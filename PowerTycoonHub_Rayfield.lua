@@ -72,6 +72,7 @@ local InstantKill = false
 local AutoTools = false
 local NoCooldown = false
 local Reach = false
+local ReachMultiplier = 2.0
 local FastRespawn = false
 local AntiSpawnkill = false
 
@@ -143,7 +144,7 @@ local auraToggle = SPTTab:CreateToggle({
 })
 
 SPTTab:CreateToggle({
-    Name = "Instant Kill",
+    Name = "Instant Kill (Proper Delete)",
     CurrentValue = false,
     Flag = "InstantKillToggle",
     Callback = function(state)
@@ -325,30 +326,65 @@ SPTTab:CreateToggle({
     end
 })
 
--- Reach Section
+-- Reach Section with Slider
 local ReachSection = SPTTab:CreateSection("Reach")
 
+local reachTrackedParts = {}
+
+local function applyReach()
+    local myChar = player.Character; if not myChar then return end
+    for _, t in ipairs(myChar:GetChildren()) do
+        if t:IsA("Tool") then
+            local part = nil
+            for _, obj in ipairs(t:GetDescendants()) do if obj:IsA("TouchTransmitter") and obj.Parent:IsA("BasePart") then part = obj.Parent; break end end
+            if not part then part = t:FindFirstChildWhichIsA("BasePart") end
+            if part then
+                if not reachTrackedParts[part] then
+                    -- Store original size
+                    reachTrackedParts[part] = {origSize = part.Size}
+                    part.Massless = true
+                    local hl = Instance.new("Highlight",part)
+                    hl.FillTransparency = 1
+                    hl.OutlineColor = Color3.fromRGB(0,150,255)
+                    hl.OutlineTransparency = 0
+                end
+                -- Apply current multiplier
+                local tracked = reachTrackedParts[part]
+                part.Size = tracked.origSize * ReachMultiplier
+            end
+        end
+    end
+end
+
 SPTTab:CreateToggle({
-    Name = "Reach (hitbox + outline)",
+    Name = "Enable Reach",
     CurrentValue = false,
     Flag = "ReachToggle",
     Callback = function(state)
         Reach = state
         if state then
-            local reachHL = {}
-            local function apply()
-                local myChar = player.Character; if not myChar then return end
-                for _, t in ipairs(myChar:GetChildren()) do
-                    if t:IsA("Tool") then
-                        local part = nil
-                        for _, obj in ipairs(t:GetDescendants()) do if obj:IsA("TouchTransmitter") and obj.Parent:IsA("BasePart") then part = obj.Parent; break end end
-                        if not part then part = t:FindFirstChildWhichIsA("BasePart") end
-                        if part and not reachHL[part] then part.Size = part.Size * 2; part.Massless = true; local hl = Instance.new("Highlight",part); hl.FillTransparency = 1; hl.OutlineColor = Color3.fromRGB(0,150,255); hl.OutlineTransparency = 0; reachHL[part] = hl end
-                    end
-                end
-            end
-            apply(); player.CharacterAdded:Connect(apply)
-            task.spawn(function() while Reach do apply(); task.wait(0.5) end end)
+            applyReach()
+            player.CharacterAdded:Connect(function()
+                reachTrackedParts = {}
+                applyReach()
+            end)
+            task.spawn(function() while Reach do applyReach(); task.wait(0.1) end end)
+        end
+    end
+})
+
+SPTTab:CreateSlider({
+    Name = "Reach Size Multiplier",
+    Min = 1,
+    Max = 10,
+    Increment = 0.5,
+    Suffix = "x",
+    CurrentValue = 2,
+    Flag = "ReachSlider",
+    Callback = function(value)
+        ReachMultiplier = value
+        if Reach then
+            applyReach()
         end
     end
 })
@@ -496,8 +532,14 @@ function startAuraLoop()
                 if tChar then
                     local hum = tChar:FindFirstChild("Humanoid")
                     if hum and hum.Health > 0 then
-                        pcall(function() hum:TakeDamage(9e9) end)
-                        pcall(function() hum.Health = 0 end)
+                        -- Proper deletion method
+                        pcall(function()
+                            hum.Health = 0
+                            task.wait(0.1)
+                            if tChar:FindFirstChild("Humanoid") then
+                                hum:Destroy()
+                            end
+                        end)
                     end
                 end
             end
