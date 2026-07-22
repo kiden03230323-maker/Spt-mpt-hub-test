@@ -76,10 +76,15 @@ local ReachMultiplier = 2.0
 local FastRespawn = false
 local AntiSpawnkill = false
 
+-- Modern Tool Follow with Caching
 local ToolFollow = {
     Enabled = false,
     Targets = {},
-    Connection = nil
+    Connection = nil,
+    CachedToolParts = {},
+    CachedTorso = {},
+    FollowOffset = Vector3.new(0, 0.6, 0),
+    AvoidCollisionOffset = Vector3.new(0, 0, 0.5)
 }
 
 -- ============================================
@@ -152,10 +157,12 @@ SPTTab:CreateToggle({
     end
 })
 
--- Tool Follow Section
+-- Tool Follow Section (MODERN - NO EXTERNAL UI)
 local ToolFollowSection = SPTTab:CreateSection("Tool Follow")
 
-local function createToolFollowTargets()
+local toolFollowTargetLabel = SPTTab:CreateLabel("Follow Targets: 0 selected")
+
+local function refreshToolFollowTargets()
     local followPlayers = {}
     for _, plr in ipairs(Players:GetPlayers()) do
         if plr ~= player then
@@ -180,18 +187,19 @@ local function createToolFollowTargets()
                 local plr = Players:FindFirstChild(name)
                 if plr then table.insert(ToolFollow.Targets, plr) end
             end
+            toolFollowTargetLabel:Set("Follow Targets: " .. tostring(#ToolFollow.Targets) .. " selected")
         end
     })
 end
 
-local followRefreshBtn = SPTTab:CreateButton({
+SPTTab:CreateButton({
     Name = "🔄 Refresh Follow Targets",
     Callback = function()
-        createToolFollowTargets()
+        refreshToolFollowTargets()
     end
 })
 
-createToolFollowTargets()
+refreshToolFollowTargets()
 
 SPTTab:CreateToggle({
     Name = "Enable Tool Follow",
@@ -200,6 +208,32 @@ SPTTab:CreateToggle({
     Callback = function(state)
         ToolFollow.Enabled = state
         if state then startToolFollow() else stopToolFollow() end
+    end
+})
+
+SPTTab:CreateSlider({
+    Name = "Follow Height Offset",
+    Min = -2,
+    Max = 2,
+    Increment = 0.1,
+    Suffix = "y",
+    CurrentValue = 0.6,
+    Flag = "FollowHeightSlider",
+    Callback = function(value)
+        ToolFollow.FollowOffset = Vector3.new(0, value, 0)
+    end
+})
+
+SPTTab:CreateSlider({
+    Name = "Follow Collision Offset",
+    Min = -1,
+    Max = 2,
+    Increment = 0.1,
+    Suffix = "z",
+    CurrentValue = 0.5,
+    Flag = "FollowCollisionSlider",
+    Callback = function(value)
+        ToolFollow.AvoidCollisionOffset = Vector3.new(0, 0, value)
     end
 })
 
@@ -551,7 +585,7 @@ function stopAuraLoop()
 end
 
 -- ============================================
--- TOOL FOLLOW FUNCTIONS
+-- TOOL FOLLOW FUNCTIONS (MODERN - NO CRASH)
 -- ============================================
 local function getToolPart(tool)
     if tool:FindFirstChild("Handle") and tool.Handle:IsA("BasePart") then return tool.Handle end
@@ -560,25 +594,35 @@ local function getToolPart(tool)
     return nil
 end
 
-local cachedToolParts = {}
-local cachedTorso = {}
-
 local function updateToolCache()
-    table.clear(cachedToolParts)
+    table.clear(ToolFollow.CachedToolParts)
     local char = player.Character; if not char then return end
     for _, tool in ipairs(char:GetChildren()) do
         if tool:IsA("Tool") then
             local part = getToolPart(tool)
-            if part then table.insert(cachedToolParts, part) end
+            if part then table.insert(ToolFollow.CachedToolParts, part) end
         end
     end
 end
 
 local function getCachedTorso(char)
-    if cachedTorso[char] and cachedTorso[char].Parent then return cachedTorso[char] end
+    if ToolFollow.CachedTorso[char] and ToolFollow.CachedTorso[char].Parent then return ToolFollow.CachedTorso[char] end
     local torso = char:FindFirstChild("UpperTorso") or char:FindFirstChild("Torso")
-    cachedTorso[char] = torso
+    ToolFollow.CachedTorso[char] = torso
     return torso
+end
+
+local function moveToolsToTarget(targetChar)
+    local torso = getCachedTorso(targetChar)
+    if not torso then return end
+
+    for _, part in ipairs(ToolFollow.CachedToolParts) do
+        if part and part.Parent then
+            part.Position = torso.Position + ToolFollow.FollowOffset + ToolFollow.AvoidCollisionOffset
+            part.CanCollide = false
+            part.Massless = true
+        end
+    end
 end
 
 function startToolFollow()
@@ -589,24 +633,13 @@ function startToolFollow()
         local myChar = player.Character; if not myChar then return end
         updateToolCache()
         for _, targetPlr in ipairs(ToolFollow.Targets) do
-            local tChar = targetPlr.Character
-            if tChar and tChar:FindFirstChild("Humanoid") and tChar.Humanoid.Health > 0 then
-                local torso = getCachedTorso(tChar)
-                if torso then
-                    for _, part in ipairs(cachedToolParts) do
-                        if part and part.Parent then
-                            part.Position = torso.Position + Vector3.new(0, 0.6, 0.5)
-                            part.CanCollide = false
-                            part.Massless = true
-                            pcall(firetouchinterest, part, torso, 0)
-                            pcall(firetouchinterest, part, torso, 1)
-                        end
-                    end
-                end
+            if targetPlr and targetPlr.Character then
+                moveToolsToTarget(targetPlr.Character)
             end
         end
     end)
 end
+
 function stopToolFollow()
     if ToolFollow.Connection then ToolFollow.Connection:Disconnect(); ToolFollow.Connection = nil end
 end
