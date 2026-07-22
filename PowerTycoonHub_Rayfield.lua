@@ -585,7 +585,7 @@ function stopAuraLoop()
 end
 
 -- ============================================
--- TOOL FOLLOW FUNCTIONS (MODERN - NO CRASH)
+-- TOOL FOLLOW FUNCTIONS (ULTRA-FAST - RenderStepped PreSimulation)
 -- ============================================
 local function getToolPart(tool)
     if tool:FindFirstChild("Handle") and tool.Handle:IsA("BasePart") then return tool.Handle end
@@ -627,7 +627,9 @@ end
 
 function startToolFollow()
     if ToolFollow.Connection then ToolFollow.Connection:Disconnect(); ToolFollow.Connection = nil end
-    ToolFollow.Connection = RunService.Heartbeat:Connect(function()
+    
+    -- Ultra-fast loop using RenderStepped (most responsive, runs before rendering)
+    ToolFollow.Connection = RunService.RenderStepped:Connect(function()
         if not ToolFollow.Enabled then return end
         if #ToolFollow.Targets == 0 then return end
         local myChar = player.Character; if not myChar then return end
