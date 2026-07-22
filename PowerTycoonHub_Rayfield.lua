@@ -1,5 +1,5 @@
 --[[
-POWER TYCOON HUB – ZyronX UI Version
+POWER TYCOON HUB – ZyronX UI Version (With Smart Auto Cash & Auto Build)
 ]]
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -49,6 +49,12 @@ local AutoGetTools = false
 local grabLoopConn = nil
 local toolLoopConn = nil
 local auraConn = nil
+
+-- NEW STATE VARIABLES
+local AutoClaimMoney = false
+local AutoBuild = false
+local claimConn = nil
+local buildConn = nil
 
 -- ============================================
 -- TARGET MANAGER GUI (Custom Sub-Menu)
@@ -325,6 +331,141 @@ if player.Character then
 end
 
 -- ============================================
+-- SMART AUTO CLAIM MONEY & AUTO BUILD
+-- ============================================
+local function getPlayerCash()
+    local ls = player:FindFirstChild("leaderstats")
+    if ls then
+        local cash = ls:FindFirstChild("Cash") or ls:FindFirstChild("Money") or ls:FindFirstChild("Coins") or ls:FindFirstChild("Gold")
+        if cash and (cash:IsA("IntValue") or cash:IsA("NumberValue")) then
+            return cash.Value
+        end
+        -- Fallback to first number value if specific names aren't found
+        for _, stat in ipairs(ls:GetChildren()) do
+            if stat:IsA("IntValue") or stat:IsA("NumberValue") then
+                return stat.Value
+            end
+        end
+    end
+    return 0
+end
+
+local function getCost(obj)
+    local priceVal = obj:FindFirstChild("Price") or obj:FindFirstChild("Cost") or obj:FindFirstChild("Value")
+    if priceVal and (priceVal:IsA("IntValue") or priceVal:IsA("NumberValue")) then
+        return priceVal.Value
+    end
+    local attr = obj:GetAttribute("Price") or obj:GetAttribute("Cost")
+    if type(attr) == "number" then return attr end
+    
+    for _, child in ipairs(obj:GetDescendants()) do
+        if (child:IsA("IntValue") or child:IsA("NumberValue")) then
+            local n = child.Name:lower()
+            if n:find("price") or n:find("cost") then
+                return child.Value
+            end
+        end
+    end
+    return 0 
+end
+
+local function getPriority(modelName)
+    local name = modelName:lower()
+    if name:find("gear") then return 1 end
+    if name:find("wall") then return 2 end
+    if name:find("gen") then return 3 end
+    if name:find("door") then return 4 end
+    return 5
+end
+
+function startClaimMoney()
+    if claimConn then claimConn:Disconnect() end
+    claimConn = RunService.PreSimulation:Connect(function()
+        if not AutoClaimMoney then return end
+        local myChar = player.Character
+        if not myChar then return end
+        local root = myChar:FindFirstChild("HumanoidRootPart")
+        if not root then return end
+        
+        local myTycoon = workspace:FindFirstChild(player.Name)
+        if not myTycoon then return end
+        
+        local cashRegister = myTycoon:FindFirstChild("CashRegister", true)
+        if cashRegister then
+            for _, part in ipairs(cashRegister:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    pcall(firetouchinterest, root, part, 0)
+                    pcall(firetouchinterest, root, part, 1)
+                end
+            end
+        end
+    end)
+end
+
+function stopClaimMoney()
+    if claimConn then claimConn:Disconnect(); claimConn = nil end
+end
+
+function startAutoBuild()
+    if buildConn then buildConn:Disconnect() end
+    local lastBuyTime = 0
+    buildConn = RunService.PreSimulation:Connect(function()
+        if not AutoBuild then return end
+        
+        -- Cooldown to prevent spamming the server (0.5s between purchases)
+        if tick() - lastBuyTime < 0.5 then return end 
+
+        local myChar = player.Character
+        if not myChar then return end
+        local root = myChar:FindFirstChild("HumanoidRootPart")
+        if not root then return end
+        
+        local myTycoon = workspace:FindFirstChild(player.Name)
+        if not myTycoon then return end
+        
+        local cash = getPlayerCash()
+        
+        -- Collect all potential buy buttons
+        local buttons = {}
+        for _, obj in ipairs(myTycoon:GetDescendants()) do
+            if obj:IsA("Model") and (obj.Name:lower():find("button") or obj.Name:lower():find("btn")) then
+                local cost = getCost(obj)
+                -- Only consider if it has a cost > 0 (meaning it's not free/already bought)
+                if cost > 0 then
+                    table.insert(buttons, {Model = obj, Cost = cost, Priority = getPriority(obj.Name)})
+                end
+            end
+        end
+        
+        -- Sort by Priority (ascending), then by Cost (ascending)
+        table.sort(buttons, function(a, b)
+            if a.Priority == b.Priority then
+                return a.Cost < b.Cost
+            end
+            return a.Priority < b.Priority
+        end)
+        
+        -- Find the first button we can afford based on priority
+        for _, btnData in ipairs(buttons) do
+            if cash >= btnData.Cost then
+                for _, part in ipairs(btnData.Model:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        pcall(firetouchinterest, root, part, 0)
+                        pcall(firetouchinterest, root, part, 1)
+                    end
+                end
+                lastBuyTime = tick() -- Update cooldown
+                break -- Only buy one at a time to respect priority
+            end
+        end
+    end)
+end
+
+function stopAutoBuild()
+    if buildConn then buildConn:Disconnect(); buildConn = nil end
+end
+
+-- ============================================
 -- ZYRONX UI INITIALIZATION
 -- ============================================
 local Library = loadstring(game:HttpGetAsync("https://pastefy.app/YoX4PJmf/raw"))()
@@ -365,6 +506,20 @@ end, {Title="Enable Tool Follow", Description="Forces your tools to follow and h
 
 -- Page 2: Tycoon
 local SPT_Tycoon = SPT_Tab:CreatePage("Tycoon")
+
+-- Tycoon Automation Section
+local TycoonCoreSection = SPT_Tycoon:CreateSection("Tycoon Automation")
+TycoonCoreSection:AddToggle("Auto Claim Money", false, function(state)
+    AutoClaimMoney = state
+    if state then startClaimMoney() else stopClaimMoney() end
+end, {Title="Auto Claim Money", Description="Automatically touches the Cash Register to collect cash."})
+
+TycoonCoreSection:AddToggle("Smart Auto Build", false, function(state)
+    AutoBuild = state
+    if state then startAutoBuild() else stopAutoBuild() end
+end, {Title="Smart Auto Build", Description="Buys upgrades in priority order: Gear → Walls → Gen → Doors. Checks cash first!"})
+
+-- Auto Get Tools Section
 local AutoToolsSection = SPT_Tycoon:CreateSection("Auto Get Tools")
 AutoToolsSection:AddToggle("Auto Grab Weapons", false, function(state)
     AutoGetTools = state
@@ -585,8 +740,8 @@ SavesCard:AddConfigManager("PowerTycoonHub_Config")
 -- ============================================
 Library:Notify({
     Title = "Power Tycoon Hub Loaded",
-    Description = "Successfully initialized with ZyronX UI!",
+    Description = "Smart Auto-Builder activated! Priority: Gear > Walls > Gen.",
     Duration = 4
 })
 
-print("⚡ Power Tycoon Hub – ZyronX UI Version. Ready for dumper logs to fix Instant Kill.")
+print("⚡ Power Tycoon Hub – ZyronX UI Version. Smart Auto-Build enabled.")
