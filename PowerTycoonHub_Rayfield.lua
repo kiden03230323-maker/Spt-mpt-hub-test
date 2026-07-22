@@ -72,7 +72,7 @@ local InstantKill = false
 local AutoTools = false
 local NoCooldown = false
 local Reach = false
-local ReachMultiplier = 2.0
+local ReachMultiplier = 0
 local FastRespawn = false
 local AntiSpawnkill = false
 
@@ -86,6 +86,10 @@ local ToolFollow = {
     FollowOffset = Vector3.new(0, 0.6, 0),
     AvoidCollisionOffset = Vector3.new(0, 0, 0.5)
 }
+
+-- Reach tracking
+local reachTrackedParts = {}
+local reachRenderConnection = nil
 
 -- ============================================
 -- SUPER POWER TYCOON TAB
@@ -360,12 +364,11 @@ SPTTab:CreateToggle({
     end
 })
 
--- Reach Section with Slider
+-- Reach Section with Slider (FIXED - NO REPLICATION NEEDED)
 local ReachSection = SPTTab:CreateSection("Reach")
 
-local reachTrackedParts = {}
-
-local function applyReach()
+local function applyReachMultiplier()
+    if not Reach then return end
     local myChar = player.Character; if not myChar then return end
     for _, t in ipairs(myChar:GetChildren()) do
         if t:IsA("Tool") then
@@ -374,17 +377,21 @@ local function applyReach()
             if not part then part = t:FindFirstChildWhichIsA("BasePart") end
             if part then
                 if not reachTrackedParts[part] then
-                    -- Store original size
                     reachTrackedParts[part] = {origSize = part.Size}
                     part.Massless = true
-                    local hl = Instance.new("Highlight",part)
+                    local hl = Instance.new("Highlight", part)
                     hl.FillTransparency = 1
-                    hl.OutlineColor = Color3.fromRGB(0,150,255)
+                    hl.OutlineColor = Color3.fromRGB(0, 150, 255)
                     hl.OutlineTransparency = 0
                 end
-                -- Apply current multiplier
                 local tracked = reachTrackedParts[part]
-                part.Size = tracked.origSize * ReachMultiplier
+                if ReachMultiplier > 0 then
+                    part.Size = tracked.origSize * (1 + ReachMultiplier)
+                else
+                    part.Size = tracked.origSize
+                end
+                -- Set network owner to ensure hitbox works server-side
+                pcall(function() part:SetNetworkOwner(player) end)
             end
         end
     end
@@ -397,28 +404,36 @@ SPTTab:CreateToggle({
     Callback = function(state)
         Reach = state
         if state then
-            applyReach()
+            applyReachMultiplier()
             player.CharacterAdded:Connect(function()
                 reachTrackedParts = {}
-                applyReach()
+                task.wait(0.5)
+                applyReachMultiplier()
             end)
-            task.spawn(function() while Reach do applyReach(); task.wait(0.1) end end)
+            -- Continuous loop to maintain reach
+            if reachRenderConnection then reachRenderConnection:Disconnect() end
+            reachRenderConnection = RunService.RenderStepped:Connect(function()
+                if not Reach then return end
+                applyReachMultiplier()
+            end)
+        else
+            if reachRenderConnection then reachRenderConnection:Disconnect(); reachRenderConnection = nil end
         end
     end
 })
 
 SPTTab:CreateSlider({
-    Name = "Reach Size Multiplier",
-    Min = 1,
+    Name = "Reach Expansion",
+    Min = 0,
     Max = 10,
     Increment = 0.5,
     Suffix = "x",
-    CurrentValue = 2,
+    CurrentValue = 0,
     Flag = "ReachSlider",
     Callback = function(value)
         ReachMultiplier = value
         if Reach then
-            applyReach()
+            applyReachMultiplier()
         end
     end
 })
@@ -447,17 +462,44 @@ SPTTab:CreateToggle({
 })
 
 SPTTab:CreateToggle({
-    Name = "Anti Spawnkill (invincible 3s)",
+    Name = "Anti Spawnkill (Godmode 5s)",
     CurrentValue = false,
     Flag = "AntiSpawnkillToggle",
     Callback = function(state)
         AntiSpawnkill = state
         if state then
             player.CharacterAdded:Connect(function(c)
-                local hum = c:WaitForChild("Humanoid"); hum.MaxHealth = 9e9; hum.Health = 9e9
-                local dmgConn = hum.TakeDamage:Connect(function() return 0 end)
-                local ff = Instance.new("ForceField",c); ff.Visible = false
-                task.delay(3, function() if hum and hum.Parent then hum.MaxHealth = 100; hum.Health = 100 end; if dmgConn then dmgConn:Disconnect() end; if ff then ff:Destroy() end end)
+                local hum = c:WaitForChild("Humanoid")
+                local hrp = c:WaitForChild("HumanoidRootPart")
+                
+                -- Godmode setup
+                hum.MaxHealth = math.huge
+                hum.Health = math.huge
+                
+                -- Block all damage
+                local damageTaken = 0
+                hum.HealthChanged:Connect(function(health)
+                    if AntiSpawnkill and health < hum.MaxHealth then
+                        hum.Health = hum.MaxHealth
+                    end
+                end)
+                
+                -- Add ForceField
+                local ff = Instance.new("ForceField", c)
+                ff.Visible = false
+                
+                -- 5 second protection
+                task.delay(5, function()
+                    if AntiSpawnkill and hum and hum.Parent then
+                        -- Restore normal health
+                        hum.MaxHealth = 100
+                        hum.Health = 100
+                        -- Remove ForceField
+                        if ff and ff.Parent then
+                            ff:Destroy()
+                        end
+                    end
+                end)
             end)
         end
     end
@@ -566,7 +608,6 @@ function startAuraLoop()
                 if tChar then
                     local hum = tChar:FindFirstChild("Humanoid")
                     if hum and hum.Health > 0 then
-                        -- Proper deletion method
                         pcall(function()
                             hum.Health = 0
                             task.wait(0.1)
@@ -585,7 +626,7 @@ function stopAuraLoop()
 end
 
 -- ============================================
--- TOOL FOLLOW FUNCTIONS (ULTRA-FAST - RenderStepped PreSimulation)
+-- TOOL FOLLOW FUNCTIONS (ULTRA-FAST - RenderStepped)
 -- ============================================
 local function getToolPart(tool)
     if tool:FindFirstChild("Handle") and tool.Handle:IsA("BasePart") then return tool.Handle end
@@ -628,7 +669,6 @@ end
 function startToolFollow()
     if ToolFollow.Connection then ToolFollow.Connection:Disconnect(); ToolFollow.Connection = nil end
     
-    -- Ultra-fast loop using RenderStepped (most responsive, runs before rendering)
     ToolFollow.Connection = RunService.RenderStepped:Connect(function()
         if not ToolFollow.Enabled then return end
         if #ToolFollow.Targets == 0 then return end
