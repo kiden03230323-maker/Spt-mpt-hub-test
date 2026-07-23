@@ -1,6 +1,6 @@
 --[[
 POWER TYCOON HUB – Ultimate ZyronX UI Version (SPT + FULL MPT Feature Parity)
-Every feature from the reference hub natively rewritten for maximum stability and performance.
+MPT Tab restructured into clean, scrollable sections for better mobile compatibility.
 ]]
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -814,10 +814,10 @@ UtilsSection:AddButton("Open Game Dumper", function()
     local logLines={}
     local function addLog(text,color) table.insert(logLines,text); local lbl=Instance.new("TextLabel",scroll); lbl.Size=UDim2.new(1,0,0,20); lbl.BackgroundTransparency=1; lbl.Text=text; lbl.TextColor3=color or Color3.fromRGB(200,200,200); lbl.Font=Enum.Font.Gotham; lbl.TextSize=13; lbl.TextXAlignment=Enum.TextXAlignment.Left; lbl.TextWrapped=true end
     copyBtn.MouseButton1Click:Connect(function() pcall(function() setclipboard(table.concat(logLines, "\n")) end); addLog("✅ Copied!",Color3.fromRGB(100,255,100)) end)
-    addLog("🔎 SCANNING...",Color3.fromRGB(255,200,50))
+    addLog(" SCANNING...",Color3.fromRGB(255,200,50))
     local function scan(container,depth)
         for _,child in ipairs(container:GetChildren()) do
-            local indent=string.rep("   ",depth); local icon="📄 "
+            local indent=string.rep("   ",depth); local icon=" "
             if child:IsA("Folder") then icon="📁 "; addLog(indent..icon.."  "..child.Name.." (Folder)",Color3.fromRGB(255,200,100)); scan(child,depth+1)
             elseif child:IsA("Tool") then icon="🔧 "; addLog(indent..icon.."  "..child.Name.." (Tool)",Color3.fromRGB(100,255,100))
             elseif child:IsA("Model") then icon="🧩 "; addLog(indent..icon.."  "..child.Name.." (Model)",Color3.fromRGB(200,200,255))
@@ -841,51 +841,39 @@ end, {Title="Set Damage Remote", Description="Enter full path to damage remote."
 
 
 -- ============================================
--- MEGA POWER TYCOON TAB (FULL FEATURE PARITY)
+-- MEGA POWER TYCOON TAB (RESTRUCTURED: SINGLE PAGE WITH SECTIONS)
 -- ============================================
 local MPT_Tab = Window:CreateTab("Mega Power Tycoon", false, false)
+local MPT_MainPage = MPT_Tab:CreatePage("All Features")
 
--- MPT Page 1: Combat
-local MPT_Combat = MPT_Tab:CreatePage("Combat")
-local MPT_CombatSec = MPT_Combat:CreateSection("Aggressive Combat")
+local MPT_CombatSec = MPT_MainPage:CreateSection("Aggressive Combat")
 MPT_CombatSec:AddButton("Manage Aura Targets", function() toggleTargetFrame("Aura") end, {Title="Manage Targets", Description="Select players for MPT Combat features."})
 MPT_CombatSec:AddToggle("Kill Aura", false, function(state) Aura.Enabled = state; if state then startAuraLoop() else stopAuraLoop() end end, {Title="Kill Aura", Description="Automatically hits targets around you."})
 MPT_CombatSec:AddToggle("Fast Kill", false, function(state) InstantKill = state end, {Title="Fast Kill", Description="Brute-force sets target health to 0."})
 MPT_CombatSec:AddToggle("Hit Amplifier", false, function(state) HitAmplifier = state end, {Title="Hit Amplifier", Description="Spams damage remotes for massive damage."})
 
--- MPT Page 2: Movement & Control
-local MPT_Movement = MPT_Tab:CreatePage("Movement & Control")
-local MPT_ControlSec = MPT_Movement:CreateSection("Target Control")
-
+local MPT_ControlSec = MPT_MainPage:CreateSection("Target Control")
 local function getPlayerNames()
     local names = {"None"}
     for _, p in ipairs(Players:GetPlayers()) do if p ~= player then table.insert(names, p.Name) end end
     return names
 end
-
 MPT_ControlSec:AddDropdown("Loopbring Target", getPlayerNames, "None", function(selected)
     if selected == "None" then Loopbring.Target = nil else Loopbring.Target = Players:FindFirstChild(selected) end
 end, {Title="Loopbring Target", Description="Choose a player to constantly teleport to you."})
-
 MPT_ControlSec:AddToggle("Loopbring", false, function(state) 
     Loopbring.Enabled = state
     if state then startLoopbring() else stopLoopbring() end 
 end, {Title="Loopbring", Description="Constantly teleports the target to you."})
-
 MPT_ControlSec:AddDropdown("Freeze Target", getPlayerNames, "None", function(selected)
     if selected == "None" then FreezeTarget.Target = nil else FreezeTarget.Target = Players:FindFirstChild(selected) end
 end, {Title="Freeze Target", Description="Choose a player to freeze."})
-
 MPT_ControlSec:AddToggle("No Movement (Freeze)", false, function(state) 
     FreezeTarget.Enabled = state
     if state then startFreezeTarget() else stopFreezeTarget() end 
 end, {Title="No Movement", Description="Anchors target and sets speed to 0."})
 
-
--- MPT Page 3: Tools & Visuals
-local MPT_Tools = MPT_Tab:CreatePage("Tools & Visuals")
-local MPT_ToolSec = MPT_Tools:CreateSection("Tool Manipulation")
-
+local MPT_ToolSec = MPT_MainPage:CreateSection("Tool Manipulation")
 MPT_ToolSec:AddToggle("Get Tools", false, function(state)
     AutoGetTools = state
     if state then
@@ -911,7 +899,6 @@ MPT_ToolSec:AddToggle("Get Tools", false, function(state)
         if grabLoopConn then grabLoopConn:Disconnect(); grabLoopConn = nil end
     end
 end, {Title="Get Tools", Description="Automatically grabs weapons from tycoon pads."})
-
 MPT_ToolSec:AddToggle("Use Tools", false, function(state)
     AutoTools = state
     if state then
@@ -925,7 +912,6 @@ MPT_ToolSec:AddToggle("Use Tools", false, function(state)
         if toolLoopConn then toolLoopConn:Disconnect(); toolLoopConn = nil end
     end
 end, {Title="Use Tools", Description="Continuously activates all tools."})
-
 MPT_ToolSec:AddToggle("Cooldown (No Cooldown)", false, function(state)
     NoCooldown = state
     if state then
@@ -958,7 +944,6 @@ MPT_ToolSec:AddToggle("Cooldown (No Cooldown)", false, function(state)
         end)
     end
 end, {Title="Cooldown", Description="Removes tool cooldowns."})
-
 MPT_ToolSec:AddToggle("Reach", false, function(state)
     Reach = state
     if state then
@@ -982,7 +967,6 @@ MPT_ToolSec:AddToggle("Reach", false, function(state)
         task.spawn(function() while Reach do apply(); task.wait(0.5) end end)
     end
 end, {Title="Reach", Description="Expands tool hitboxes and adds an outline."})
-
 MPT_ToolSec:AddToggle("ReachVA", false, function(state)
     ReachVA = state
     if state then
@@ -1006,7 +990,6 @@ MPT_ToolSec:AddToggle("ReachVA", false, function(state)
         if reachConn then reachConn:Disconnect(); reachConn = nil end
     end
 end, {Title="ReachVA", Description="Aggressively teleports tools to the first selected aura target."})
-
 MPT_ToolSec:AddToggle("Hitbox", false, function(state)
     Hitbox = state
     if state then
@@ -1020,32 +1003,24 @@ MPT_ToolSec:AddToggle("Hitbox", false, function(state)
         end
     end
 end, {Title="Hitbox", Description="Permanently scales up tool hitboxes by 2.5x."})
-
 MPT_ToolSec:AddToggle("Fly Tools / Float Tools", false, function(state) 
     ToolFollow.Enabled = state
     if state then startToolFollow() else stopToolFollow() end 
 end, {Title="Fly / Float Tools", Description="Forces tools to float and hit targets."})
-
 MPT_ToolSec:AddToggle("Big Tools", false, function(state) 
     BigTools = state
     if state then applyBigTools() end
 end, {Title="Big Tools", Description="Scales up all tool hitboxes by 3x."})
-
 MPT_ToolSec:AddToggle("No Animation", false, function(state) 
     NoAnimation = state
     if state then applyNoAnimation() end
 end, {Title="No Animation", Description="Destroys the Animate script for glitchy movement."})
-
 MPT_ToolSec:AddToggle("Invisible", false, function(state) 
     LocalInvisible = state
     if state then applyLocalInvisible() end
 end, {Title="Invisible", Description="Makes your character transparent locally."})
 
-
--- MPT Page 4: Utilities & Spam
-local MPT_Utils = MPT_Tab:CreatePage("Utilities & Spam")
-local MPT_UtilSec = MPT_Utils:CreateSection("Player Utilities")
-
+local MPT_UtilSec = MPT_MainPage:CreateSection("Player Utilities")
 MPT_UtilSec:AddToggle("Fast Respawn", false, function(state)
     FastRespawn = state
     if state then
@@ -1064,7 +1039,6 @@ MPT_UtilSec:AddToggle("Fast Respawn", false, function(state)
         player.CharacterAdded:Connect(hook)
     end
 end, {Title="Fast Respawn", Description="Instantly respawns upon death."})
-
 MPT_UtilSec:AddToggle("Anti Spawn", false, function(state)
     AntiSpawnkill = state
     if state then
@@ -1080,7 +1054,6 @@ MPT_UtilSec:AddToggle("Anti Spawn", false, function(state)
         end)
     end
 end, {Title="Anti Spawn", Description="3 seconds of invincibility on spawn."})
-
 MPT_UtilSec:AddButton("Get Base", function()
     local myRoot = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
     if not myRoot then return end
@@ -1105,19 +1078,16 @@ MPT_UtilSec:AddButton("Get Base", function()
     end
 end, {Title="Get Base", Description="Instantly teleports you to the nearest tycoon door."})
 
-local MPT_SpamSec = MPT_Utils:CreateSection("Spam & Misc")
+local MPT_SpamSec = MPT_MainPage:CreateSection("Spam & Misc")
 MPT_SpamSec:AddTextbox("Chat Message", "MPT Hub is OP!", function(text) ChatSpammer.Message = text end, {Title="Chat Spammer Message", Description="Set the message to spam."})
-
 MPT_SpamSec:AddToggle("Ultra Spammer", false, function(state) 
     ChatSpammer.Enabled = state
     if state then startChatSpammer() else stopChatSpammer() end 
 end, {Title="Ultra Spammer", Description="Spams the set message in chat."})
-
 MPT_SpamSec:AddButton("Lag Server (Local Test)", function()
     triggerLocalLag()
     Library:Notify({Title = "Lag Triggered", Description = "Spawned 500 local parts to test client FPS drop. (Safe)", Duration = 3})
 end, {Title="Lag Server", Description="Spawns local parts to simulate lag safely without risking a ban."})
-
 MPT_SpamSec:AddTextbox("Command", "print('Hello')", function(text)
     local success, err = pcall(function() loadstring(text)() end)
     if not success then
@@ -1144,8 +1114,8 @@ SavesCard:AddConfigManager("PowerTycoonHub_Config")
 -- ============================================
 Library:Notify({
     Title = "Power Tycoon Hub Loaded",
-    Description = "ALL friend's hub features natively integrated and optimized!",
+    Description = "MPT Tab restructured into clean scrollable sections!",
     Duration = 4
 })
 
-print("⚡ Power Tycoon Hub – Ultimate ZyronX UI Version. Full feature parity achieved.")
+print("⚡ Power Tycoon Hub – Ultimate ZyronX UI Version. MPT Tab now uses single-page sections.")
