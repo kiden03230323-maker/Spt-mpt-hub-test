@@ -1,64 +1,118 @@
-# ⚡ Power Tycoon Hub – Rayfield UI Edition
+# ⚡ Power Tycoon Hub – Architectural Integration Edition
 
-A sophisticated **Roblox Power Tycoon exploit hub** with a sleek **Rayfield UI** and secure key system.
+A sophisticated **Roblox Power Tycoon exploit hub** with **Native ZyronX UI**, premium custom overlays, and enterprise-grade security architecture.
+
+**Owner:** exo_blox | **Co-Owner:** city800
+
+---
+
+## 🎨 UI Architecture
+
+This hub uses **Native ZyronX UI Library** (not Rayfield) with:
+- ✨ Modern dark theme with purple accents
+- 🎯 Premium custom overlay system
+- 🔐 Whitelisted administrative console
+- 📱 Responsive design & smooth animations
+- 🛡️ Enterprise-grade security layer
+
+---
 
 ## 🔐 Key System
-**Key:** `EXOSTAKEOVERR19$`
+
+**Key:** `EXOSTAKEOVERR19$` (24-hour expiration)
+
+- 🔒 **Hardware ID Tracking** - Device-based bans
+- ⏱️ **Time-Limited Keys** - Auto-expire every 24 hours
+- 📝 **User/Device Ban System** - Dual-layer bans
+- 🔧 **Maintenance Mode** - Admin shutdown capability
 
 ---
 
 ## 📋 Features
 
-### 🎯 Multi-Target Aura
-- **Manage Targets** - Select multiple players to target
+### 🎯 Multi-Target Aura (Super Power Tycoon)
 - **Enable Aura** - Toggle damage aura on/off
-- **Instant Kill** - One-hit eliminations
-- **🔄 Refresh Players** - Update player list in real-time
+- **Instant Kill** - One-hit brute-force eliminations
+- **Auto Target Detection** - Works with any tool
+- **Damage Remote Auto-Detection** - Finds damage systems automatically
 
-### 🛠️ Tool Follow
-- **Select Follow Targets** - Choose which players to follow
-- **Enable Tool Follow** - Stick tools to targets
-- **Auto-detection** - Finds tool parts automatically
+### 🛠️ Tool Follow System
+- **Enable Tool Follow** - Stick tools to targets continuously
+- **Auto-detection** - Finds tool parts & hit boxes automatically
+- **Smooth Tracking** - Heartbeat-based positioning
+- **Touch Interest Firing** - Native Roblox damage triggering
 
-### ⚙️ Auto Get Tools (0 Delay)
-- **Auto Grab Weapons** - Automatically collects weapons
+### ⚙️ Auto Grab Weapons (0 Delay)
+- **Auto Grab Weapons** - Automatically collects tycoon tools
 - **Supported Bases:**
   - Stone
   - Magic
   - Storm
   - Robotic
 - **Exclusions:** Insanity, Giant, Dark, Spike, Web, Strong
+- **Priority System** - Intelligent tool acquisition
 
-### 💪 Tools & Cooldown
-- **Auto Use Tools (0 delay)** - Rapid tool activation
-- **No Cooldown (arms stick)** - Remove cooldown delays
-- Hooked wait/task.wait functions for maximum speed
+### 💪 Tools & Cooldown Management
+- **Auto Use Tools (0 delay)** - Continuous rapid activation
+- **No Cooldown** - Removes wait/task.wait delays via function hooking
+- **RenderStepped Loop** - Ultra-fast tool cycling
+- **Backpack Auto-Equip** - Tools automatically moved to character
 
-### 🎯 Reach
-- **Reach (hitbox + outline)** - Expand hitboxes
-- **Visual Indicator** - Blue outline on reach parts
-- **2x Size Multiplier** - Doubled weapon hitbox
+### 🎯 Reach Enhancement
+- **Reach (hitbox + outline)** - Expand tool hitboxes
+- **Visual Indicator** - Blue outline on expanded parts
+- **2x Size Multiplier** - Doubled weapon reach
+- **Massless Tools** - Improved collision detection
 
-### 🛡️ Respawn & Protection
-- **Fast Respawn** - Instant respawn on death
-- **Anti Spawnkill (3s invincible)** - Spawn protection
+### 💰 Tycoon Automation (Super Power Tycoon)
+- **Auto Claim Money** - Continuous cash register interaction
+- **Smart Auto Build** - Priority-based upgrade purchasing
+  - Buys gears first (priority 1)
+  - Then walls (priority 2)
+  - Then generators (priority 3)
+  - Then doors (priority 4)
+- **Cost Detection** - Reads Price/Cost/Value objects
+- **Cash Verification** - Only buys when affordable
 
-### 🔧 Utilities
-- **🔍 Open Game Dumper** - Full game object scanner
-- **⚙️ Set Damage Remote** - Custom damage remote configuration
-- **Copy Logs** - Export dumper results
+### 🎮 Mega Power Tycoon Tab
+- **Kill Aura** - Multi-target damage system
+- **Fast Kill** - Instant elimination mode
+- **Get Base** - Quick teleport to nearest tycoon door
+
+---
+
+## 🔐 Administrative Console (Whitelisted)
+
+**Hub Manage Tab** - Restricted Access
+
+### Authentication
+```
+Owner: exo_blox / Password: 03239461
+Operator: OP / Password: 0000
+```
+
+### Owner-Only Actions
+- 🚫 **Ban User (Account + HWID)** - Permanent dual-layer ban
+- 🔧 **Shutdown Hub** - Activate maintenance mode (1 hour auto-reset)
+- 👥 **Join Selected User** - Teleport to player
+- ⚠️ **Issue Official Warning** - Send warning to players
+
+### Real-Time Features
+- Live player list with avatars
+- Click to select target player
+- Auto-refresh every 3 seconds
 
 ---
 
 ## 📦 Installation
 
-### Method 1: Direct Executor
+### Method 1: Direct Executor (Recommended)
 ```lua
-loadstring(game:HttpGet("https://raw.githubusercontent.com/kiden03230323-maker/spt-mpt-hub-test/main/PowerTycoonHub_Rayfield.lua"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/kiden03230323-maker/Spt-mpt-hub-test/main/PowerTycoonHub_Rayfield.lua"))()
 ```
 
 ### Method 2: Manual Copy
-1. Copy the script from `PowerTycoonHub_Rayfield.lua`
+1. Copy entire script from `PowerTycoonHub_Rayfield.lua`
 2. Paste into your Roblox exploit executor
 3. Run and enter key: `EXOSTAKEOVERR19$`
 
@@ -69,86 +123,94 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/kiden03230323-maker/s
 ### Getting Started
 1. **Execute the script** in your Roblox executor
 2. **Enter the key:** `EXOSTAKEOVERR19$`
-3. **The hub opens** with full UI
+3. **Hub UI opens** with three main tabs
 
 ### Multi-Target Aura Setup
-1. Go to **Super Power Tycoon** tab
-2. Click **🔄 Refresh Players** to see all players
-3. Select targets from the dropdown
-4. Toggle **Enable Aura** to activate
-5. Optional: Enable **Instant Kill** for one-shot eliminations
+1. Go to **Super Power Tycoon** → **Combat**
+2. Toggle **Enable Aura** to activate damage aura
+3. Optional: Enable **Instant Kill** for one-shot eliminations
+4. Aura targets all nearby players automatically
 
 ### Tool Follow
-1. Click **🔄 Refresh Follow Targets**
-2. Select targets from dropdown
-3. Toggle **Enable Tool Follow**
-4. Your tools will stick to targets
+1. Go to **Super Power Tycoon** → **Combat**
+2. Enable **Tool Follow** to make tools stick to targets
+3. Works with any equipped weapon in inventory
 
 ### Auto Grab Weapons
-1. Toggle **Auto Grab Weapons**
-2. Walk to tycoon areas
-3. Tools automatically grabbed and equipped
+1. Go to **Super Power Tycoon** → **Tycoon** → **Auto Get Tools**
+2. Toggle **Auto Grab Weapons**
+3. Walk to any tycoon area
+4. Tools automatically grab from pads (Stone, Magic, Storm, Robotic)
+
+### Tool Activation & Cooldown
+1. Go to **Super Power Tycoon** → **Tycoon** → **Tools & Cooldown**
+2. **Auto Use Tools** - Continuously activates all tools
+3. **No Cooldown** - Removes wait delays for faster attacks
 
 ### Reach Expansion
-1. Toggle **Reach (hitbox + outline)**
-2. Weapon hitbox increases 2x
-3. Blue outline shows reach expansion
+1. Go to **Super Power Tycoon** → **Movement & Visuals**
+2. Toggle **Reach (hitbox + outline)**
+3. Weapon hitbox increases 2x
+4. Blue outline shows expanded reach
 
-### Fast Respawn
-1. Toggle **Fast Respawn**
-2. Die to respawn instantly
-3. Works with Guide remote
+### Auto Build Tycoon
+1. Go to **Super Power Tycoon** → **Tycoon**
+2. Toggle **Smart Auto Build**
+3. Automatically purchases upgrades in priority order
+4. Buys only when you have enough cash
 
-### Anti Spawnkill
-1. Toggle **Anti Spawnkill (invincible 3s)**
-2. Get 3 seconds of invincibility on spawn
-3. Infinite health during protection
+### Auto Claim Money
+1. Go to **Super Power Tycoon** → **Tycoon**
+2. Toggle **Auto Claim Money**
+3. Continuously collects from cash register
 
----
+### Mega Power Tycoon Tab
+1. Go to **Mega Power Tycoon** → **All Features**
+2. Quick access to Kill Aura and Fast Kill
+3. **Get Base** button teleports to nearest tycoon
 
-## 🔍 Game Dumper
-
-Click **🔍 Open Game Dumper** to scan:
-- ✅ Workspace
-- ✅ ReplicatedStorage
-- ✅ ReplicatedFirst
-- ✅ Lighting
-- ✅ Player Backpack
-- ✅ Player Character
-
-**Icons:**
-- 📁 Folders
-- 🔧 Tools
-- 🧩 Models
-- 📡 RemoteEvent / RemoteFunction
-- 🔗 BindableEvent / BindableFunction
-
-**Copy results** to clipboard with 📋 button.
+### Administrative Console
+1. Go to **Hub Manage** → **Console**
+2. Click **Launch Console**
+3. Enter credentials (Owner or Operator)
+4. Access player management tools
+5. Ban, warn, or join players in real-time
 
 ---
 
-## ⚙️ Configuration
+## 🔧 Configuration
 
 ### Damage Remote Detection
-- **Auto-detects** damage remotes by name matching:
-  - "damage"
-  - "hit"
-  - "attack"
-  - "deal"
+The hub **auto-detects** damage remotes by scanning for:
+- "damage"
+- "hit"
+- "attack"
+- "deal"
 
-### Custom Damage Remote
-1. Use Game Dumper to find the remote
-2. Click **⚙️ Set Damage Remote**
-3. Enter full path (e.g., `game.ReplicatedStorage.DealDamage`)
+### Tycoon Detection
+- Auto-detects player's tycoon type
+- Finds nearest tycoon by door proximity
+- Caches type for performance
+- Resets on character respawn
+
+### Tool Base System
+```lua
+Energy Sword → Stone
+Staff → Magic
+Axe → Storm
+Fist → Robotic
+```
 
 ---
 
 ## 🚀 Performance Tips
 
-- **Disable unused features** to improve FPS
-- **Auto Use Tools** uses RenderStepped (fast updates)
-- **No Cooldown** hooks wait functions
-- **Tool Follow** updates on Heartbeat
+- **Disable unused features** to maximize FPS
+- **Auto Use Tools** uses RenderStepped (fastest updates)
+- **No Cooldown** hooks wait/task.wait functions
+- **Tool Follow** updates on Heartbeat (60 FPS)
+- **Aura** runs on PreSimulation (physics-safe)
+- **Auto Build** includes 0.5s throttle to prevent spam
 
 ---
 
@@ -156,15 +218,43 @@ Click **🔍 Open Game Dumper** to scan:
 
 ### Services Used
 - `Players` - Player management
-- `RunService` - Loop connections
+- `RunService` - Loop connections (PreSimulation, RenderStepped, Heartbeat)
 - `ReplicatedStorage` - Remote detection
 - `CoreGui` - UI rendering
+- `HttpService` - JSON key/ban file handling
+- `TweenService` - UI animations
+- `UserInputService` - Input handling
 
-### Connection Types
-- `PreSimulation` - Damage/aura loop
-- `RenderStepped` - Tool activation
-- `Heartbeat` - Tool follow
-- `TouchTransmitter` - Hitbox detection
+### Loop Architecture
+- **PreSimulation** - Damage/aura/claim/build loops (physics-safe)
+- **RenderStepped** - Auto tool activation (high-frequency)
+- **Heartbeat** - Tool follow tracking (smooth motion)
+- **TouchTransmitter** - Hit box detection
+
+### Security Features
+- ✅ **Hardware ID Tracking** - `gethwid()` integration
+- ✅ **Time-Locked Keys** - 24-hour expiration
+- ✅ **Dual-Layer Bans** - User ID + HWID
+- ✅ **File Persistence** - JSON-based data storage
+- ✅ **Whitelisted Admin** - Username/password authentication
+- ✅ **Maintenance Mode** - Admin shutdown capability
+
+---
+
+## 🎨 UI Theme Colors
+
+```lua
+Base       = RGB(15, 15, 18)          -- Dark background
+Element    = RGB(22, 22, 26)          -- Card/panel background
+Accent     = RGB(190, 140, 255)       -- Purple accent
+AccentDark = RGB(140, 90, 200)        -- Dark purple
+Border     = RGB(35, 35, 42)          -- UI borders
+Text       = RGB(240, 240, 245)       -- Primary text
+SubText    = RGB(160, 160, 175)       -- Secondary text
+Danger     = RGB(220, 50, 50)         -- Red alerts
+Success    = RGB(50, 200, 100)        -- Green success
+Warning    = RGB(230, 180, 40)        -- Orange warnings
+```
 
 ---
 
@@ -197,4 +287,6 @@ This project is provided as-is. No warranty or support guaranteed.
 
 **Made with ⚡ for Power Tycoon**
 
-**Key:** `EXOSTAKEOVERR19$`
+**Architectural Integration Edition | ZyronX UI**
+
+**Key:** `EXOSTAKEOVERR19$` (24-hour expiration)
