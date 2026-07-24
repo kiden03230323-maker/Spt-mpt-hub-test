@@ -59,9 +59,7 @@ local function readFile(path)
 end
 
 local function writeFile(path, data)
-    if writefile then
-        pcall(writefile, path, data)
-    end
+    if writefile then pcall(writefile, path, data) end
 end
 
 local function readJSON(path)
@@ -75,15 +73,11 @@ end
 
 local function writeJSON(path, data)
     local success, encoded = pcall(HttpService.JSONEncode, HttpService, data)
-    if success then
-        writeFile(path, encoded)
-    end
+    if success then writeFile(path, encoded) end
 end
 
 local function getDeviceID()
-    if gethwid then
-        return gethwid()
-    end
+    if gethwid then return gethwid() end
     return tostring(player.UserId) .. "_HWID_FALLBACK"
 end
 
@@ -244,9 +238,7 @@ local function createKeySystem(onSuccess)
     end)
     
     input.FocusLost:Connect(function(enterPressed)
-        if enterPressed then
-            btn.MouseButton1Click:Fire()
-        end
+        if enterPressed then btn.MouseButton1Click:Fire() end
     end)
 end
 
@@ -860,13 +852,50 @@ local function getCost(obj)
     return 0 
 end
 
+-- ============================================
+-- SMART AUTO BUILD: TIERED PRIORITY SYSTEM
+-- ============================================
 local function getPriority(modelName)
     local name = modelName:lower()
-    if name:find("gear") then return 1 end
-    if name:find("wall") then return 2 end
-    if name:find("gen") then return 3 end
-    if name:find("door") then return 4 end
-    return 5
+    
+    -- Ignore Robux pads entirely as they require real money
+    if name:find("robux") then return 999 end
+    
+    local num = tonumber(name:match("%d+")) or 0
+    
+    -- Generators
+    if name:find("gen") and not name:find("gear") then
+        if num == 0 then return 10 end      -- First Gen
+        if num == 1 then return 11 end      -- Gen1
+        if num == 2 then return 30 end      -- Gen2
+        if num == 3 then return 31 end      -- Gen3
+        if num == 4 then return 50 end      -- Gen4
+        if num == 5 then return 60 end      -- Gen5
+        if num >= 6 then return 70 + num end -- Gen6, Gen7
+    end
+    
+    -- Weapons / Tools / Gear
+    if name:find("gear") or name:find("gun") then
+        if num <= 1 then return 20 end      -- First Tool
+        if num == 2 then return 21 end      -- GearGiver2
+        if num == 3 then return 55 end      -- GearGiver3
+        if num == 4 then return 65 end      -- GearGiver4
+        if num == 5 then return 66 end      -- GearGiver5
+        if num >= 6 then return 67 + num end
+    end
+    
+    -- Walls, Doors, Stairs, UpStairs
+    if name:find("wall") or name:find("door") or name:find("ladder") or name:find("upstairs") then
+        return 40 + num
+    end
+    
+    -- Endgame
+    if name:find("ultima") or name:find("effect") then
+        return 80
+    end
+    
+    -- Fallback (Shop, etc.)
+    return 90 + num
 end
 
 -- ============================================
@@ -1079,7 +1108,7 @@ function startAutoBuild()
     local lastBuyTime = 0
     buildConn = RunService.PreSimulation:Connect(function()
         if not AutoBuild then return end
-        if tick() - lastBuyTime < 0.5 then return end
+        if tick() - lastBuyTime < 0.5 then return end -- Prevents spam buying
 
         local myChar = player.Character
         if not myChar then return end
@@ -1096,7 +1125,7 @@ function startAutoBuild()
         
         local buttons = {}
         for _, obj in ipairs(tycoonFolder:GetDescendants()) do
-            if obj:IsA("Model") and (obj.Name:lower():find("button") or obj.Name:lower():find("btn")) then
+            if obj:IsA("Model") and (obj.Name:lower():find("button") or obj.Name:lower():find("btn") or obj.Name:lower():find("gen") or obj.Name:lower():find("wall") or obj.Name:lower():find("door") or obj.Name:lower():find("ladder") or obj.Name:lower():find("upstairs") or obj.Name:lower():find("gear") or obj.Name:lower():find("ultima")) then
                 local cost = getCost(obj)
                 if cost > 0 then
                     table.insert(buttons, {Model = obj, Cost = cost, Priority = getPriority(obj.Name)})
@@ -1160,7 +1189,6 @@ local SPT_Tab = Window:CreateTab("Super Power Tycoon", true, false)
 local SPT_Combat = SPT_Tab:CreatePage("Combat")
 local AuraSection = SPT_Combat:CreateSection("Multi-Target Aura")
 
--- NATIVE DROPDOWN FOR AURA TARGETS (Multi-Select enabled via 'true')
 AuraSection:AddDropdown("Select Aura Targets", getServerPlayers(), true, function(selectedNames)
     table.clear(Aura.TargetList)
     if selectedNames then
@@ -1192,7 +1220,6 @@ end, {
 
 local ToolFollowSection = SPT_Combat:CreateSection("Tool Follow")
 
--- NATIVE DROPDOWN FOR TOOL FOLLOW TARGETS (Multi-Select enabled via 'true')
 ToolFollowSection:AddDropdown("Select Tool Follow Targets", getServerPlayers(), true, function(selectedNames)
     table.clear(ToolFollow.Targets)
     if selectedNames then
@@ -1233,7 +1260,7 @@ TycoonCoreSection:AddToggle("Smart Auto Build", false, function(state)
     if state then startAutoBuild() else stopAutoBuild() end
 end, {
     Title = "Smart Auto Build",
-    Description = "Buys upgrades in priority order: Gear → Walls → Gen → Doors. Checks cash first!"
+    Description = "Buys upgrades in strict priority order: Gen1 -> Tools -> Gen2/3 -> Walls/Stairs -> Gen4 -> Gear3 -> Gen5 -> Gear4/5 -> Gen6/7 -> Endgame."
 })
 
 local AutoToolsSection = SPT_Tycoon:CreateSection("Auto Get Tools")
@@ -1470,7 +1497,7 @@ MPT_CombatSec:AddToggle("Fast Kill", false, function(state) InstantKill = state 
 
 local MPT_TycoonSec = MPT_Page:CreateSection("Tycoon Automation")
 MPT_TycoonSec:AddToggle("Auto Claim Money", false, function(state) AutoClaimMoney = state; if state then startClaimMoney() else stopClaimMoney() end end, {Title="Auto Claim Money", Description="Collects cash automatically."})
-MPT_TycoonSec:AddToggle("Smart Auto Build", false, function(state) AutoBuild = state; if state then startAutoBuild() else stopAutoBuild() end end, {Title="Smart Auto Build", Description="Buys upgrades in priority order."})
+MPT_TycoonSec:AddToggle("Smart Auto Build", false, function(state) AutoBuild = state; if state then startAutoBuild() else stopAutoBuild() end end, {Title="Smart Auto Build", Description="Buys upgrades in strict priority order."})
 
 local MPT_UtilsSec = MPT_Page:CreateSection("Utilities")
 MPT_UtilsSec:AddToggle("Fast Respawn", false, function(state) FastRespawn = state end, {Title="Fast Respawn", Description="Instant respawn."})
@@ -1533,7 +1560,7 @@ SavesCard:AddConfigManager("PowerTycoonHub_Config")
 -- ============================================
 Library:Notify({
     Title = "Power Tycoon Hub Loaded",
-    Description = "Architectural Master Edition initialized. Native Dropdowns active.",
+    Description = "Architectural Master Edition initialized. Smart Builder updated with Web Tycoon logic.",
     Duration = 4
 })
 
