@@ -1,7 +1,7 @@
 --[[
     ╔═══════════════════════════════════════════════════════════════╗
     ║  POWER TYCOON HUB - ARCHITECTURAL MASTER EDITION            ║
-    ║  Full SPT/MPT Features + Global Hub Dashboard + Premium UI  ║
+    ║  Full SPT/MPT Features + Anti-Aura Defense + Premium UI     ║
     ║  Owner: exo_blox | Co-Owner: city800                        ║
     ╚══════════════════════════════════════════════════════════════╝
 ]]
@@ -711,6 +711,10 @@ local claimConn = nil
 local buildConn = nil
 local cachedTycoonType = nil
 
+-- NEW: ANTI-AURA STATE
+local AntiAura = { Enabled = false, GodMode = false, Dodge = false, Repel = false }
+local antiAuraConn = nil
+
 -- ============================================
 -- GAME LOGIC: DAMAGE REMOTE DETECTION
 -- ============================================
@@ -857,44 +861,29 @@ end
 -- ============================================
 local function getPriority(modelName)
     local name = modelName:lower()
-    
-    -- Ignore Robux pads entirely as they require real money
     if name:find("robux") then return 999 end
-    
     local num = tonumber(name:match("%d+")) or 0
-    
-    -- Generators
     if name:find("gen") and not name:find("gear") then
-        if num == 0 then return 10 end      -- First Gen
-        if num == 1 then return 11 end      -- Gen1
-        if num == 2 then return 30 end      -- Gen2
-        if num == 3 then return 31 end      -- Gen3
-        if num == 4 then return 50 end      -- Gen4
-        if num == 5 then return 60 end      -- Gen5
-        if num >= 6 then return 70 + num end -- Gen6, Gen7
+        if num == 0 then return 10 end
+        if num == 1 then return 11 end
+        if num == 2 then return 30 end
+        if num == 3 then return 31 end
+        if num == 4 then return 50 end
+        if num == 5 then return 60 end
+        if num >= 6 then return 70 + num end
     end
-    
-    -- Weapons / Tools / Gear
     if name:find("gear") or name:find("gun") then
-        if num <= 1 then return 20 end      -- First Tool
-        if num == 2 then return 21 end      -- GearGiver2
-        if num == 3 then return 55 end      -- GearGiver3
-        if num == 4 then return 65 end      -- GearGiver4
-        if num == 5 then return 66 end      -- GearGiver5
+        if num <= 1 then return 20 end
+        if num == 2 then return 21 end
+        if num == 3 then return 55 end
+        if num == 4 then return 65 end
+        if num == 5 then return 66 end
         if num >= 6 then return 67 + num end
     end
-    
-    -- Walls, Doors, Stairs, UpStairs
     if name:find("wall") or name:find("door") or name:find("ladder") or name:find("upstairs") then
         return 40 + num
     end
-    
-    -- Endgame
-    if name:find("ultima") or name:find("effect") then
-        return 80
-    end
-    
-    -- Fallback (Shop, etc.)
+    if name:find("ultima") or name:find("effect") then return 80 end
     return 90 + num
 end
 
@@ -1108,7 +1097,7 @@ function startAutoBuild()
     local lastBuyTime = 0
     buildConn = RunService.PreSimulation:Connect(function()
         if not AutoBuild then return end
-        if tick() - lastBuyTime < 0.5 then return end -- Prevents spam buying
+        if tick() - lastBuyTime < 0.5 then return end
 
         local myChar = player.Character
         if not myChar then return end
@@ -1156,6 +1145,83 @@ end
 
 function stopAutoBuild()
     if buildConn then buildConn:Disconnect(); buildConn = nil end
+end
+
+-- ============================================
+-- NEW: ANTI KILL AURA (DEFENSE LOGIC)
+-- ============================================
+function startAntiAura()
+    if antiAuraConn then antiAuraConn:Disconnect() end
+    
+    -- Hooking TakeDamage to prevent health loss
+    if not getgenv().AntiAuraHooked then
+        pcall(function()
+            local oldTakeDamage
+            local hum = player.Character and player.Character:FindFirstChild("Humanoid")
+            if hum then
+                oldTakeDamage = hookfunction(hum.TakeDamage, function(self, amount)
+                    if AntiAura.Enabled and AntiAura.GodMode and self.Parent == player.Character then
+                        return 0
+                    end
+                    return oldTakeDamage(self, amount)
+                end)
+            end
+        end)
+        getgenv().AntiAuraHooked = true
+    end
+
+    antiAuraConn = RunService.Heartbeat:Connect(function()
+        if not AntiAura.Enabled then return end
+        local myChar = player.Character
+        if not myChar then return end
+        local root = myChar:FindFirstChild("HumanoidRootPart")
+        local hum = myChar:FindFirstChild("Humanoid")
+        
+        if root then
+            -- Force Network Ownership to prevent friend from moving us
+            for _, part in ipairs(myChar:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    pcall(function() part:SetNetworkOwner(player) end)
+                end
+            end
+            
+            -- Micro-Dodge (Breaks touch registration by shifting CFrame)
+            if AntiAura.Dodge then
+                local offset = Vector3.new(0, math.sin(tick() * 60) * 0.8, 0)
+                root.CFrame = root.CFrame + offset
+            end
+            
+            -- Repel (Pushes character away from incoming tools)
+            if AntiAura.Repel then
+                for _, otherPlr in ipairs(Players:GetPlayers()) do
+                    if otherPlr ~= player and otherPlr.Character then
+                        for _, tool in ipairs(otherPlr.Character:GetChildren()) do
+                            if tool:IsA("Tool") then
+                                local handle = tool:FindFirstChild("Handle") or tool:FindFirstChildWhichIsA("BasePart")
+                                if handle then
+                                    local dist = (handle.Position - root.Position).Magnitude
+                                    if dist < 12 then
+                                        local direction = (root.Position - handle.Position).Unit
+                                        root.AssemblyLinearVelocity = root.AssemblyLinearVelocity + direction * 80
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        
+        if hum and AntiAura.GodMode then
+            if hum.Health < hum.MaxHealth then
+                hum.Health = hum.MaxHealth
+            end
+        end
+    end)
+end
+
+function stopAntiAura()
+    if antiAuraConn then antiAuraConn:Disconnect(); antiAuraConn = nil end
 end
 
 -- ============================================
@@ -1240,6 +1306,38 @@ ToolFollowSection:AddToggle("Enable Tool Follow", false, function(state)
 end, {
     Title = "Enable Tool Follow",
     Description = "Forces your tools to follow and hit targets."
+})
+
+-- NEW: DEFENSE / ANTI-AURA SECTION
+local DefenseSection = SPT_Combat:CreateSection("Defense / Anti-Aura")
+
+DefenseSection:AddToggle("Enable Anti-Aura", false, function(state)
+    AntiAura.Enabled = state
+    if state then startAntiAura() else stopAntiAura() end
+end, {
+    Title = "Enable Anti-Aura",
+    Description = "Master toggle for anti-aura defenses. Counters Kill Aura users."
+})
+
+DefenseSection:AddToggle("God Mode (Anti-Damage)", false, function(state)
+    AntiAura.GodMode = state
+end, {
+    Title = "God Mode",
+    Description = "Blocks health reduction and heals instantly if hit."
+})
+
+DefenseSection:AddToggle("Micro-Dodge (Blink)", false, function(state)
+    AntiAura.Dodge = state
+end, {
+    Title = "Micro-Dodge",
+    Description = "Shifts your CFrame rapidly to break touch hitboxes."
+})
+
+DefenseSection:AddToggle("Repel (Anti-Touch)", false, function(state)
+    AntiAura.Repel = state
+end, {
+    Title = "Repel",
+    Description = "Pushes your character away from incoming tools."
 })
 
 -- Page 2: Tycoon
@@ -1560,7 +1658,7 @@ SavesCard:AddConfigManager("PowerTycoonHub_Config")
 -- ============================================
 Library:Notify({
     Title = "Power Tycoon Hub Loaded",
-    Description = "Architectural Master Edition initialized. Smart Builder updated with Web Tycoon logic.",
+    Description = "Architectural Master Edition initialized. Anti-Aura Defense Active.",
     Duration = 4
 })
 
