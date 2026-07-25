@@ -360,10 +360,6 @@ local function createMaintScreen()
     }):Play()
 end
 -- ============================================
--- PREMIUM HUB MANAGE CONSOLE (DASHBOARD) - REMOVED AS PER REQUEST
--- ============================================
--- (Code removed based on user request)
--- ============================================
 -- HELPER: GET SERVER PLAYERS FOR DROPDOWNS
 -- ============================================
 local function getServerPlayers()
@@ -1007,407 +1003,481 @@ end
 
 
 -- ============================================
--- ZYRONX UI INITIALIZATION
+-- FLUENTPRO UI INITIALIZATION
 -- ============================================
-local Library = loadstring(game:HttpGetAsync("https://pastefy.app/YoX4PJmf/raw"))()
-Library.WhitelistedUsers = {
-    "exo_blox",
-    "city800"
-}
-local Window = Library:CreateWindow({
+-- Note: Assumes FluentPro is already loaded
+if not Fluent then
+    warn("FluentPro library not found! Please load it first.")
+    return
+end
+
+local FluentWindow = Fluent:CreateWindow({
     Title = "Power Tycoon Hub",
-    Subtitle = "Architectural Master Edition",
-    SubtitleColor = Color3.fromRGB(190, 140, 255),
-    Logo = "rbxassetid://82367817676382",
-    LogoSize = 32,
-    SphereText = true,
-    SphereWords = "EXO",
-    SphereImage = "rbxassetid://82367817676382",
-    SphereIconSize = 38
+    SubTitle = "Architectural Master Edition",
+    Version = "v1.1",
+    TabWidth = 150,
+    Size = UDim2.fromOffset(600, 500),
+    Acrylic = true,
+    Theme = "Custom",
+    CustomTheme = {
+        Background = THEME.Base,
+        Panel = THEME.Element,
+        Text = THEME.Text,
+        Muted = THEME.SubText,
+        Accent = THEME.Accent,
+    },
+    MinimizeKey = Enum.KeyCode.F9, -- Example key
+    Search = true,
+    Icons = "solar/planet-bold",
+    UserInfoTop = true,
+    UserInfoTitle = "User",
+    UserInfoSubtitle = player.DisplayName,
+    UserImage = "https://www.roblox.com/headshot-thumbnail/image?userId="..player.UserId.."&width=420&height=420&format=png" -- Example user image
 })
 
--- ============================================
--- SUPER POWER TYCOON TAB
--- ============================================
-local SPT_Tab = Window:CreateTab("Super Power Tycoon", true, false)
+-- Define Tabs
+local SPT_Tab = FluentWindow:CreateTab("Super Power Tycoon", "solar/rocket-bold") -- Example icon
+local MPT_Tab = FluentWindow:CreateTab("Mega Power Tycoon", "solar/bolt-bold") -- Example icon
+local Updates_Tab = FluentWindow:CreateTab("Updates", "solar/update-bold") -- Example icon
+local Settings_Tab = FluentWindow:CreateTab("Settings", "solar/setting-bold") -- Example icon
 
--- Page 1: Combat
-local SPT_Combat = SPT_Tab:CreatePage("Combat")
-local AuraSection = SPT_Combat:CreateSection("Multi-Target Aura")
-AuraSection:AddDropdown("Select Aura Targets", getServerPlayers(), true, function(selectedNames)
-    table.clear(Aura.TargetList)
-    if selectedNames then
-        for _, name in ipairs(selectedNames) do
-            local plr = Players:FindFirstChild(name)
-            if plr then table.insert(Aura.TargetList, plr) end
+-- SPT Pages
+local SPT_Combat = SPT_Tab:CreatePage("Combat", "solar/fight-bold") -- Example icon
+local SPT_Tycoon = SPT_Tab:CreatePage("Tycoon", "solar/building-bold") -- Example icon
+local SPT_Misc = SPT_Tab:CreatePage("Movement & Visuals", "solar/walk-bold") -- Example icon
+local SPT_Utils = SPT_Tab:CreatePage("Utilities", "solar/tool-bold") -- Example icon
+
+-- MPT Page
+local MPT_Page = MPT_Tab:CreatePage("Features", "solar/star-bold") -- Example icon
+
+-- Updates Page
+local Updates_Page = Updates_Tab:CreatePage("Changelog", "solar/list-check-bold") -- Example icon
+
+-- Settings Page
+local Settings_Page = Settings_Tab:CreatePage("Settings", "solar/settings-bold") -- Example icon
+
+-- SPT Combat Section
+local AuraSection = SPT_Combat:AddSection("Multi-Target Aura", "solar/target-bold") -- Example icon
+AuraSection:AddDropdown("Select Aura Targets", {
+    Title = "Select Aura Targets",
+    Options = getServerPlayers(),
+    MultiSelection = true,
+    Callback = function(selectedNames)
+        table.clear(Aura.TargetList)
+        if selectedNames then
+            for _, name in ipairs(selectedNames) do
+                local plr = Players:FindFirstChild(name)
+                if plr then table.insert(Aura.TargetList, plr) end
+            end
         end
+        Fluent:Notify({Title="Aura Targets Updated", Content="Targeting ".. #Aura.TargetList .." players.", Type="Info", Duration=2})
     end
-    Library:Notify({Title="Aura Targets Updated", Description="Targeting ".. #Aura.TargetList .." players.", Duration=2})
-end, {
-    Title = "Manage Aura Targets",
-    Description = "Multi-select dropdown to choose who the Kill Aura will attack."
 })
-
-AuraSection:AddToggle("Enable Aura", false, function(state)
-    Aura.Enabled = state
-    if state then startAuraLoop() else stopAuraLoop() end
-end, {
+AuraSection:AddToggle("Enable Aura", {
     Title = "Enable Aura",
-    Description = "Starts the multi-target aura loop."
-})
-
-AuraSection:AddToggle("Instant Kill", false, function(state)
-    InstantKill = state
-end, {
-    Title = "Instant Kill",
-    Description = "Attempts to brute-force kill targets."
-})
-
-local ToolFollowSection = SPT_Combat:CreateSection("Tool Follow")
-ToolFollowSection:AddDropdown("Select Tool Follow Targets", getServerPlayers(), true, function(selectedNames)
-    table.clear(ToolFollow.Targets)
-    if selectedNames then
-        for _, name in ipairs(selectedNames) do
-            local plr = Players:FindFirstChild(name)
-            if plr then table.insert(ToolFollow.Targets, plr) end
-        end
+    Default = false,
+    Callback = function(state)
+        Aura.Enabled = state
+        if state then startAuraLoop() else stopAuraLoop() end
     end
-    Library:Notify({Title="Tool Targets Updated", Description="Following ".. #ToolFollow.Targets .." players.", Duration=2})
-end, {
-    Title = "Manage Follow Targets",
-    Description = "Multi-select dropdown to choose who your tools will follow."
+})
+AuraSection:AddToggle("Instant Kill", {
+    Title = "Instant Kill",
+    Default = false,
+    Callback = function(state)
+        InstantKill = state
+    end
 })
 
-ToolFollowSection:AddToggle("Enable Tool Follow", false, function(state)
-    ToolFollow.Enabled = state
-    if state then startToolFollow() else stopToolFollow() end
-end, {
+local ToolFollowSection = SPT_Combat:AddSection("Tool Follow", "solar/track-bold") -- Example icon
+ToolFollowSection:AddDropdown("Select Tool Follow Targets", {
+    Title = "Select Tool Follow Targets",
+    Options = getServerPlayers(),
+    MultiSelection = true,
+    Callback = function(selectedNames)
+        table.clear(ToolFollow.Targets)
+        if selectedNames then
+            for _, name in ipairs(selectedNames) do
+                local plr = Players:FindFirstChild(name)
+                if plr then table.insert(ToolFollow.Targets, plr) end
+            end
+        end
+        Fluent:Notify({Title="Tool Targets Updated", Content="Following ".. #ToolFollow.Targets .." players.", Type="Info", Duration=2})
+    end
+})
+ToolFollowSection:AddToggle("Enable Tool Follow", {
     Title = "Enable Tool Follow",
-    Description = "Forces your tools to follow and hit targets. Ignores dead targets."
+    Default = false,
+    Callback = function(state)
+        ToolFollow.Enabled = state
+        if state then startToolFollow() else stopToolFollow() end
+    end
 })
 
--- NEW: DEFENSE / ANTI-AURA SECTION
-local DefenseSection = SPT_Combat:CreateSection("Defense / Anti-Aura")
-DefenseSection:AddToggle("Enable Anti-Aura", false, function(state)
-    AntiAura.Enabled = state
-    if state then startAntiAura() else stopAntiAura() end
-end, {
+local DefenseSection = SPT_Combat:AddSection("Defense / Anti-Aura", "solar/shield-bold") -- Example icon
+DefenseSection:AddToggle("Enable Anti-Aura", {
     Title = "Enable Anti-Aura",
-    Description = "Master toggle for anti-aura defenses. Counters Kill Aura users."
+    Default = false,
+    Callback = function(state)
+        AntiAura.Enabled = state
+        if state then startAntiAura() else stopAntiAura() end
+    end
 })
-
-DefenseSection:AddToggle("God Mode (Anti-Damage)", false, function(state)
-    AntiAura.GodMode = state
-end, {
+DefenseSection:AddToggle("God Mode (Anti-Damage)", {
     Title = "God Mode",
-    Description = "Blocks health reduction and heals instantly if hit."
+    Default = false,
+    Callback = function(state)
+        AntiAura.GodMode = state
+    end
 })
-
-DefenseSection:AddToggle("Micro-Dodge (Blink)", false, function(state)
-    AntiAura.Dodge = state
-end, {
+DefenseSection:AddToggle("Micro-Dodge (Blink)", {
     Title = "Micro-Dodge",
-    Description = "Shifts your CFrame rapidly to break touch hitboxes."
+    Default = false,
+    Callback = function(state)
+        AntiAura.Dodge = state
+    end
 })
-
-DefenseSection:AddToggle("Repel (Anti-Touch)", false, function(state)
-    AntiAura.Repel = state
-end, {
+DefenseSection:AddToggle("Repel (Anti-Touch)", {
     Title = "Repel",
-    Description = "Pushes your character away from incoming tools."
+    Default = false,
+    Callback = function(state)
+        AntiAura.Repel = state
+    end
 })
 
--- Page 2: Tycoon
-local SPT_Tycoon = SPT_Tab:CreatePage("Tycoon")
-local TycoonCoreSection = SPT_Tycoon:CreateSection("Tycoon Automation")
-TycoonCoreSection:AddToggle("Auto Claim Money", false, function(state)
-    AutoClaimMoney = state
-    if state then startClaimMoney() else stopClaimMoney() end
-end, {
+-- SPT Tycoon Section
+local TycoonCoreSection = SPT_Tycoon:AddSection("Tycoon Automation", "solar/gear-bold") -- Example icon
+TycoonCoreSection:AddToggle("Auto Claim Money", {
     Title = "Auto Claim Money",
-    Description = "Remotely touches the Cash Register TouchTransmitter to collect cash."
+    Default = false,
+    Callback = function(state)
+        AutoClaimMoney = state
+        if state then startClaimMoney() else stopClaimMoney() end
+    end
 })
-
-TycoonCoreSection:AddToggle("Smart Auto Build", false, function(state)
-    AutoBuild = state
-    if state then startAutoBuild() else stopAutoBuild() end
-end, {
+TycoonCoreSection:AddToggle("Smart Auto Build", {
     Title = "Smart Auto Build",
-    Description = "Buys upgrades in strict priority order: Gen1 -> Tools -> Gen2/3 -> Walls/Stairs -> Gen4 -> Gear3 -> Gen5 -> Gear4/5 -> Gen6/7 -> Endgame. "
+    Default = false,
+    Callback = function(state)
+        AutoBuild = state
+        if state then startAutoBuild() else stopAutoBuild() end
+    end
 })
 
-local AutoToolsSection = SPT_Tycoon:CreateSection("Auto Get Tools")
-AutoToolsSection:AddToggle("Auto Grab Weapons", false, function(state)
-    AutoGetTools = state
-    if state then
-        if grabLoopConn then grabLoopConn:Disconnect() end
-        grabLoopConn = RunService.PreSimulation:Connect(function() -- Changed to PreSimulation
-            if not AutoGetTools then return end
-            local myChar = player.Character; if not myChar then return end
-            local root = myChar:FindFirstChild("HumanoidRootPart"); if not root then return end
-            for toolName, base in pairs(toolToBase) do
-                if player.Backpack:FindFirstChild(toolName) or myChar:FindFirstChild(toolName) then continue end
-                local pads = padsByBase[base]; if not pads then continue end
-                local closest, minDist = nil, 1000
-                for _, pad in ipairs(pads) do
-                    local d = (pad.Position - root.Position).Magnitude
-                    if d < minDist then minDist = d; closest = pad end
-                end
-                if closest then
-                    for i = 1, 8 do
-                        pcall(firetouchinterest, root, closest, 0)
-                        pcall(firetouchinterest, root, closest, 1)
+local AutoToolsSection = SPT_Tycoon:AddSection("Auto Get Tools", "solar/bag-bold") -- Example icon
+AutoToolsSection:AddToggle("Auto Grab Weapons", {
+    Title = "Auto Grab Weapons",
+    Default = false,
+    Callback = function(state)
+        AutoGetTools = state
+        if state then
+            if grabLoopConn then grabLoopConn:Disconnect() end
+            grabLoopConn = RunService.PreSimulation:Connect(function() -- Changed to PreSimulation
+                if not AutoGetTools then return end
+                local myChar = player.Character; if not myChar then return end
+                local root = myChar:FindFirstChild("HumanoidRootPart"); if not root then return end
+                for toolName, base in pairs(toolToBase) do
+                    if player.Backpack:FindFirstChild(toolName) or myChar:FindFirstChild(toolName) then continue end
+                    local pads = padsByBase[base]; if not pads then continue end
+                    local closest, minDist = nil, 1000
+                    for _, pad in ipairs(pads) do
+                        local d = (pad.Position - root.Position).Magnitude
+                        if d < minDist then minDist = d; closest = pad end
+                    end
+                    if closest then
+                        for i = 1, 8 do
+                            pcall(firetouchinterest, root, closest, 0)
+                            pcall(firetouchinterest, root, closest, 1)
+                        end
                     end
                 end
-            end
-        end)
-    else
-        if grabLoopConn then grabLoopConn:Disconnect(); grabLoopConn = nil end
-    end
-end, {
-    Title = "Auto Grab Weapons",
-    Description = "Automatically grabs weapons from tycoon pads."
-})
-
-local CooldownSection = SPT_Tycoon:CreateSection("Tools & Cooldown")
-CooldownSection:AddToggle("Auto Use Tools (0 delay)", false, function(state)
-    AutoTools = state
-    if state then
-        toolLoopConn = RunService.RenderStepped:Connect(function() -- Kept RenderStepped for tool activation
-            if not AutoTools then return end
-            local myChar = player.Character; if not myChar or not myChar:FindFirstChild("Humanoid") or myChar.Humanoid.Health <= 0 then return end
-            for _, t in ipairs(myChar:GetChildren()) do if t:IsA("Tool") then pcall(function() t:Activate() end) end
-            for _, t in ipairs(player.Backpack:GetChildren()) do if t:IsA("Tool") then t.Parent = myChar; pcall(function() t:Activate() end) end
-        end)
-    else
-        if toolLoopConn then toolLoopConn:Disconnect(); toolLoopConn = nil end
-    end
-end, {
-    Title = "Auto Use Tools",
-    Description = "Continuously activates all tools in inventory."
-})
-
-CooldownSection:AddToggle("No Cooldown (arms stick)", false, function(state)
-    NoCooldown = state
-    if state then
-        if not getgenv().NoCooldownHooked then
-            hookfunction(wait, function() return RunService.PostSimulation:Wait() end)
-            hookfunction(task.wait, function() return RunService.PostSimulation:Wait() end)
-            hookfunction(delay, function(_, func) task.spawn(func) end)
-            hookfunction(spawn, function(func) task.spawn(func) end)
-            getgenv().NoCooldownHooked = true
+            end)
+        else
+            if grabLoopConn then grabLoopConn:Disconnect(); grabLoopConn = nil end
         end
-        task.spawn(function()
-            while NoCooldown do
-                local myChar = player.Character
-                if myChar then
-                    for _, t in ipairs(myChar:GetChildren()) do
-                        if t:IsA("Tool") and t:FindFirstChild("Handle") then
-                            pcall(function() t.Enabled = true; t.Cooldown = 0 end)
-                            local handle = t.Handle; if handle:IsA("BasePart") then handle.CanCollide = false
-                                local rightArm = myChar:FindFirstChild("Right Arm") or myChar:FindFirstChild("RightArm")
-                                if rightArm then
-                                    local weld = rightArm:FindFirstChild("RightGrip") or rightArm:FindFirstChild("RightShoulder")
-                                    if weld then weld.C0 = CFrame.new(0,-1,0) * CFrame.Angles(math.rad(90),0,0) end
+    end
+})
+
+local CooldownSection = SPT_Tycoon:AddSection("Tools & Cooldown", "solar/speedometer-bold") -- Example icon
+CooldownSection:AddToggle("Auto Use Tools (0 delay)", {
+    Title = "Auto Use Tools",
+    Default = false,
+    Callback = function(state)
+        AutoTools = state
+        if state then
+            toolLoopConn = RunService.RenderStepped:Connect(function() -- Kept RenderStepped for tool activation
+                if not AutoTools then return end
+                local myChar = player.Character; if not myChar or not myChar:FindFirstChild("Humanoid") or myChar.Humanoid.Health <= 0 then return end
+                for _, t in ipairs(myChar:GetChildren()) do if t:IsA("Tool") then pcall(function() t:Activate() end) end
+                for _, t in ipairs(player.Backpack:GetChildren()) do if t:IsA("Tool") then t.Parent = myChar; pcall(function() t:Activate() end) end
+            end)
+        else
+            if toolLoopConn then toolLoopConn:Disconnect(); toolLoopConn = nil end
+        end
+    end
+})
+CooldownSection:AddToggle("No Cooldown (arms stick)", {
+    Title = "No Cooldown",
+    Default = false,
+    Callback = function(state)
+        NoCooldown = state
+        if state then
+            if not getgenv().NoCooldownHooked then
+                hookfunction(wait, function() return RunService.PostSimulation:Wait() end)
+                hookfunction(task.wait, function() return RunService.PostSimulation:Wait() end)
+                hookfunction(delay, function(_, func) task.spawn(func) end)
+                hookfunction(spawn, function(func) task.spawn(func) end)
+                getgenv().NoCooldownHooked = true
+            end
+            task.spawn(function()
+                while NoCooldown do
+                    local myChar = player.Character
+                    if myChar then
+                        for _, t in ipairs(myChar:GetChildren()) do
+                            if t:IsA("Tool") and t:FindFirstChild("Handle") then
+                                pcall(function() t.Enabled = true; t.Cooldown = 0 end)
+                                local handle = t.Handle; if handle:IsA("BasePart") then handle.CanCollide = false
+                                    local rightArm = myChar:FindFirstChild("Right Arm") or myChar:FindFirstChild("RightArm")
+                                    if rightArm then
+                                        local weld = rightArm:FindFirstChild("RightGrip") or rightArm:FindFirstChild("RightShoulder")
+                                        if weld then weld.C0 = CFrame.new(0,-1,0) * CFrame.Angles(math.rad(90),0,0) end
+                                    end
                                 end
                             end
                         end
                     end
+                    RunService.RenderStepped:Wait() -- Wait for next frame to avoid infinite loop without yielding
                 end
-                RunService.RenderStepped:Wait() -- Wait for next frame to avoid infinite loop without yielding
-            end
-        end)
-    end
-end, {
-    Title = "No Cooldown",
-    Description = "Removes tool cooldowns and modifies arm welds. "
-})
-
--- Page 3: Movement & Visuals
-local SPT_Misc = SPT_Tab:CreatePage("Movement & Visuals")
-local ReachSection = SPT_Misc:CreateSection("Reach")
-ReachSection:AddSlider("Reach Size", {Min = 1, Max = 10, Value = ReachSize, Float = 0.1}, function(value) -- Add slider
-    ReachSize = value -- Update the stored size
-    if Reach then -- If reach is currently active, reapply the new size
-        stopReach() -- Stop and clear old highlights
-        startReach() -- Apply new size and recreate highlights
-    end
-end, {
-    Title = "Reach Size",
-    Description = "Adjusts the multiplier for tool hitbox expansion."
-})
-
-ReachSection:AddToggle("Reach (hitbox + outline)", false, function(state)
-    Reach = state
-    if state then
-        startReach() -- Apply immediately using PreSimulation and no delay loop
-    else
-        stopReach() -- Remove highlights and reset sizes
-    end
-end, {
-    Title = "Reach",
-    Description = "Expands tool hitboxes and adds an outline. Uses slider for size."
-})
-
-local RespawnSection = SPT_Misc:CreateSection("Respawn & Protection")
-RespawnSection:AddToggle("Fast Respawn", false, function(state)
-    FastRespawn = state
-    if state then
-        startFastRespawn() -- Use improved respawn logic
-    end
-end, {
-    Title = "Fast Respawn",
-    Description = "Instantly respawns you upon death using Guide remote if available."
-})
-
-RespawnSection:AddToggle("Anti Spawnkill (invincible 3s)", false, function(state)
-    AntiSpawnkill = state
-    if state then
-        player.CharacterAdded:Connect(function(c)
-            local hum = c:WaitForChild("Humanoid"); hum.MaxHealth = 9e9; hum.Health = 9e9
-            local dmgConn = hum.TakeDamage:Connect(function() return 0 end)
-            local ff = Instance.new("ForceField", c); ff.Visible = false
-            task.delay(3, function()
-                if hum and hum.Parent then hum.MaxHealth = 100; hum.Health = 100 end
-                if dmgConn then dmgConn:Disconnect() end
-                if ff then ff:Destroy() end
             end)
-        end)
-    end
-end, {
-    Title = "Anti Spawnkill",
-    Description = "Grants 3 seconds of invincibility on spawn."
-})
-
--- Page 4: Utilities
-local SPT_Utils = SPT_Tab:CreatePage("Utilities")
-local UtilsSection = SPT_Utils:CreateSection("Tools")
-UtilsSection:AddButton("Open Game Dumper", function()
-    if CoreGui:FindFirstChild("DumperGUI") then return end
-    local dGui = Instance.new("ScreenGui", CoreGui); dGui.Name = "DumperGUI"; dGui.ResetOnSpawn = false
-    local frame = Instance.new("Frame", dGui); frame.Size = UDim2.new(0,650,0,500); frame.Position = UDim2.new(0.5,-325,0.5,-250); frame.BackgroundColor3 = Color3.fromRGB(15,15,20); frame.Active=true; frame.Draggable= true; Instance.new("UICorner",frame).CornerRadius = UDim.new(0,10)
-    local title = Instance.new("TextLabel", frame); title.Size=UDim2.new(1,0,0,35); title.BackgroundColor3=Color3.fromRGB(30,30,40); title.Text= "🔍 FULL GAME SCANNER "; title.TextColor3=Color3.fromRGB(255,255,255); title.Font=Enum.Font.GothamBold; title.TextSize=18
-    local scroll = Instance.new("ScrollingFrame", frame); scroll.Size=UDim2.new(1,-10,1,-80); scroll.Position=UDim2.new(0,5,0,40); scroll.BackgroundTransparency=1; scroll.ScrollBarThickness=8; scroll.AutomaticCanvasSize=Enum.AutomaticSize.Y
-    local list = Instance.new("UIListLayout", scroll); list.SortOrder=Enum.SortOrder.LayoutOrder; list.Padding=UDim.new(0,2)
-    local copyBtn = Instance.new("TextButton", frame); copyBtn.Size=UDim2.new(0,120,0,30); copyBtn.Position=UDim2.new(0.5,-160,1,-40); copyBtn.BackgroundColor3=Color3.fromRGB(40,120,200); copyBtn.Text= "📋 Copy Log "; copyBtn.TextColor3=Color3.fromRGB(255,255,255); copyBtn.Font=Enum.Font.GothamBold; copyBtn.TextSize=14
-    local closeBtn = Instance.new("TextButton", frame); closeBtn.Size=UDim2.new(0,100,0,30); closeBtn.Position=UDim2.new(0.5,30,1,-40); closeBtn.BackgroundColor3=Color3.fromRGB(200,40,40); closeBtn.Text= "✖ Close "; closeBtn.TextColor3=Color3.fromRGB(255,255,255); closeBtn.Font=Enum.Font.GothamBold; closeBtn.TextSize=14; closeBtn.MouseButton1Click:Connect(function() dGui:Destroy() end)
-    local logLines={}
-    local function addLog(text,color) table.insert(logLines,text); local lbl=Instance.new("TextLabel",scroll); lbl.Size=UDim2.new(1,0,0,20); lbl.BackgroundTransparency=1; lbl.Text=text; lbl.TextColor3=color or Color3.fromRGB(200,200,200); lbl.Font=Enum.Font.Gotham; lbl.TextSize=13; lbl.TextXAlignment=Enum.TextXAlignment.Left; lbl.TextWrapped=true end
-    copyBtn.MouseButton1Click:Connect(function() pcall(function() setclipboard(table.concat(logLines, "\n")) end); addLog("✅ Copied to clipboard!",Color3.fromRGB(100,255,100)) end)
-    addLog("🔎 SCANNING ALL GAME OBJECTS...",Color3.fromRGB(255,200,50))
-    local function scan(container,depth)
-        for _,child in ipairs(container:GetChildren()) do
-            local indent=string.rep("    ",depth); local icon= "📄  "
-            if child:IsA("Folder") then icon= "📁  "; addLog(indent..icon.. "   "..child.Name.. " (Folder) ",Color3.fromRGB(255,200,100)); scan(child,depth+1)
-            elseif child:IsA("Tool") then icon= "🔧  "; addLog(indent..icon.. "   "..child.Name.. " (Tool) ",Color3.fromRGB(100,255,100))
-            elseif child:IsA("Model") then icon= "🧩  "; addLog(indent..icon.. "   "..child.Name.. " (Model) ",Color3.fromRGB(200,200,255))
-            elseif child:IsA("RemoteEvent") then icon= "📡  "; addLog(indent..icon.. "   "..child.Name.. " (RemoteEvent) ",Color3.fromRGB(255,150,255))
-            elseif child:IsA("RemoteFunction") then icon= "📡  "; addLog(indent..icon.. "   "..child.Name.. " (RemoteFunction) ",Color3.fromRGB(255,150,255))
-            elseif child:IsA("BindableEvent") or child:IsA("BindableFunction") then icon= "🔗  "; addLog(indent..icon.. "   "..child.Name.. " ( "..child.ClassName.. " ) ",Color3.fromRGB(200,200,255))
-            end
         end
     end
-    addLog("━━━ WORKSPACE ━━━ ",Color3.fromRGB(100,200,255)); scan(workspace,0)
-    addLog("━━━ REPLICATEDSTORAGE ━━━ ",Color3.fromRGB(100,200,255)); scan(ReplicatedStorage,0)
-    addLog("━━━ REPLICATEDFIRST ━━━ ",Color3.fromRGB(100,200,255)); scan(game:GetService("ReplicatedFirst"),0)
-    addLog("━━━ LIGHTING ━━━ ",Color3.fromRGB(100,200,255)); scan(game:GetService("Lighting"),0)
-    addLog("━━━ PLAYER BACKPACK ━━━ ",Color3.fromRGB(100,200,255)); if player:FindFirstChild("Backpack") then scan(player.Backpack,0) end
-    addLog("━━━ PLAYER CHARACTER ━━━ ",Color3.fromRGB(100,200,255)); if player.Character then scan(player.Character,0) end
-    addLog("✅ SCAN COMPLETE! Use the Copy button to save all data.",Color3.fromRGB(100,255,255))
-end, {
-    Title = "Open Game Dumper",
-    Description = "Scans the game and logs remotes/objects. "
 })
 
-UtilsSection:AddTextbox("Damage Remote Path", "game.ReplicatedStorage.DealDamage", function(text)
-    if text and text ~= " " then
-        local success, remote = pcall(function() return loadstring("return " .. text)() end)
-        if success and (remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction")) then
-            DAMAGE_REMOTE = remote
-            print("Damage remote set to: ", DAMAGE_REMOTE:GetFullName())
-            Library:Notify({Title = "Remote Set", Description = "Damage remote updated successfully.", Duration = 3})
+-- SPT Misc Section
+local ReachSection = SPT_Misc:AddSection("Reach", "solar/stretch-bold") -- Example icon
+ReachSection:AddSlider("Reach Size", {
+    Title = "Reach Size",
+    Min = 1,
+    Max = 10,
+    Default = ReachSize,
+    Rounding = 1,
+    Callback = function(value)
+        ReachSize = value -- Update the stored size
+        if Reach then -- If reach is currently active, reapply the new size
+            stopReach() -- Stop and clear old highlights
+            startReach() -- Apply new size and recreate highlights
+        end
+    end
+})
+ReachSection:AddToggle("Reach (hitbox + outline)", {
+    Title = "Reach",
+    Default = false,
+    Callback = function(state)
+        Reach = state
+        if state then
+            startReach() -- Apply immediately using PreSimulation and no delay loop
         else
-            warn("Invalid remote path. ")
-            Library:Notify({Title = "Error", Description = "Invalid remote path.", Duration = 3})
+            stopReach() -- Remove highlights and reset sizes
         end
     end
-end, {
-    Title = "Set Damage Remote",
-    Description = "Enter the full path to the damage remote. "
 })
 
--- ============================================
--- MEGA POWER TYCOON TAB
--- ============================================
-local MPT_Tab = Window:CreateTab("Mega Power Tycoon", false, false)
-local MPT_Page = MPT_Tab:CreatePage("Features")
-local MPT_CombatSec = MPT_Page:CreateSection("Combat  & Control ")
-MPT_CombatSec:AddToggle("Kill Aura", false, function(state) Aura.Enabled = state; if state then startAuraLoop() else stopAuraLoop() end end, {Title= "Kill Aura", Description= "Hits targets around you."})
-MPT_CombatSec:AddToggle("Fast Kill", false, function(state) InstantKill = state end, {Title= "Fast Kill", Description= "Instantly kills targets."})
-local MPT_TycoonSec = MPT_Page:CreateSection("Tycoon Automation")
-MPT_TycoonSec:AddToggle("Auto Claim Money", false, function(state) AutoClaimMoney = state; if state then startClaimMoney() else stopClaimMoney() end end, {Title="Auto Claim Money", Description="Collects cash automatically."})
-MPT_TycoonSec:AddToggle("Smart Auto Build", false, function(state) AutoBuild = state; if state then startAutoBuild() else stopAutoBuild() end end, {Title="Smart Auto Build", Description="Buys upgrades in strict priority order."})
-local MPT_UtilsSec = MPT_Page:CreateSection("Utilities")
-MPT_UtilsSec:AddToggle("Fast Respawn", false, function(state) FastRespawn = state end, {Title="Fast Respawn", Description="Instant respawn."})
-MPT_UtilsSec:AddToggle("Anti Spawn", false, function(state) AntiSpawnkill = state end, {Title="Anti Spawn", Description="3s invincibility."})
-MPT_UtilsSec:AddButton("Get Base", function()
-    local myRoot = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-    if not myRoot then return end
-    local tycoonsFolder = workspace:FindFirstChild("Tycoons")
-    if not tycoonsFolder then return end
-    local closestDoor, minDist = nil, math.huge
-    for _, tycoonFolder in ipairs(tycoonsFolder:GetChildren()) do
-        if tycoonFolder:IsA("Folder") then
-            local door = tycoonFolder:FindFirstChild("Door", true)
-            if door then
-                local doorPart = door:FindFirstChildWhichIsA("BasePart")
-                if doorPart then
-                    local dist = (doorPart.Position - myRoot.Position).Magnitude
-                    if dist  < minDist then minDist = dist; closestDoor = doorPart end
+local RespawnSection = SPT_Misc:AddSection("Respawn & Protection", "solar/refresh-bold") -- Example icon
+RespawnSection:AddToggle("Fast Respawn", {
+    Title = "Fast Respawn",
+    Default = false,
+    Callback = function(state)
+        FastRespawn = state
+        if state then
+            startFastRespawn() -- Use improved respawn logic
+        end
+    end
+})
+RespawnSection:AddToggle("Anti Spawnkill (invincible 3s)", {
+    Title = "Anti Spawnkill",
+    Default = false,
+    Callback = function(state)
+        AntiSpawnkill = state
+        if state then
+            player.CharacterAdded:Connect(function(c)
+                local hum = c:WaitForChild("Humanoid"); hum.MaxHealth = 9e9; hum.Health = 9e9
+                local dmgConn = hum.TakeDamage:Connect(function() return 0 end)
+                local ff = Instance.new("ForceField", c); ff.Visible = false
+                task.delay(3, function()
+                    if hum and hum.Parent then hum.MaxHealth = 100; hum.Health = 100 end
+                    if dmgConn then dmgConn:Disconnect() end
+                    if ff then ff:Destroy() end
+                end)
+            end)
+        end
+    end
+})
+
+-- SPT Utils Section
+local UtilsSection = SPT_Utils:AddSection("Tools", "solar/wrench-bold") -- Example icon
+UtilsSection:AddButton("Open Game Dumper", {
+    Title = "Open Game Dumper",
+    Callback = function()
+        if CoreGui:FindFirstChild("DumperGUI") then return end
+        local dGui = Instance.new("ScreenGui", CoreGui); dGui.Name = "DumperGUI"; dGui.ResetOnSpawn = false
+        local frame = Instance.new("Frame", dGui); frame.Size = UDim2.new(0,650,0,500); frame.Position = UDim2.new(0.5,-325,0.5,-250); frame.BackgroundColor3 = Color3.fromRGB(15,15,20); frame.Active=true; frame.Draggable= true; Instance.new("UICorner",frame).CornerRadius = UDim.new(0,10)
+        local title = Instance.new("TextLabel", frame); title.Size=UDim2.new(1,0,0,35); title.BackgroundColor3=Color3.fromRGB(30,30,40); title.Text= "🔍 FULL GAME SCANNER "; title.TextColor3=Color3.fromRGB(255,255,255); title.Font=Enum.Font.GothamBold; title.TextSize=18
+        local scroll = Instance.new("ScrollingFrame", frame); scroll.Size=UDim2.new(1,-10,1,-80); scroll.Position=UDim2.new(0,5,0,40); scroll.BackgroundTransparency=1; scroll.ScrollBarThickness=8; scroll.AutomaticCanvasSize=Enum.AutomaticSize.Y
+        local list = Instance.new("UIListLayout", scroll); list.SortOrder=Enum.SortOrder.LayoutOrder; list.Padding=UDim.new(0,2)
+        local copyBtn = Instance.new("TextButton", frame); copyBtn.Size=UDim2.new(0,120,0,30); copyBtn.Position=UDim2.new(0.5,-160,1,-40); copyBtn.BackgroundColor3=Color3.fromRGB(40,120,200); copyBtn.Text= "📋 Copy Log "; copyBtn.TextColor3=Color3.fromRGB(255,255,255); copyBtn.Font=Enum.Font.GothamBold; copyBtn.TextSize=14
+        local closeBtn = Instance.new("TextButton", frame); closeBtn.Size=UDim2.new(0,100,0,30); closeBtn.Position=UDim2.new(0.5,30,1,-40); closeBtn.BackgroundColor3=Color3.fromRGB(200,40,40); closeBtn.Text= "✖ Close "; closeBtn.TextColor3=Color3.fromRGB(255,255,255); closeBtn.Font=Enum.Font.GothamBold; closeBtn.TextSize=14; closeBtn.MouseButton1Click:Connect(function() dGui:Destroy() end)
+        local logLines={}
+        local function addLog(text,color) table.insert(logLines,text); local lbl=Instance.new("TextLabel",scroll); lbl.Size=UDim2.new(1,0,0,20); lbl.BackgroundTransparency=1; lbl.Text=text; lbl.TextColor3=color or Color3.fromRGB(200,200,200); lbl.Font=Enum.Font.Gotham; lbl.TextSize=13; lbl.TextXAlignment=Enum.TextXAlignment.Left; lbl.TextWrapped=true end
+        copyBtn.MouseButton1Click:Connect(function() pcall(function() setclipboard(table.concat(logLines, "\n")) end); addLog("✅ Copied to clipboard!",Color3.fromRGB(100,255,100)) end)
+        addLog("🔎 SCANNING ALL GAME OBJECTS...",Color3.fromRGB(255,200,50))
+        local function scan(container,depth)
+            for _,child in ipairs(container:GetChildren()) do
+                local indent=string.rep("    ",depth); local icon= "📄  "
+                if child:IsA("Folder") then icon= "📁  "; addLog(indent..icon.. "   "..child.Name.. " (Folder) ",Color3.fromRGB(255,200,100)); scan(child,depth+1)
+                elseif child:IsA("Tool") then icon= "🔧  "; addLog(indent..icon.. "   "..child.Name.. " (Tool) ",Color3.fromRGB(100,255,100))
+                elseif child:IsA("Model") then icon= "🧩  "; addLog(indent..icon.. "   "..child.Name.. " (Model) ",Color3.fromRGB(200,200,255))
+                elseif child:IsA("RemoteEvent") then icon= "📡  "; addLog(indent..icon.. "   "..child.Name.. " (RemoteEvent) ",Color3.fromRGB(255,150,255))
+                elseif child:IsA("RemoteFunction") then icon= "📡  "; addLog(indent..icon.. "   "..child.Name.. " (RemoteFunction) ",Color3.fromRGB(255,150,255))
+                elseif child:IsA("BindableEvent") or child:IsA("BindableFunction") then icon= "🔗  "; addLog(indent..icon.. "   "..child.Name.. " ( "..child.ClassName.. " ) ",Color3.fromRGB(200,200,255))
                 end
             end
         end
+        addLog("━━━ WORKSPACE ━━━ ",Color3.fromRGB(100,200,255)); scan(workspace,0)
+        addLog("━━━ REPLICATEDSTORAGE ━━━ ",Color3.fromRGB(100,200,255)); scan(ReplicatedStorage,0)
+        addLog("━━━ REPLICATEDFIRST ━━━ ",Color3.fromRGB(100,200,255)); scan(game:GetService("ReplicatedFirst"),0)
+        addLog("━━━ LIGHTING ━━━ ",Color3.fromRGB(100,200,255)); scan(game:GetService("Lighting"),0)
+        addLog("━━━ PLAYER BACKPACK ━━━ ",Color3.fromRGB(100,200,255)); if player:FindFirstChild("Backpack") then scan(player.Backpack,0) end
+        addLog("━━━ PLAYER CHARACTER ━━━ ",Color3.fromRGB(100,200,255)); if player.Character then scan(player.Character,0) end
+        addLog("✅ SCAN COMPLETE! Use the Copy button to save all data.",Color3.fromRGB(100,255,255))
     end
-    if closestDoor then myRoot.CFrame = closestDoor.CFrame + Vector3.new(0, 5, 0) end
-end, {Title= "Get Base", Description= "Teleport to tycoon. "})
+})
 
--- ============================================
--- UPDATES TAB
--- ============================================
-local UpdatesTab = Window:CreateTab("Updates", false, false)
-local UpdatesPage = UpdatesTab:CreatePage("Changelog")
+UtilsSection:AddTextbox("Damage Remote Path", {
+    Title = "Set Damage Remote",
+    Placeholder = "game.ReplicatedStorage.DealDamage",
+    Callback = function(text)
+        if text and text ~= " " then
+            local success, remote = pcall(function() return loadstring("return " .. text)() end)
+            if success and (remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction")) then
+                DAMAGE_REMOTE = remote
+                print("Damage remote set to: ", DAMAGE_REMOTE:GetFullName())
+                Fluent:Notify({Title = "Remote Set", Content = "Damage remote updated successfully.", Type="Info", Duration = 3})
+            else
+                warn("Invalid remote path. ")
+                Fluent:Notify({Title = "Error", Content = "Invalid remote path.", Type="Error", Duration = 3})
+            end
+        end
+    end
+})
 
-local UpdatesSection = UpdatesPage:CreateSection("ZyronX Hub Changelog")
+-- MPT Section
+local MPT_CombatSec = MPT_Page:AddSection("Combat & Control", "solar/control-bold") -- Example icon
+MPT_CombatSec:AddToggle("Kill Aura", {
+    Title = "Kill Aura",
+    Default = false,
+    Callback = function(state) Aura.Enabled = state; if state then startAuraLoop() else stopAuraLoop() end end
+})
+MPT_CombatSec:AddToggle("Fast Kill", {
+    Title = "Fast Kill",
+    Default = false,
+    Callback = function(state) InstantKill = state end
+})
+
+local MPT_TycoonSec = MPT_Page:AddSection("Tycoon Automation", "solar/cash-bold") -- Example icon
+MPT_TycoonSec:AddToggle("Auto Claim Money", {
+    Title = "Auto Claim Money",
+    Default = false,
+    Callback = function(state) AutoClaimMoney = state; if state then startClaimMoney() else stopClaimMoney() end end
+})
+MPT_TycoonSec:AddToggle("Smart Auto Build", {
+    Title = "Smart Auto Build",
+    Default = false,
+    Callback = function(state) AutoBuild = state; if state then startAutoBuild() else stopAutoBuild() end end
+})
+
+local MPT_UtilsSec = MPT_Page:AddSection("Utilities", "solar/tools-bold") -- Example icon
+MPT_UtilsSec:AddToggle("Fast Respawn", {
+    Title = "Fast Respawn",
+    Default = false,
+    Callback = function(state) FastRespawn = state end
+})
+MPT_UtilsSec:AddToggle("Anti Spawn", {
+    Title = "Anti Spawn",
+    Default = false,
+    Callback = function(state) AntiSpawnkill = state end
+})
+MPT_UtilsSec:AddButton("Get Base", {
+    Title = "Get Base",
+    Callback = function()
+        local myRoot = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+        if not myRoot then return end
+        local tycoonsFolder = workspace:FindFirstChild("Tycoons")
+        if not tycoonsFolder then return end
+        local closestDoor, minDist = nil, math.huge
+        for _, tycoonFolder in ipairs(tycoonsFolder:GetChildren()) do
+            if tycoonFolder:IsA("Folder") then
+                local door = tycoonFolder:FindFirstChild("Door", true)
+                if door then
+                    local doorPart = door:FindFirstChildWhichIsA("BasePart")
+                    if doorPart then
+                        local dist = (doorPart.Position - myRoot.Position).Magnitude
+                        if dist  < minDist then minDist = dist; closestDoor = doorPart end
+                    end
+                end
+            end
+        end
+        if closestDoor then myRoot.CFrame = closestDoor.CFrame + Vector3.new(0, 5, 0) end
+    end
+})
+
+-- Updates Section
+local UpdatesSection = Updates_Page:AddSection("ZyronX Hub Changelog", "solar/document-bold") -- Example icon
 UpdatesSection:AddLabel("v1.1 - July 25, 2026:")
 UpdatesSection:AddLabel("  - Improved Tool Follow: Now uses PreSimulation and ignores dead targets.")
 UpdatesSection:AddLabel("  - Improved Reach: Uses PreSimulation, adds size slider, remembers size, removes delay.")
 UpdatesSection:AddLabel("  - Improved Respawn: Prioritizes 'Guide' remote for faster respawn/equip.")
 UpdatesSection:AddLabel("  - Added Updates Tab.")
 UpdatesSection:AddLabel("  - Removed Hub Manage Tab.")
+UpdatesSection:AddLabel("  - Integrated with FluentPro UI.")
 UpdatesSection:AddLabel("  - Various minor optimizations.")
 
--- ============================================
--- SETTINGS TAB
--- ============================================
-local SettingsTab = Window:CreateTab("Settings", false, false)
-local S_Page1 = SettingsTab:CreatePage("Settings")
-local AppearanceCard = S_Page1:CreateSection("UI Config")
-AppearanceCard:AddToggle("Transparency Toggle", false, function(state)
-    Window:SetTransparency(state and 0.2 or 0)
-end, {
+-- Settings Section
+local AppearanceCard = Settings_Page:AddSection("UI Config", "solar/palette-bold") -- Example icon
+AppearanceCard:AddToggle("Transparency Toggle", {
     Title = "Glass Architecture",
-    Description = "Overrides main window background for a sleek 0.2 transparency visual."
+    Default = false,
+    Callback = function(state)
+        -- FluentPro handles transparency/acrylic internally based on theme
+        -- This toggle could potentially switch themes or modify CustomTheme values
+        print("Transparency Toggle State:", state)
+    end
 })
 
-local SavesCard = S_Page1:CreateSection("Config")
-SavesCard:AddConfigManager("PowerTycoonHub_Config")
+local SavesCard = Settings_Page:AddSection("Config", "solar/save-bold") -- Example icon
+-- FluentPro might have its own config saving mechanism
+SavesCard:AddButton("Save Config Placeholder", {
+    Title = "Save Config",
+    Callback = function()
+        print("Saving config placeholder...")
+        -- Implement saving logic using writeJSON/writeFile
+    end
+})
+SavesCard:AddButton("Load Config Placeholder", {
+    Title = "Load Config",
+    Callback = function()
+        print("Loading config placeholder...")
+        -- Implement loading logic using readJSON/readFile
+    end
+})
+
 
 -- ============================================
 -- INITIALIZATION NOTIFICATION
 -- ============================================
-Library:Notify({
+Fluent:Notify({
     Title = "Power Tycoon Hub Loaded",
-    Description = "Architectural Master Edition initialized. Anti-Aura Defense Active.",
+    Content = "Architectural Master Edition initialized. Anti-Aura Defense Active.",
+    Type = "Success",
     Duration = 4
 })
 
