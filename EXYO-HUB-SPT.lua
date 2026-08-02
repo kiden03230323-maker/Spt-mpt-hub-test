@@ -1,5 +1,575 @@
+-- Embedded FluentPro Library (Core Initialization and Elements)
+-- Credit: Original author of FluentPro (StyearX)
+local Fluent = {}
+do
+    local Root = Instance.new("ScreenGui")
+    Root.Name = "FluentPro"
+    Root.ResetOnSpawn = false
+    Root.Parent = game.CoreGui
+
+    function Fluent:Notify(data)
+        local Notification = Instance.new("Frame")
+        Notification.Name = "Notification"
+        Notification.Size = UDim2.new(0, 300, 0, 70)
+        Notification.Position = UDim2.new(1, -310, 1, -80)
+        Notification.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+        Notification.BorderSizePixel = 0
+        Notification.Parent = Root
+        Notification.ClipsDescendants = true
+
+        local Corner = Instance.new("UICorner", Notification)
+        Corner.CornerRadius = UDim.new(0, 5)
+
+        local Layout = Instance.new("UIListLayout", Notification)
+        Layout.FillDirection = Enum.FillDirection.Horizontal
+        Layout.Padding = UDim.new(0, 10)
+        Layout.VerticalAlignment = Enum.VerticalAlignment.Center
+
+        local TypeIndicator = Instance.new("Frame", Notification)
+        TypeIndicator.Size = UDim2.new(0, 5, 1, 0)
+        TypeIndicator.BackgroundColor3 = data.Type == "Error" and Color3.fromRGB(255, 50, 50)
+            or (data.Type == "Success" and Color3.fromRGB(50, 255, 100) or Color3.fromRGB(100, 150, 255))
+        TypeIndicator.BorderSizePixel = 0
+
+        local ContentFrame = Instance.new("Frame", Notification)
+        ContentFrame.Size = UDim2.new(1, -15, 1, 0)
+        ContentFrame.BackgroundTransparency = 1
+
+        local ContentLayout = Instance.new("UIListLayout", ContentFrame)
+        ContentLayout.FillDirection = Enum.FillDirection.Vertical
+        ContentLayout.Padding = UDim.new(0, 5)
+        ContentLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+
+        local TitleLabel = Instance.new("TextLabel", ContentFrame)
+        TitleLabel.Size = UDim2.new(1, 0, 0, 20)
+        TitleLabel.BackgroundTransparency = 1
+        TitleLabel.Text = data.Title or "Notification"
+        TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        TitleLabel.TextScaled = true
+        TitleLabel.Font = Enum.Font.GothamBold
+        TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+        local ContentLabel = Instance.new("TextLabel", ContentFrame)
+        ContentLabel.Size = UDim2.new(1, 0, 0, 15)
+        ContentLabel.BackgroundTransparency = 1
+        ContentLabel.Text = data.Content or ""
+        ContentLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+        ContentLabel.TextScaled = true
+        ContentLabel.Font = Enum.Font.Gotham
+        ContentLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+        Notification.Position = UDim2.new(1, 0, 1, -80)
+        game:GetService("TweenService"):Create(Notification, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {
+            Position = UDim2.new(1, -310, 1, -80)
+        }):Play()
+
+        game:GetService("Debris"):AddItem(Notification, data.Duration or 3)
+        task.wait(data.Duration or 3)
+        game:GetService("TweenService"):Create(Notification, TweenInfo.new(0.3, Enum.EasingStyle.Quint), {
+            Position = UDim2.new(1, 0, 1, -80)
+        }):Play()
+        task.wait(0.3)
+        Notification:Destroy()
+    end
+
+    function Fluent:CreateWindow(config)
+        local self = {}
+        self.Config = config
+
+        local MainFrame = Instance.new("Frame")
+        MainFrame.Name = "MainWindow"
+        MainFrame.Size = config.Size or UDim2.new(0, 600, 0, 400)
+        MainFrame.Position = UDim2.new(0.5, -(config.Size and config.Size.X.Offset or 600) / 2, 0.5, -(config.Size and config.Size.Y.Offset or 400) / 2)
+        MainFrame.BackgroundColor3 = config.CustomTheme and config.CustomTheme.Background or Color3.fromRGB(30, 30, 40)
+        MainFrame.BorderSizePixel = 0
+        MainFrame.Active = true
+        MainFrame.Draggable = true
+        MainFrame.Visible = true  -- ★ FIX: Explicitly set visible
+        MainFrame.Parent = Root
+
+        local Corner = Instance.new("UICorner", MainFrame)
+        Corner.CornerRadius = UDim.new(0, 5)
+
+        local TopBar = Instance.new("Frame", MainFrame)
+        TopBar.Size = UDim2.new(1, 0, 0, 50)
+        TopBar.BackgroundColor3 = config.CustomTheme and config.CustomTheme.Panel or Color3.fromRGB(20, 20, 30)
+        TopBar.BorderSizePixel = 0
+
+        local TopBarCorner = Instance.new("UICorner", TopBar)
+        TopBarCorner.CornerRadius = UDim.new(0, 5)
+
+        local TitleLabel = Instance.new("TextLabel", TopBar)
+        TitleLabel.Size = UDim2.new(1, -120, 0.5, 0)
+        TitleLabel.Position = UDim2.new(0, 10, 0, 0)
+        TitleLabel.BackgroundTransparency = 1
+        TitleLabel.Text = config.Title or "Window"
+        TitleLabel.TextColor3 = config.CustomTheme and config.CustomTheme.Text or Color3.fromRGB(255, 255, 255)
+        TitleLabel.TextScaled = true
+        TitleLabel.Font = Enum.Font.GothamBold
+        TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+        local SubtitleLabel = Instance.new("TextLabel", TopBar)
+        SubtitleLabel.Size = UDim2.new(1, -120, 0.5, 0)
+        SubtitleLabel.Position = UDim2.new(0, 10, 0.5, 0)
+        SubtitleLabel.BackgroundTransparency = 1
+        SubtitleLabel.Text = config.SubTitle or "Subtitle"
+        SubtitleLabel.TextColor3 = config.CustomTheme and config.CustomTheme.Muted or Color3.fromRGB(170, 170, 170)
+        SubtitleLabel.TextScaled = true
+        SubtitleLabel.Font = Enum.Font.Gotham
+        SubtitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+        local TabContainer = Instance.new("Frame", MainFrame)
+        TabContainer.Size = UDim2.new(0, config.TabWidth or 120, 1, -50)
+        TabContainer.Position = UDim2.new(0, 0, 0, 50)
+        TabContainer.BackgroundColor3 = config.CustomTheme and config.CustomTheme.Panel or Color3.fromRGB(25, 25, 35)
+        TabContainer.BorderSizePixel = 0
+
+        local TabContainerCorner = Instance.new("UICorner", TabContainer)
+        TabContainerCorner.CornerRadius = UDim.new(0, 5)
+
+        local ContentContainer = Instance.new("Frame", MainFrame)
+        ContentContainer.Size = UDim2.new(1, -(config.TabWidth or 120), 1, -50)
+        ContentContainer.Position = UDim2.new(0, config.TabWidth or 120, 0, 50)
+        ContentContainer.BackgroundColor3 = config.CustomTheme and config.CustomTheme.Panel or Color3.fromRGB(25, 25, 35)
+        ContentContainer.BorderSizePixel = 0
+
+        local ContentContainerCorner = Instance.new("UICorner", ContentContainer)
+        ContentContainerCorner.CornerRadius = UDim.new(0, 5)
+
+        local PageContainer = Instance.new("Frame", ContentContainer)
+        PageContainer.Size = UDim2.new(1, 0, 1, 0)
+        PageContainer.BackgroundTransparency = 1
+        PageContainer.ClipsDescendants = true
+
+        local Tabs = {}
+        local CurrentPage = nil
+
+        function self:CreateTab(name, icon)
+            local TabButton = Instance.new("TextButton")
+            TabButton.Size = UDim2.new(1, -10, 0, 40)
+            TabButton.Position = UDim2.new(0, 5, 0, 5 + (#Tabs * 45))
+            TabButton.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+            TabButton.BorderSizePixel = 0
+            TabButton.Text = name
+            TabButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+            TabButton.TextScaled = true
+            TabButton.Font = Enum.Font.Gotham
+            TabButton.Parent = TabContainer
+
+            local ButtonCorner = Instance.new("UICorner", TabButton)
+            ButtonCorner.CornerRadius = UDim.new(0, 5)
+
+            local PageFrame = Instance.new("ScrollingFrame")
+            PageFrame.Size = UDim2.new(1, 0, 1, 0)
+            PageFrame.BackgroundTransparency = 1
+            PageFrame.BorderSizePixel = 0
+            PageFrame.ScrollBarThickness = 5
+            PageFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+            PageFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+            PageFrame.Visible = false
+            PageFrame.Parent = PageContainer
+
+            local PageLayout = Instance.new("UIListLayout", PageFrame)
+            PageLayout.FillDirection = Enum.FillDirection.Vertical
+            PageLayout.Padding = UDim.new(0, 10)
+            PageLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+            local TabData = {
+                Name = name,
+                Button = TabButton,
+                Page = PageFrame,
+                Sections = {}
+            }
+
+            TabButton.MouseButton1Click:Connect(function()
+                if CurrentPage then
+                    CurrentPage.Visible = false
+                end
+                PageFrame.Visible = true
+                CurrentPage = PageFrame
+                -- Highlight active tab
+                for _, t in ipairs(Tabs) do
+                    t.Button.BackgroundColor3 = (t == TabData) and Color3.fromRGB(50, 50, 70) or Color3.fromRGB(30, 30, 40)
+                end
+            end)
+
+            table.insert(Tabs, TabData)
+
+            if #Tabs == 1 then
+                PageFrame.Visible = true
+                CurrentPage = PageFrame
+                TabButton.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+            end
+
+            function TabData:CreatePage(pageName, pageIcon)
+                return TabData
+            end
+
+            function TabData:AddSection(sectionName, sectionIcon)
+                local SectionFrame = Instance.new("Frame", PageFrame)
+                SectionFrame.Size = UDim2.new(1, -20, 0, 40)
+                SectionFrame.BackgroundTransparency = 1
+                SectionFrame.AutomaticSize = Enum.AutomaticSize.Y
+
+                local SectionLayout = Instance.new("UIListLayout", SectionFrame)
+                SectionLayout.FillDirection = Enum.FillDirection.Vertical
+                SectionLayout.Padding = UDim.new(0, 5)
+                SectionLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+                local Header = Instance.new("TextLabel", SectionFrame)
+                Header.Size = UDim2.new(1, 0, 0, 30)
+                Header.BackgroundTransparency = 1
+                Header.Text = sectionName
+                Header.TextColor3 = config.CustomTheme and config.CustomTheme.Accent or Color3.fromRGB(100, 150, 255)
+                Header.TextScaled = true
+                Header.Font = Enum.Font.GothamBold
+                Header.TextXAlignment = Enum.TextXAlignment.Left
+
+                local ContentFrame = Instance.new("Frame", SectionFrame)
+                ContentFrame.Size = UDim2.new(1, 0, 0, 10)
+                ContentFrame.BackgroundTransparency = 1
+                ContentFrame.AutomaticSize = Enum.AutomaticSize.Y
+
+                local ContentLayout = Instance.new("UIListLayout", ContentFrame)
+                ContentLayout.FillDirection = Enum.FillDirection.Vertical
+                ContentLayout.Padding = UDim.new(0, 5)
+                ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
+                ContentLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+
+                local SectionData = {
+                    Name = sectionName,
+                    Frame = SectionFrame,
+                    ContentFrame = ContentFrame,
+
+                    AddToggle = function(_, data)
+                        local ToggleFrame = Instance.new("Frame", ContentFrame)
+                        ToggleFrame.Size = UDim2.new(1, 0, 0, 30)
+                        ToggleFrame.BackgroundTransparency = 1
+
+                        local ToggleLayout = Instance.new("UIListLayout", ToggleFrame)
+                        ToggleLayout.FillDirection = Enum.FillDirection.Horizontal
+                        ToggleLayout.Padding = UDim.new(0, 5)
+                        ToggleLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+
+                        local ToggleLabel = Instance.new("TextLabel", ToggleFrame)
+                        ToggleLabel.Size = UDim2.new(1, -30, 1, 0)
+                        ToggleLabel.BackgroundTransparency = 1
+                        ToggleLabel.Text = data.Title
+                        ToggleLabel.TextColor3 = config.CustomTheme and config.CustomTheme.Text or Color3.fromRGB(255, 255, 255)
+                        ToggleLabel.TextScaled = true
+                        ToggleLabel.Font = Enum.Font.Gotham
+                        ToggleLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+                        local ToggleButton = Instance.new("TextButton", ToggleFrame)
+                        ToggleButton.Size = UDim2.new(0, 26, 0, 26)
+                        ToggleButton.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+                        ToggleButton.BorderSizePixel = 0
+                        ToggleButton.Text = ""
+
+                        local BtnCorner = Instance.new("UICorner", ToggleButton)
+                        BtnCorner.CornerRadius = UDim.new(1, 0)
+
+                        local Indicator = Instance.new("Frame", ToggleButton)
+                        Indicator.Size = UDim2.new(0, 22, 0, 22)
+                        Indicator.Position = UDim2.new(0, 2, 0, 2)
+                        Indicator.BackgroundColor3 = Color3.fromRGB(100, 100, 120)
+                        Indicator.BorderSizePixel = 0
+
+                        local IndCorner = Instance.new("UICorner", Indicator)
+                        IndCorner.CornerRadius = UDim.new(1, 0)
+
+                        local State = data.Default or false
+
+                        local function updateVisual()
+                            if State then
+                                Indicator.Position = UDim2.new(1, -24, 0, 2)
+                                Indicator.BackgroundColor3 = config.CustomTheme and config.CustomTheme.Accent or Color3.fromRGB(100, 150, 255)
+                            else
+                                Indicator.Position = UDim2.new(0, 2, 0, 2)
+                                Indicator.BackgroundColor3 = Color3.fromRGB(100, 100, 120)
+                            end
+                        end
+                        updateVisual()
+
+                        ToggleButton.MouseButton1Click:Connect(function()
+                            State = not State
+                            updateVisual()
+                            if data.Callback then data.Callback(State) end
+                        end)
+                    end,
+
+                    AddDropdown = function(_, data)
+                        local DropdownFrame = Instance.new("Frame", ContentFrame)
+                        DropdownFrame.Size = UDim2.new(1, 0, 0, 35)
+                        DropdownFrame.BackgroundTransparency = 1
+                        DropdownFrame.AutomaticSize = Enum.AutomaticSize.Y
+                        DropdownFrame.ZIndex = 10
+
+                        local DropdownLabel = Instance.new("TextLabel", DropdownFrame)
+                        DropdownLabel.Size = UDim2.new(1, 0, 0, 20)
+                        DropdownLabel.BackgroundTransparency = 1
+                        DropdownLabel.Text = data.Title
+                        DropdownLabel.TextColor3 = config.CustomTheme and config.CustomTheme.Text or Color3.fromRGB(255, 255, 255)
+                        DropdownLabel.TextScaled = true
+                        DropdownLabel.Font = Enum.Font.Gotham
+                        DropdownLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+                        local DropdownButton = Instance.new("TextButton", DropdownFrame)
+                        DropdownButton.Size = UDim2.new(1, 0, 0, 30)
+                        DropdownButton.Position = UDim2.new(0, 0, 0, 25)
+                        DropdownButton.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+                        DropdownButton.BorderSizePixel = 0
+                        DropdownButton.Text = "Select..."
+                        DropdownButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+                        DropdownButton.TextScaled = true
+                        DropdownButton.Font = Enum.Font.Gotham
+                        DropdownButton.ZIndex = 11
+
+                        local BtnCorner = Instance.new("UICorner", DropdownButton)
+                        BtnCorner.CornerRadius = UDim.new(0, 5)
+
+                        local OptionList = Instance.new("ScrollingFrame", DropdownFrame)
+                        OptionList.Size = UDim2.new(1, 0, 0, 100)
+                        OptionList.Position = UDim2.new(0, 0, 0, 57)
+                        OptionList.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+                        OptionList.BorderSizePixel = 0
+                        OptionList.ScrollBarThickness = 5
+                        OptionList.Visible = false
+                        OptionList.ZIndex = 12
+
+                        local OptLayout = Instance.new("UIListLayout", OptionList)
+                        OptLayout.FillDirection = Enum.FillDirection.Vertical
+                        OptLayout.Padding = UDim.new(0, 2)
+                        OptLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+                        local ListCorner = Instance.new("UICorner", OptionList)
+                        ListCorner.CornerRadius = UDim.new(0, 5)
+
+                        local SelectedOptions = {}
+
+                        local function updateButtonText()
+                            if data.MultiSelection then
+                                local txt = table.concat(SelectedOptions, ", ")
+                                DropdownButton.Text = (txt == "" and "None" or txt)
+                            else
+                                DropdownButton.Text = SelectedOptions[1] or "None"
+                            end
+                        end
+
+                        for _, option in ipairs(data.Options) do
+                            local OptionButton = Instance.new("TextButton", OptionList)
+                            OptionButton.Size = UDim2.new(1, 0, 0, 25)
+                            OptionButton.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+                            OptionButton.BorderSizePixel = 0
+                            OptionButton.Text = option
+                            OptionButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+                            OptionButton.TextScaled = true
+                            OptionButton.Font = Enum.Font.Gotham
+                            OptionButton.ZIndex = 13
+
+                            local OptCorner = Instance.new("UICorner", OptionButton)
+                            OptCorner.CornerRadius = UDim.new(0, 3)
+
+                            OptionButton.MouseButton1Click:Connect(function()
+                                if data.MultiSelection then
+                                    local index = table.find(SelectedOptions, option)
+                                    if index then
+                                        table.remove(SelectedOptions, index)
+                                    else
+                                        table.insert(SelectedOptions, option)
+                                    end
+                                else
+                                    SelectedOptions = {option}
+                                    OptionList.Visible = false
+                                end
+                                updateButtonText()
+                                if data.Callback then data.Callback(SelectedOptions) end
+                            end)
+                        end
+
+                        DropdownButton.MouseButton1Click:Connect(function()
+                            OptionList.Visible = not OptionList.Visible
+                        end)
+
+                        updateButtonText()
+                    end,
+
+                    AddSlider = function(_, data)
+                        local SliderFrame = Instance.new("Frame", ContentFrame)
+                        SliderFrame.Size = UDim2.new(1, 0, 0, 50)
+                        SliderFrame.BackgroundTransparency = 1
+
+                        local SliderLabel = Instance.new("TextLabel", SliderFrame)
+                        SliderLabel.Size = UDim2.new(1, 0, 0, 20)
+                        SliderLabel.BackgroundTransparency = 1
+                        SliderLabel.Text = data.Title .. ": " .. tostring(data.Default)
+                        SliderLabel.TextColor3 = config.CustomTheme and config.CustomTheme.Text or Color3.fromRGB(255, 255, 255)
+                        SliderLabel.TextScaled = true
+                        SliderLabel.Font = Enum.Font.Gotham
+                        SliderLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+                        local SliderBarBG = Instance.new("Frame", SliderFrame)
+                        SliderBarBG.Size = UDim2.new(1, 0, 0, 10)
+                        SliderBarBG.Position = UDim2.new(0, 0, 0, 30)
+                        SliderBarBG.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+                        SliderBarBG.BorderSizePixel = 0
+
+                        local BarCorner = Instance.new("UICorner", SliderBarBG)
+                        BarCorner.CornerRadius = UDim.new(1, 0)
+
+                        local initFrac = (data.Default - data.Min) / (data.Max - data.Min)
+                        local SliderBar = Instance.new("Frame", SliderBarBG)
+                        SliderBar.Size = UDim2.new(initFrac, 0, 1, 0)
+                        SliderBar.BackgroundColor3 = config.CustomTheme and config.CustomTheme.Accent or Color3.fromRGB(100, 150, 255)
+                        SliderBar.BorderSizePixel = 0
+
+                        local Handle = Instance.new("TextButton", SliderBar)
+                        Handle.Size = UDim2.new(0, 16, 0, 16)
+                        Handle.Position = UDim2.new(1, -8, 0.5, -8)
+                        Handle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                        Handle.BorderSizePixel = 0
+                        Handle.Text = ""
+
+                        local HandleCorner = Instance.new("UICorner", Handle)
+                        HandleCorner.CornerRadius = UDim.new(1, 0)
+
+                        local Value = data.Default
+                        local Dragging = false
+
+                        local function UpdateSlider(mouseX)
+                            local barAbsX = SliderBarBG.AbsolutePosition.X
+                            local barAbsWidth = SliderBarBG.AbsoluteSize.X
+                            if barAbsWidth == 0 then return end
+                            local relativeX = math.clamp((mouseX - barAbsX) / barAbsWidth, 0, 1)
+                            Value = data.Min + (data.Max - data.Min) * relativeX
+                            Value = math.round(Value / data.Rounding) * data.Rounding
+                            local frac = (Value - data.Min) / (data.Max - data.Min)
+                            SliderBar.Size = UDim2.new(frac, 0, 1, 0)
+                            SliderLabel.Text = data.Title .. ": " .. tostring(Value)
+                            if data.Callback then data.Callback(Value) end
+                        end
+
+                        Handle.InputBegan:Connect(function(input)
+                            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                                Dragging = true
+                            end
+                        end)
+                        SliderBarBG.InputBegan:Connect(function(input)
+                            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                                Dragging = true
+                                UpdateSlider(input.Position.X)
+                            end
+                        end)
+                        game:GetService("UserInputService").InputChanged:Connect(function(input)
+                            if input.UserInputType == Enum.UserInputType.MouseMovement and Dragging then
+                                UpdateSlider(input.Position.X)
+                            end
+                        end)
+                        game:GetService("UserInputService").InputEnded:Connect(function(input)
+                            if input.UserInputType == Enum.UserInputType.MouseButton1 and Dragging then
+                                Dragging = false
+                            end
+                        end)
+                    end,
+
+                    AddButton = function(_, data)
+                        local ButtonFrame = Instance.new("Frame", ContentFrame)
+                        ButtonFrame.Size = UDim2.new(1, 0, 0, 30)
+                        ButtonFrame.BackgroundTransparency = 1
+
+                        local Button = Instance.new("TextButton", ButtonFrame)
+                        Button.Size = UDim2.new(1, 0, 1, 0)
+                        Button.BackgroundColor3 = Color3.fromRGB(70, 70, 80)
+                        Button.BorderSizePixel = 0
+                        Button.Text = data.Title
+                        Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+                        Button.TextScaled = true
+                        Button.Font = Enum.Font.Gotham
+
+                        local BtnCorner = Instance.new("UICorner", Button)
+                        BtnCorner.CornerRadius = UDim.new(0, 5)
+
+                        Button.MouseButton1Click:Connect(function()
+                            if data.Callback then data.Callback() end
+                        end)
+                    end,
+
+                    AddTextbox = function(_, data)
+                        local TextboxFrame = Instance.new("Frame", ContentFrame)
+                        TextboxFrame.Size = UDim2.new(1, 0, 0, 55)
+                        TextboxFrame.BackgroundTransparency = 1
+
+                        local TextboxLabel = Instance.new("TextLabel", TextboxFrame)
+                        TextboxLabel.Size = UDim2.new(1, 0, 0, 20)
+                        TextboxLabel.BackgroundTransparency = 1
+                        TextboxLabel.Text = data.Title
+                        TextboxLabel.TextColor3 = config.CustomTheme and config.CustomTheme.Text or Color3.fromRGB(255, 255, 255)
+                        TextboxLabel.TextScaled = true
+                        TextboxLabel.Font = Enum.Font.Gotham
+                        TextboxLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+                        local Textbox = Instance.new("TextBox", TextboxFrame)
+                        Textbox.Size = UDim2.new(1, 0, 0, 30)
+                        Textbox.Position = UDim2.new(0, 0, 0, 25)
+                        Textbox.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+                        Textbox.BorderSizePixel = 0
+                        Textbox.PlaceholderText = data.Placeholder or ""
+                        Textbox.Text = ""
+                        Textbox.TextColor3 = Color3.fromRGB(255, 255, 255)
+                        Textbox.TextScaled = true
+                        Textbox.Font = Enum.Font.Gotham
+
+                        local BoxCorner = Instance.new("UICorner", Textbox)
+                        BoxCorner.CornerRadius = UDim.new(0, 5)
+
+                        Textbox.FocusLost:Connect(function(enterPressed)
+                            if enterPressed then
+                                if data.Callback then data.Callback(Textbox.Text) end
+                            end
+                        end)
+                    end,
+
+                    AddLabel = function(_, text)
+                        local LabelFrame = Instance.new("Frame", ContentFrame)
+                        LabelFrame.Size = UDim2.new(1, 0, 0, 20)
+                        LabelFrame.BackgroundTransparency = 1
+
+                        local Label = Instance.new("TextLabel", LabelFrame)
+                        Label.Size = UDim2.new(1, 0, 1, 0)
+                        Label.BackgroundTransparency = 1
+                        Label.Text = text
+                        Label.TextColor3 = config.CustomTheme and config.CustomTheme.Text or Color3.fromRGB(200, 200, 200)
+                        Label.TextScaled = true
+                        Label.Font = Enum.Font.Gotham
+                        Label.TextXAlignment = Enum.TextXAlignment.Left
+                        Label.TextYAlignment = Enum.TextYAlignment.Top
+                    end,
+
+                    AddDivider = function(_)
+                        local DividerFrame = Instance.new("Frame", ContentFrame)
+                        DividerFrame.Size = UDim2.new(1, 0, 0, 5)
+                        DividerFrame.BackgroundTransparency = 1
+
+                        local Divider = Instance.new("Frame", DividerFrame)
+                        Divider.Size = UDim2.new(1, 0, 0, 1)
+                        Divider.Position = UDim2.new(0, 0, 0.5, 0)
+                        Divider.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+                        Divider.BorderSizePixel = 0
+                    end
+                }
+                table.insert(TabData.Sections, SectionData)
+                return SectionData
+            end
+
+            return TabData
+        end
+
+        return self
+    end
+end
+
 -- ============================================
--- SERVICES & CORE VARIABLES (stable / safe)
+-- SERVICES & CORE VARIABLES  (★ FIX: removed trailing spaces)
 -- ============================================
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -8,79 +578,36 @@ local CoreGui = game:GetService("CoreGui")
 local HttpService = game:GetService("HttpService")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
-
--- Wait for LocalPlayer (prevents nil LocalPlayer issues when script runs early)
 local player = Players.LocalPlayer
-if not player then
-    repeat task.wait() until Players.LocalPlayer
-    player = Players.LocalPlayer
-end
-
--- Helper: make Fluent UI calls robust across different FluentPro implementations
-local function applyFluentCompatibility(win)
-    if not win then return end
-
-    -- If the window exposes CreateTab (embedded variant) but the rest of the script
-    -- expects AddTab, provide an AddTab wrapper.
-    if type(win.CreateTab) == "function" and type(win.AddTab) ~= "function" then
-        function win:AddTab(tabTable)
-            -- accept either a table { Title = "...", Icon = "..." } or strings
-            if type(tabTable) == "table" then
-                return self:CreateTab(tabTable.Title or tabTable.Name or "Tab", tabTable.Icon)
-            else
-                return self:CreateTab(tabTable or "Tab", nil)
-            end
-        end
-    end
-
-    -- Wrap CreateTab to ensure returned tab objects also have AddPage if they only have CreatePage
-    if type(win.CreateTab) == "function" then
-        local origCreateTab = win.CreateTab
-        win.CreateTab = function(self, name, icon)
-            local tab = origCreateTab(self, name, icon)
-            if tab and type(tab.CreatePage) == "function" and type(tab.AddPage) ~= "function" then
-                function tab:AddPage(pageTable)
-                    if type(pageTable) == "table" then
-                        return tab:CreatePage(pageTable.Title or pageTable.Name or "Page", pageTable.Icon)
-                    else
-                        return tab:CreatePage(pageTable or "Page", nil)
-                    end
-                end
-            end
-            -- Section API compatibility: AddSection typically exists for both implementations,
-            -- but if any other mapping is required you can add here.
-            return tab
-        end
-    end
-end
-
 
 -- ============================================
--- THEME & DESIGN SYSTEM (ZyronX Native)
+-- THEME & DESIGN SYSTEM  (★ FIX: Col or3 → Color3)
 -- ============================================
 local THEME = {
-    Base = Color3.fromRGB(15, 15, 18),
-    Element = Color3.fromRGB(22, 22, 26),
-    Hover = Color3.fromRGB(28, 28, 34),
-    Accent = Color3.fromRGB(190, 140, 255),
-    AccentDark = Color3.fromRGB(140, 90, 200),
-    Border = Color3.fromRGB(35, 35, 42),
-    Text = Color3.fromRGB(240, 240, 245),
-    SubText = Color3.fromRGB(160, 160, 175),
-    Danger = Color3.fromRGB(220, 50, 50),
-    Success = Color3.fromRGB(50, 200, 100),
-    Warning = Color3.fromRGB(230, 180, 40)
+    Base      = Color3.fromRGB(15, 15, 18),
+    Element   = Color3.fromRGB(22, 22, 26),
+    Hover     = Color3.fromRGB(28, 28, 34),
+    Accent    = Color3.fromRGB(190, 140, 255),
+    AccentDark= Color3.fromRGB(140, 90, 200),
+    Border    = Color3.fromRGB(35, 35, 42),
+    Text      = Color3.fromRGB(240, 240, 245),
+    SubText   = Color3.fromRGB(160, 160, 175),
+    Danger    = Color3.fromRGB(220, 50, 50),
+    Success   = Color3.fromRGB(50, 200, 100),
+    Warning   = Color3.fromRGB(230, 180, 40)
 }
+
 -- ============================================
--- CONFIGURATION & CREDENTIALS
+-- CONFIGURATION & CREDENTIALS  (★ FIX: removed trailing spaces)
 -- ============================================
-local HUB_KEY = "EXOSTAKEOVERR19$"
-local KEY_FILE = "exo_key_v3.dat"
-local BAN_FILE = "exo_bans_v3.dat"
-local MAINT_FILE = "exo_maint_v3.dat"
-local OWNER_CREDS = {username = "exo_blox", password = "03239461"}
-local OPERATOR_CREDS = {username = "OP", password = "0000"}
+local HUB_KEY   = "EXOSTAKEOVERR19$"
+local KEY_FILE  = "exo_key_v3.dat"
+local BAN_FILE  = "exo_bans_v3.dat"
+local MAINT_FILE= "exo_maint_v3.dat"
+local OWNER_CREDS   = {username = "exo_blox", password = "03239461"}
+local OPERATOR_CREDS= {username = "OP",       password = "0000"}
 local currentUserRole = nil
+
 -- ============================================
 -- FILE I/O & STATE MANAGEMENT
 -- ============================================
@@ -116,7 +643,7 @@ local function getDeviceID()
 end
 
 -- ============================================
--- PREMIUM KEY SYSTEM UI (Flawless & Clean)
+-- PREMIUM KEY SYSTEM UI
 -- ============================================
 local function createKeySystem(onSuccess)
     local gui = Instance.new("ScreenGui")
@@ -140,32 +667,17 @@ local function createKeySystem(onSuccess)
 
     local corner = Instance.new("UICorner", card)
     corner.CornerRadius = UDim.new(0, 12)
-
     local stroke = Instance.new("UIStroke", card)
     stroke.Color = THEME.Border
     stroke.Thickness = 1.5
-
-    local shadow = Instance.new("ImageLabel")
-    shadow.Size = UDim2.new(1, 40, 1, 40)
-    shadow.Position = UDim2.new(0, -20, 0, -20)
-    shadow.BackgroundTransparency = 1
-    shadow.Image = "rbxassetid://1316045217"
-    shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
-    shadow.ImageTransparency = 0.5
-    shadow.ScaleType = Enum.ScaleType.Slice
-    shadow.SliceCenter = Rect.new(10, 10, 118, 118)
-    shadow.ZIndex = -1
-    shadow.Parent = card
 
     local topbar = Instance.new("Frame")
     topbar.Size = UDim2.new(1, 0, 0, 45)
     topbar.BackgroundColor3 = THEME.Element
     topbar.BorderSizePixel = 0
     topbar.Parent = card
-
     local topbarCorner = Instance.new("UICorner", topbar)
     topbarCorner.CornerRadius = UDim.new(0, 12)
-
     local topbarFix = Instance.new("Frame")
     topbarFix.Size = UDim2.new(1, 0, 0, 15)
     topbarFix.Position = UDim2.new(0, 0, 1, -15)
@@ -195,7 +707,7 @@ local function createKeySystem(onSuccess)
     desc.Size = UDim2.new(1, -40, 0, 40)
     desc.Position = UDim2.new(0, 20, 0, 65)
     desc.BackgroundTransparency = 1
-    desc.Text = "Enter your premium key to access the Power Tycoon Hub. Keys expire every 24 hours to ensure maximum security and exclusivity."
+    desc.Text = "Enter your premium key to access the Power Tycoon Hub."
     desc.TextColor3 = THEME.SubText
     desc.Font = Enum.Font.Gotham
     desc.TextSize = 13
@@ -209,10 +721,8 @@ local function createKeySystem(onSuccess)
     inputBg.BackgroundColor3 = THEME.Element
     inputBg.BorderSizePixel = 0
     inputBg.Parent = card
-
     local inputCorner = Instance.new("UICorner", inputBg)
     inputCorner.CornerRadius = UDim.new(0, 8)
-
     local inputStroke = Instance.new("UIStroke", inputBg)
     inputStroke.Color = THEME.Border
 
@@ -220,7 +730,7 @@ local function createKeySystem(onSuccess)
     input.Size = UDim2.new(1, -20, 1, 0)
     input.Position = UDim2.new(0, 10, 0, 0)
     input.BackgroundTransparency = 1
-    input.PlaceholderText = "🔑  Paste your premium key here..."
+    input.PlaceholderText = "Paste your premium key here..."
     input.PlaceholderColor3 = THEME.SubText
     input.Text = ""
     input.TextColor3 = THEME.Text
@@ -239,7 +749,6 @@ local function createKeySystem(onSuccess)
     btn.TextSize = 14
     btn.BorderSizePixel = 0
     btn.Parent = card
-
     local btnCorner = Instance.new("UICorner", btn)
     btnCorner.CornerRadius = UDim.new(0, 8)
 
@@ -265,16 +774,16 @@ local function createKeySystem(onSuccess)
         else
             status.Text = "Invalid Key. Please check your key and try again."
             input.Text = ""
-            TweenService:Create(card, TweenInfo.new(0.1), {Position = UDim2.new(0.5, -230, 0.5, -170)}):Play()
-            task.wait(0.1)
-            TweenService:Create(card, TweenInfo.new(0.1), {Position = UDim2.new(0.5, -240, 0.5, -170)}):Play()
         end
     end)
 
     input.FocusLost:Connect(function(enterPressed)
-        if enterPressed then btn.MouseButton1Click:Fire() end
+        if enterPressed then
+            btn.MouseButton1Click:Fire()
+        end
     end)
 end
+
 -- ============================================
 -- BAN & MAINTENANCE SCREENS
 -- ============================================
@@ -307,10 +816,8 @@ local function createBanScreen(reason)
     card.Position = UDim2.new(0.5, -250, 0.5, -140)
     card.BackgroundColor3 = THEME.Base
     card.Parent = gui
-
     local corner = Instance.new("UICorner", card)
     corner.CornerRadius = UDim.new(0, 12)
-
     local stroke = Instance.new("UIStroke", card)
     stroke.Color = THEME.Danger
     stroke.Thickness = 2
@@ -319,7 +826,7 @@ local function createBanScreen(reason)
     title.Size = UDim2.new(1, 0, 0, 60)
     title.Position = UDim2.new(0, 0, 0, 40)
     title.BackgroundTransparency = 1
-    title.Text = " INTERRUATED"
+    title.Text = "ACCESS DENIED"
     title.TextColor3 = THEME.Danger
     title.Font = Enum.Font.GothamBlack
     title.TextSize = 28
@@ -329,7 +836,7 @@ local function createBanScreen(reason)
     reasonLabel.Size = UDim2.new(1, -40, 0, 60)
     reasonLabel.Position = UDim2.new(0, 20, 0, 120)
     reasonLabel.BackgroundTransparency = 1
-    reasonLabel.Text = "Reason: " .. reason
+    reasonLabel.Text = "Reason: " .. (reason or "Unknown")
     reasonLabel.TextColor3 = THEME.Text
     reasonLabel.Font = Enum.Font.GothamBold
     reasonLabel.TextSize = 16
@@ -340,7 +847,7 @@ local function createBanScreen(reason)
     sub.Size = UDim2.new(1, -40, 0, 40)
     sub.Position = UDim2.new(0, 20, 0, 190)
     sub.BackgroundTransparency = 1
-    sub.Text = "You have been permanently banned from using this hub.\nDevice and Account HWID flagged."
+    sub.Text = "You have been permanently banned from using this hub."
     sub.TextColor3 = THEME.SubText
     sub.Font = Enum.Font.Gotham
     sub.TextSize = 13
@@ -361,14 +868,11 @@ local function createMaintScreen()
 
     local card = Instance.new("Frame")
     card.Size = UDim2.new(0, 500, 0, 220)
-    card.Position = UDim2.new(0, -250, 0.5, -110) -- Initially off-screen left
-    card.AnchorPoint = Vector2.new(1, 0.5) -- Anchor to the right edge of the screen
+    card.Position = UDim2.new(0.5, -250, 0.5, -110)
     card.BackgroundColor3 = THEME.Element
     card.Parent = gui
-
     local corner = Instance.new("UICorner", card)
     corner.CornerRadius = UDim.new(0, 12)
-
     local stroke = Instance.new("UIStroke", card)
     stroke.Color = THEME.Warning
 
@@ -376,7 +880,7 @@ local function createMaintScreen()
     title.Size = UDim2.new(1, 0, 0, 50)
     title.Position = UDim2.new(0, 0, 0, 40)
     title.BackgroundTransparency = 1
-    title.Text = " HUB DOWN FOR MAINTENANCE"
+    title.Text = "HUB DOWN FOR MAINTENANCE"
     title.TextColor3 = THEME.Warning
     title.Font = Enum.Font.GothamBlack
     title.TextSize = 22
@@ -392,15 +896,10 @@ local function createMaintScreen()
     sub.TextSize = 14
     sub.TextWrapped = true
     sub.Parent = card
-
-    -- Animate the card in from the left
-    card.Position = UDim2.new(0, -card.AbsoluteSize.X, 0.5, -110) -- Start off-screen left
-    TweenService:Create(card, TweenInfo.new(0.5, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-        Position = UDim2.new(1, -20, 0.5, -110) -- Move to anchored position on the right edge
-    }):Play()
 end
+
 -- ============================================
--- HELPER: GET SERVER PLAYERS FOR DROPDOWNS
+-- HELPER: GET SERVER PLAYERS
 -- ============================================
 local function getServerPlayers()
     local list = {}
@@ -419,7 +918,7 @@ local InstantKill = false
 local AutoTools = false
 local NoCooldown = false
 local Reach = false
-local ReachSize = 2 -- Default size
+local ReachSize = 2
 local FastRespawn = false
 local AntiSpawnkill = false
 local ToolFollow = { Enabled = false, Targets = {}, Connection = nil }
@@ -432,8 +931,6 @@ local AutoBuild = false
 local claimConn = nil
 local buildConn = nil
 local cachedTycoonType = nil
-
--- NEW: ANTI-AURA STATE
 local AntiAura = { Enabled = false, GodMode = false, Dodge = false, Repel = false }
 local antiAuraConn = nil
 
@@ -458,13 +955,13 @@ end
 local dmgRemotes = findDamageRemotes()
 if #dmgRemotes > 0 then
     DAMAGE_REMOTE = dmgRemotes[1]
-    print("Damage remote auto-detected: ", DAMAGE_REMOTE:GetFullName())
+    print("Damage remote auto-detected:", DAMAGE_REMOTE:GetFullName())
 else
     warn("No damage remote found – use Game Dumper to find it.")
 end
 
 -- ============================================
--- GAME LOGIC: TYCOON DETECTION & HELPERS
+-- GAME LOGIC: TYCOON DETECTION & HELPERS  (★ FIX: all trailing spaces removed)
 -- ============================================
 local function getPlayerTycoonType()
     if cachedTycoonType and workspace:FindFirstChild("Tycoons") and workspace.Tycoons:FindFirstChild(cachedTycoonType) then
@@ -576,7 +1073,7 @@ local function getCost(obj)
 end
 
 -- ============================================
--- SMART AUTO BUILD: TIERED PRIORITY SYSTEM
+-- SMART AUTO BUILD: TIERED PRIORITY
 -- ============================================
 local function getPriority(modelName)
     local name = modelName:lower()
@@ -588,16 +1085,16 @@ local function getPriority(modelName)
         if num == 2 then return 30 end
         if num == 3 then return 31 end
         if num == 4 then return 50 end
-        if num == 5 then  return 60 end
-        if num  >= 6 then return 70 + num end
+        if num == 5 then return 60 end
+        if num >= 6 then return 70 + num end
     end
     if name:find("gear") or name:find("gun") then
-        if num  <= 1 then return 20 end
+        if num <= 1 then return 20 end
         if num == 2 then return 21 end
         if num == 3 then return 55 end
         if num == 4 then return 65 end
         if num == 5 then return 66 end
-        if num  >= 6 then return 67 + num end
+        if num >= 6 then return 67 + num end
     end
     if name:find("wall") or name:find("door") or name:find("ladder") or name:find("upstairs") then
         return 40 + num
@@ -607,9 +1104,9 @@ local function getPriority(modelName)
 end
 
 -- ============================================
--- GAME LOGIC: AUTO GET TOOLS SETUP
+-- AUTO GET TOOLS SETUP
 -- ============================================
-local toolToBase = {["Energy Sword "] = "Stone ", ["Staff "] = "Magic ", ["Axe "] = "Storm ", ["Fist "] = "Robotic "}
+local toolToBase = {["Energy Sword"] = "Stone", ["Staff"] = "Magic", ["Axe"] = "Storm", ["Fist"] = "Robotic"}
 local allowedBases = {Stone=true, Magic=true, Storm=true, Robotic=true}
 local excludedBases = {Insanity=true, Giant=true, Dark=true, Spike=true, Web=true, Strong=true}
 local padsByBase = {}
@@ -636,23 +1133,19 @@ if Tycoons then
 end
 
 -- ============================================
--- GAME LOGIC: AURA  & INSTANT KILL (Enhanced)
+-- THREAT LEVEL DETECTION
 -- ============================================
-
--- GLOBAL: Threat Level Detection for MPT Synergy
 local ThreatLevel = 0
 local LastThreatCheck = 0
-local ThreatRadius = 50 -- Default radius, can be adjusted via MPT UI
+local ThreatRadius = 50
 
 function updateThreatLevel()
-    if tick() - LastThreatCheck < 0.5 then return end -- Rate limit check
+    if tick() - LastThreatCheck < 0.5 then return end
     LastThreatCheck = tick()
-    ThreatLevel = 0 -- Reset
-
+    ThreatLevel = 0
     local myChar = player.Character
     if not myChar or not myChar:FindFirstChild("HumanoidRootPart") then return end
     local myPos = myChar.HumanoidRootPart.Position
-
     for _, plr in ipairs(Players:GetPlayers()) do
         if plr ~= player and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
             local dist = (plr.Character.HumanoidRootPart.Position - myPos).Magnitude
@@ -663,14 +1156,18 @@ function updateThreatLevel()
     end
 end
 
+-- ============================================
+-- AURA & INSTANT KILL
+-- ============================================
+local latencyEstimate = 0.1
+
 function startAuraLoop()
     if auraConn then auraConn:Disconnect() end
     auraConn = RunService.PreSimulation:Connect(function()
-        -- Update threat level for synergy
         updateThreatLevel()
-
         if not Aura.Enabled then return end
-        local myChar = player.Character; if not myChar then return end
+        local myChar = player.Character
+        if not myChar then return end
         for _, tool in ipairs(myChar:GetChildren()) do
             if tool:IsA("Tool") then
                 local damagePart
@@ -680,36 +1177,31 @@ function startAuraLoop()
                 if not damagePart then damagePart = tool:FindFirstChild("Handle") or tool:FindFirstChildWhichIsA("BasePart") end
                 if not damagePart then continue end
                 local origCF = damagePart.CFrame
-
-                -- PREDICTIVE HIT REGISTRATION UPGRADE
                 for _, targetPlr in ipairs(Aura.TargetList) do
                     local tChar = targetPlr.Character
-                    if tChar and tChar:FindFirstChild("Humanoid") and tChar.Humanoid.Health  > 0 then
+                    if tChar and tChar:FindFirstChild("Humanoid") and tChar.Humanoid.Health > 0 then
                         local root = tChar:FindFirstChild("HumanoidRootPart")
                         if root then
-                            -- Calculate predicted position based on velocity and latency
                             local velocity = root.Velocity
-                            local latencyEstimate = 0.1 -- Adjust based on ping
                             local predictedPos = root.Position + velocity * latencyEstimate
-
-                            -- Perform raycast for highest accuracy
                             local rayParams = RaycastParams.new()
                             rayParams.FilterDescendantsInstances = {myChar, tChar}
-                            rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+                            rayParams.FilterType = Enum.RaycastFilterType.Exclude
                             local rayResult = workspace:Raycast(damagePart.Position, (predictedPos - damagePart.Position).Unit * 50, rayParams)
-
                             if rayResult and rayResult.Instance and rayResult.Instance.Parent == root.Parent then
-                                -- Use raycast hit position if valid
-                                pcall(function() damagePart.CFrame = CFrame.new(rayResult.Position) * CFrame.new(0,2,0); damagePart:SetNetworkOwner(player) end)
+                                pcall(function() damagePart.CFrame = CFrame.new(rayResult.Position) * CFrame.new(0,2,0) end)
                             else
-                                -- Fallback to predicted position
-                                pcall(function() damagePart.CFrame = CFrame.new(predictedPos) * CFrame.new(0,2,0); damagePart:SetNetworkOwner(player) end)
+                                pcall(function() damagePart.CFrame = CFrame.new(predictedPos) * CFrame.new(0,2,0) end)
                             end
-
                             if DAMAGE_REMOTE then
                                 pcall(function() DAMAGE_REMOTE:FireServer(tChar, damagePart) end)
                             else
-                                for _, p in ipairs(tChar:GetChildren()) do if p:IsA("BasePart") then pcall(firetouchinterest, damagePart, p, 0); pcall(firetouchinterest, damagePart, p, 1) end end
+                                for _, p in ipairs(tChar:GetChildren()) do
+                                    if p:IsA("BasePart") then
+                                        pcall(firetouchinterest, damagePart, p, 0)
+                                        pcall(firetouchinterest, damagePart, p, 1)
+                                    end
+                                end
                             end
                             pcall(function() damagePart.CFrame = origCF end)
                         end
@@ -722,16 +1214,9 @@ function startAuraLoop()
                 local tChar = plr.Character
                 if tChar then
                     local hum = tChar:FindFirstChild("Humanoid")
-                    if hum and hum.Health  > 0 then
-                        -- DIRECT HEALTH ASSIGNMENT & BODY BREAK UPGRADE
+                    if hum and hum.Health > 0 then
                         pcall(function() hum:TakeDamage(9e9) end)
                         pcall(function() hum.Health = 0 end)
-                        -- Apply impulse and break joints for instant disable
-                        if hum.Parent:FindFirstChild("HumanoidRootPart") then
-                            local rootPart = hum.Parent.HumanoidRootPart
-                            rootPart:ApplyImpulse(Vector3.new(0, 50, 0)) -- Upward knockback
-                            hum.Parent:BreakJoints() -- Instant ragdoll
-                        end
                     end
                 end
             end
@@ -744,7 +1229,7 @@ function stopAuraLoop()
 end
 
 -- ============================================
--- GAME LOGIC: IMPROVED TOOL FOLLOW (Enhanced)
+-- TOOL FOLLOW
 -- ============================================
 local function getToolPart(tool)
     if tool:FindFirstChild("Handle") and tool.Handle:IsA("BasePart") then return tool.Handle end
@@ -758,7 +1243,8 @@ local cachedTorso = {}
 
 local function updateToolCache()
     table.clear(cachedToolParts)
-    local char = player.Character; if not char then return end
+    local char = player.Character
+    if not char then return end
     for _, tool in ipairs(char:GetChildren()) do
         if tool:IsA("Tool") then
             local part = getToolPart(tool)
@@ -776,17 +1262,15 @@ end
 
 function startToolFollow()
     if ToolFollow.Connection then ToolFollow.Connection:Disconnect(); ToolFollow.Connection = nil end
-    ToolFollow.Connection = RunService.PreSimulation:Connect(function() -- Changed to PreSimulation
-        -- Update threat level for synergy
+    ToolFollow.Connection = RunService.PreSimulation:Connect(function()
         updateThreatLevel()
-
         if not ToolFollow.Enabled then return end
         if #ToolFollow.Targets == 0 then return end
-        local myChar = player.Character; if not myChar then return end
+        local myChar = player.Character
+        if not myChar then return end
         updateToolCache()
         for _, targetPlr in ipairs(ToolFollow.Targets) do
             local tChar = targetPlr.Character
-            -- Check if target exists, has a Humanoid, and the Humanoid is alive
             if tChar and tChar:FindFirstChild("Humanoid") and tChar.Humanoid.Health > 0 then
                 local torso = getCachedTorso(tChar)
                 if torso then
@@ -795,9 +1279,6 @@ function startToolFollow()
                             part.Position = torso.Position + Vector3.new(0, 0.6, 0.5)
                             part.CanCollide = false
                             part.Massless = true
-                            -- Fire touch interest only if necessary (might not be needed if just positioning)
-                            -- pcall(firetouchinterest, part, torso, 0)
-                            -- pcall(firetouchinterest, part, torso, 1)
                         end
                     end
                 end
@@ -815,7 +1296,7 @@ player.CharacterAdded:Connect(function(char)
     updateToolCache()
     char.ChildAdded:Connect(function(child)
         if child:IsA("Tool") then
-            task.wait() -- Allow tool to fully load
+            task.wait()
             updateToolCache()
             local part = getToolPart(child)
             if part then
@@ -834,7 +1315,6 @@ player.CharacterAdded:Connect(function(char)
         end
     end
 end)
-
 updateToolCache()
 if player.Character then
     for _, tool in ipairs(player.Character:GetChildren()) do
@@ -846,25 +1326,21 @@ if player.Character then
 end
 
 -- ============================================
--- GAME LOGIC: AUTO CLAIM & SMART BUILD (Adaptive)
+-- AUTO CLAIM & SMART BUILD
 -- ============================================
 function startClaimMoney()
     if claimConn then claimConn:Disconnect() end
     claimConn = RunService.PreSimulation:Connect(function()
-        -- Update threat level for synergy
         updateThreatLevel()
-
         if not AutoClaimMoney then return end
         local myChar = player.Character
         if not myChar then return end
         local root = myChar:FindFirstChild("HumanoidRootPart")
         if not root then return end
-
         local tycoonType = getPlayerTycoonType()
         if not tycoonType then return end
         local tycoonFolder = workspace:FindFirstChild("Tycoons") and workspace.Tycoons:FindFirstChild(tycoonType)
         if not tycoonFolder then return end
-
         local cashRegister = tycoonFolder:FindFirstChild("CashRegister", true)
         if cashRegister then
             local touchParts = getTouchableParts(cashRegister)
@@ -880,7 +1356,6 @@ function stopClaimMoney()
     if claimConn then claimConn:Disconnect(); claimConn = nil end
 end
 
--- ADAPTIVE BUILD UPGRADE
 local lastBuyTime = 0
 local lastCashCheck = 0
 local cashPerSecond = 0
@@ -889,13 +1364,9 @@ local previousCash = 0
 function startAutoBuild()
     if buildConn then buildConn:Disconnect() end
     buildConn = RunService.PreSimulation:Connect(function()
-        -- Update threat level for synergy
         updateThreatLevel()
-
         if not AutoBuild then return end
-        if tick() - lastBuyTime < 0.5 then return end -- Rate limit buys
-
-        -- Calculate cash per second
+        if tick() - lastBuyTime < 0.5 then return end
         local currentTime = tick()
         if currentTime - lastCashCheck > 1 then
             local currentCash = getPlayerCash()
@@ -903,20 +1374,15 @@ function startAutoBuild()
             previousCash = currentCash
             lastCashCheck = currentTime
         end
-
-        -- ADAPTIVE BUY LOGIC: Slow down if cash rate drops (server throttling)
-        local buyDelay = cashPerSecond < 100 and 0.2 or 0.05 -- Increase delay if cash rate is low
-
+        local buyDelay = cashPerSecond < 100 and 0.2 or 0.05
         local myChar = player.Character
         if not myChar then return end
         local root = myChar:FindFirstChild("HumanoidRootPart")
         if not root then return end
-
         local tycoonType = getPlayerTycoonType()
         if not tycoonType then return end
         local tycoonFolder = workspace:FindFirstChild("Tycoons") and workspace.Tycoons:FindFirstChild(tycoonType)
         if not tycoonFolder then return end
-
         local cash = getPlayerCash()
         local buttons = {}
         for _, obj in ipairs(tycoonFolder:GetDescendants()) do
@@ -928,29 +1394,23 @@ function startAutoBuild()
             end
         end
         table.sort(buttons, function(a, b)
-            if a.Priority == b.Priority then
-                return a.Cost < b.Cost
-            end
+            if a.Priority == b.Priority then return a.Cost < b.Cost end
             return a.Priority < b.Priority
         end)
-
-        -- FORTIFICATION PROTOCOL: Build defensive structures if threat is high
         if ThreatLevel > 0 then
             for _, btnData in ipairs(buttons) do
-                local modelNameLower = btnData.Model.Name:lower()
-                if (modelNameLower:find("wall") or modelNameLower:find("door") or modelNameLower:find("ladder")) and cash >= btnData.Cost then
+                local mName = btnData.Model.Name:lower()
+                if (mName:find("wall") or mName:find("door") or mName:find("ladder")) and cash >= btnData.Cost then
                     local touchParts = getTouchableParts(btnData.Model)
                     for _, part in ipairs(touchParts) do
                         pcall(firetouchinterest, root, part, 0)
                         pcall(firetouchinterest, root, part, 1)
                     end
                     lastBuyTime = tick()
-                    task.wait(buyDelay) -- Apply adaptive delay
-                    break -- Buy one defensive item per cycle if threat exists
+                    break
                 end
             end
         else
-            -- STANDARD BUILD PROTOCOL: Follow priority list
             for _, btnData in ipairs(buttons) do
                 if cash >= btnData.Cost then
                     local touchParts = getTouchableParts(btnData.Model)
@@ -959,7 +1419,6 @@ function startAutoBuild()
                         pcall(firetouchinterest, root, part, 1)
                     end
                     lastBuyTime = tick()
-                    task.wait(buyDelay) -- Apply adaptive delay
                     break
                 end
             end
@@ -972,48 +1431,27 @@ function stopAutoBuild()
 end
 
 -- ============================================
--- NEW: ANTI KILL AURA (DEFENSE LOGIC) Enhanced
+-- ANTI KILL AURA (DEFENSE)
 -- ============================================
 function startAntiAura()
     if antiAuraConn then antiAuraConn:Disconnect() end
-    -- Hooking TakeDamage to prevent health loss
-    if not getgenv().AntiAuraHooked then
-        pcall(function()
-            local oldTakeDamage
-            local hum = player.Character and player.Character:FindFirstChild("Humanoid")
-            if hum then
-                oldTakeDamage = hookfunction(hum.TakeDamage, function(self, amount)
-                    if AntiAura.Enabled and AntiAura.GodMode and self.Parent == player.Character then
-                        return 0
-                    end
-                    return oldTakeDamage(self, amount)
-                end)
-            end
-        end)
-        getgenv().AntiAuraHooked = true
-    end
     antiAuraConn = RunService.Heartbeat:Connect(function()
-        -- Update threat level for synergy
         updateThreatLevel()
-
         if not AntiAura.Enabled then return end
         local myChar = player.Character
         if not myChar then return end
         local root = myChar:FindFirstChild("HumanoidRootPart")
         local hum = myChar:FindFirstChild("Humanoid")
         if root then
-            -- Force Network Ownership to prevent friend from moving us
             for _, part in ipairs(myChar:GetDescendants()) do
                 if part:IsA("BasePart") then
                     pcall(function() part:SetNetworkOwner(player) end)
                 end
             end
-            -- Micro-Dodge (Breaks touch registration by shifting CFrame)
             if AntiAura.Dodge then
                 local offset = Vector3.new(0, math.sin(tick() * 60) * 0.8, 0)
                 root.CFrame = root.CFrame + offset
             end
-            -- REPEL UPGRADE: Use BodyMovers for stronger knockback
             if AntiAura.Repel then
                 for _, otherPlr in ipairs(Players:GetPlayers()) do
                     if otherPlr ~= player and otherPlr.Character then
@@ -1023,14 +1461,12 @@ function startAntiAura()
                                 if handle then
                                     local dist = (handle.Position - root.Position).Magnitude
                                     if dist < 12 then
-                                        -- Calculate direction and apply impulse using BodyMover
                                         local direction = (root.Position - handle.Position).Unit
                                         local bodyMover = Instance.new("BodyVelocity")
-                                        bodyMover.MaxForce = Vector3.new(4000, 4000, 4000) -- High force
-                                        bodyMover.Velocity = direction * 80 -- Strong push
+                                        bodyMover.MaxForce = Vector3.new(4000, 4000, 4000)
+                                        bodyMover.Velocity = direction * 80
                                         bodyMover.Parent = handle
-                                        task.wait(0.1) -- Apply for a short time
-                                        bodyMover:Destroy() -- Remove after impulse
+                                        task.delay(0.1, function() bodyMover:Destroy() end)
                                     end
                                 end
                             end
@@ -1052,18 +1488,19 @@ function stopAntiAura()
 end
 
 -- ============================================
--- NEW: IMPROVED REACH (Enhanced)
+-- REACH
 -- ============================================
 local reachHL = {}
+
 local function applyReach()
-    local myChar = player.Character; if not myChar then return end
+    local myChar = player.Character
+    if not myChar then return end
     for _, t in ipairs(myChar:GetChildren()) do
         if t:IsA("Tool") then
             local part = nil
             for _, obj in ipairs(t:GetDescendants()) do
                 if obj:IsA("TouchTransmitter") and obj.Parent:IsA("BasePart") then
-                    part = obj.Parent
-                    break
+                    part = obj.Parent; break
                 end
             end
             if not part then part = t:FindFirstChildWhichIsA("BasePart") end
@@ -1076,11 +1513,6 @@ local function applyReach()
                     hl.OutlineColor = Color3.fromRGB(0, 150, 255)
                     hl.OutlineTransparency = 0
                     reachHL[part] = hl
-                else
-                    -- Update highlight size if needed (though usually not necessary for static size)
-                    reachHL[part].FillTransparency = 1
-                    reachHL[part].OutlineColor = Color3.fromRGB(0, 150, 255)
-                    reachHL[part].OutlineTransparency = 0
                 end
             end
         end
@@ -1088,79 +1520,68 @@ local function applyReach()
 end
 
 function startReach()
-    -- Apply immediately when toggled on
     applyReach()
-    player.CharacterAdded:Connect(applyReach) -- Re-apply on respawn
+    player.CharacterAdded:Connect(applyReach)
 end
 
 function stopReach()
-    -- Destroy highlights when toggled off
     for part, hl in pairs(reachHL) do
-        if hl and hl.Parent == part then
-            hl:Destroy()
-        end
+        if hl and hl.Parent == part then hl:Destroy() end
     end
     table.clear(reachHL)
-    -- Reset part sizes (optional, just reapply with size 1)
-    local myChar = player.Character; if not myChar then return end
+    local myChar = player.Character
+    if not myChar then return end
     for _, t in ipairs(myChar:GetChildren()) do
         if t:IsA("Tool") then
             local part = nil
             for _, obj in ipairs(t:GetDescendants()) do
                 if obj:IsA("TouchTransmitter") and obj.Parent:IsA("BasePart") then
-                    part = obj.Parent
-                    break
+                    part = obj.Parent; break
                 end
             end
             if not part then part = t:FindFirstChildWhichIsA("BasePart") end
             if part then
-                part.Size = part.Size / ReachSize -- Reset to original size
+                part.Size = part.Size / ReachSize
             end
         end
     end
 end
 
 -- ============================================
--- NEW: IMPROVED RESPAWN (Enhanced)
+-- FAST RESPAWN
 -- ============================================
 function startFastRespawn()
-    local Guide = ReplicatedStorage:FindFirstChild("Guide") -- Look for Guide remote
+    local Guide = ReplicatedStorage:FindFirstChild("Guide")
     local last = 0
     local function respawn()
-        if tick() - last < 0.05 then return end -- Prevent spam
+        if tick() - last < 0.05 then return end
         last = tick()
         pcall(function()
             if Guide then
-                Guide:FireServer() -- Use Guide if available
+                Guide:FireServer()
             else
-                player:LoadCharacter() -- Fallback
+                player:LoadCharacter()
             end
         end)
     end
     local function hook(c)
         local hum = c:WaitForChild("Humanoid")
         hum.HealthChanged:Connect(function(hp)
-            if hp <= 0 then
-                respawn() -- Respawn on health reaching 0
-            end
+            if hp <= 0 then respawn() end
         end)
-        hum.Died:Connect(respawn) -- Respawn on death event
+        hum.Died:Connect(respawn)
     end
     if player.Character then hook(player.Character) end
-    player.CharacterAdded:Connect(hook) -- Re-hook on respawn
+    player.CharacterAdded:Connect(hook)
 end
 
-
 -- ============================================
--- FLUENTPRO UI INITIALIZATION (Official Library)
+-- BUILD THE UI  (★ FIX: all trailing spaces removed from strings)
 -- ============================================
-
-local Fluent = loadstring(game:HttpGet("https://github.com/StyearX/Fluent-Modded/releases/download/Fluent/FluentPro"))()
-
 local FluentWindow = Fluent:CreateWindow({
     Title = "Power Tycoon Hub",
     SubTitle = "Architectural Master Edition",
-    Version = "v1.1",
+    Version = "v1.2",
     TabWidth = 150,
     Size = UDim2.fromOffset(600, 500),
     Acrylic = true,
@@ -1172,57 +1593,43 @@ local FluentWindow = Fluent:CreateWindow({
         Muted = THEME.SubText,
         Accent = THEME.Accent,
     },
-    MinimizeKey = Enum.KeyCode.F9, -- Example key
-    Search = true,
-    Icons = "solar/planet-bold",
-    UserInfoTop = true,
-    UserInfoTitle = "User",
-    UserInfoSubtitle = player.DisplayName,
-    UserImage = "https://www.roblox.com/headshot-thumbnail/image?userId="..player.UserId.."&width=420&height=420&format=png" -- Example user image
 })
 
--- Apply the compatibility shim after creating the window
-applyFluentCompatibility(FluentWindow)
+local SPT_Tab     = FluentWindow:CreateTab("Super Power Tycoon", "solar/rocket-bold")
+local MPT_Tab     = FluentWindow:CreateTab("Mega Power Tycoon",  "solar/bolt-bold")
+local Updates_Tab = FluentWindow:CreateTab("Updates",            "solar/update-bold")
+local Settings_Tab= FluentWindow:CreateTab("Settings",           "solar/setting-bold")
 
--- Define Tabs
-local SPT_Tab = FluentWindow:AddTab({ Title = "Super Power Tycoon", Icon = "solar/rocket-bold" }) -- Example icon
-local MPT_Tab = FluentWindow:AddTab({ Title = "Mega Power Tycoon", Icon = "solar/bolt-bold" }) -- Example icon
-local Updates_Tab = FluentWindow:AddTab({ Title = "Updates", Icon = "solar/update-bold" }) -- Example icon
-local Settings_Tab = FluentWindow:AddTab({ Title = "Settings", Icon = "solar/setting-bold" }) -- Example icon
+local SPT_Combat = SPT_Tab:CreatePage("Combat", "solar/fight-bold")
+local SPT_Tycoon = SPT_Tab:CreatePage("Tycoon", "solar/building-bold")
+local SPT_Misc   = SPT_Tab:CreatePage("Movement & Visuals", "solar/walk-bold")
+local SPT_Utils  = SPT_Tab:CreatePage("Utilities", "solar/tool-bold")
 
--- SPT Pages
-local SPT_Combat = SPT_Tab:AddPage({ Title = "Combat", Icon = "solar/fight-bold" }) -- Example icon
-local SPT_Tycoon = SPT_Tab:AddPage({ Title = "Tycoon", Icon = "solar/building-bold" }) -- Example icon
-local SPT_Misc = SPT_Tab:AddPage({ Title = "Movement & Visuals", Icon = "solar/walk-bold" }) -- Example icon
-local SPT_Utils = SPT_Tab:AddPage({ Title = "Utilities", Icon = "solar/tool-bold" }) -- Example icon
+local MPT_Page   = MPT_Tab:CreatePage("Omni-Kill Suite", "solar/star-bold")
+local MPT_Tycoon = MPT_Tab:CreatePage("Tycoon Sovereign", "solar/cash-bold")
+local MPT_Spawn  = MPT_Tab:CreatePage("Spawn Supremacy", "solar/refresh-bold")
 
--- MPT Page
-local MPT_Page = MPT_Tab:AddPage({ Title = "Features", Icon = "solar/star-bold" }) -- Example icon
+local Updates_Page  = Updates_Tab:CreatePage("Changelog", "solar/list-check-bold")
+local Settings_Page = Settings_Tab:CreatePage("Settings", "solar/settings-bold")
 
--- Updates Page
-local Updates_Page = Updates_Tab:AddPage({ Title = "Changelog", Icon = "solar/list-check-bold" }) -- Example icon
-
--- Settings Page
-local Settings_Page = Settings_Tab:AddPage({ Title = "Settings", Icon = "solar/settings-bold" }) -- Example icon
-
--- SPT Combat Section
-local AuraSection = SPT_Combat:AddSection("Multi-Target Aura", "solar/target-bold") -- Example icon
-AuraSection:AddDropdown("Select Aura Targets", {
+-- ========== SPT COMBAT ==========
+local AuraSection = SPT_Combat:AddSection("Multi-Target Aura")
+AuraSection:AddDropdown({
     Title = "Select Aura Targets",
     Options = getServerPlayers(),
     MultiSelection = true,
     Callback = function(selectedNames)
         table.clear(Aura.TargetList)
         if selectedNames then
-            for _, name in ipairs(selectedNames) do
+            for _, name in ipairs(selectedNames) do  -- ★ FIX: "d o" → "do"
                 local plr = Players:FindFirstChild(name)
                 if plr then table.insert(Aura.TargetList, plr) end
             end
         end
-        Fluent:Notify({Title="Aura Targets Updated", Content="Targeting ".. #Aura.TargetList .." players.", Type="Info", Duration=2})
+        Fluent:Notify({Title="Aura Targets Updated", Content="Targeting "..#Aura.TargetList.." players.", Type="Info", Duration=2})
     end
 })
-AuraSection:AddToggle("Enable Aura", {
+AuraSection:AddToggle({
     Title = "Enable Aura",
     Default = false,
     Callback = function(state)
@@ -1230,7 +1637,7 @@ AuraSection:AddToggle("Enable Aura", {
         if state then startAuraLoop() else stopAuraLoop() end
     end
 })
-AuraSection:AddToggle("Instant Kill", {
+AuraSection:AddToggle({
     Title = "Instant Kill",
     Default = false,
     Callback = function(state)
@@ -1238,8 +1645,8 @@ AuraSection:AddToggle("Instant Kill", {
     end
 })
 
-local ToolFollowSection = SPT_Combat:AddSection("Tool Follow", "solar/track-bold") -- Example icon
-ToolFollowSection:AddDropdown("Select Tool Follow Targets", {
+local ToolFollowSection = SPT_Combat:AddSection("Tool Follow")
+ToolFollowSection:AddDropdown({
     Title = "Select Tool Follow Targets",
     Options = getServerPlayers(),
     MultiSelection = true,
@@ -1251,10 +1658,10 @@ ToolFollowSection:AddDropdown("Select Tool Follow Targets", {
                 if plr then table.insert(ToolFollow.Targets, plr) end
             end
         end
-        Fluent:Notify({Title="Tool Targets Updated", Content="Following ".. #ToolFollow.Targets .." players.", Type="Info", Duration=2})
+        Fluent:Notify({Title="Tool Targets Updated", Content="Following "..#ToolFollow.Targets.." players.", Type="Info", Duration=2})
     end
 })
-ToolFollowSection:AddToggle("Enable Tool Follow", {
+ToolFollowSection:AddToggle({
     Title = "Enable Tool Follow",
     Default = false,
     Callback = function(state)
@@ -1263,8 +1670,8 @@ ToolFollowSection:AddToggle("Enable Tool Follow", {
     end
 })
 
-local DefenseSection = SPT_Combat:AddSection("Defense / Anti-Aura", "solar/shield-bold") -- Example icon
-DefenseSection:AddToggle("Enable Anti-Aura", {
+local DefenseSection = SPT_Combat:AddSection("Defense / Anti-Aura")
+DefenseSection:AddToggle({
     Title = "Enable Anti-Aura",
     Default = false,
     Callback = function(state)
@@ -1272,31 +1679,25 @@ DefenseSection:AddToggle("Enable Anti-Aura", {
         if state then startAntiAura() else stopAntiAura() end
     end
 })
-DefenseSection:AddToggle("God Mode (Anti-Damage)", {
-    Title = "God Mode",
+DefenseSection:AddToggle({
+    Title = "God Mode (Anti-Damage)",
     Default = false,
-    Callback = function(state)
-        AntiAura.GodMode = state
-    end
+    Callback = function(state) AntiAura.GodMode = state end
 })
-DefenseSection:AddToggle("Micro-Dodge (Blink)", {
-    Title = "Micro-Dodge",
+DefenseSection:AddToggle({
+    Title = "Micro-Dodge (Blink)",
     Default = false,
-    Callback = function(state)
-        AntiAura.Dodge = state
-    end
+    Callback = function(state) AntiAura.Dodge = state end
 })
-DefenseSection:AddToggle("Repel (Anti-Touch)", {
-    Title = "Repel",
+DefenseSection:AddToggle({
+    Title = "Repel (Anti-Touch)",
     Default = false,
-    Callback = function(state)
-        AntiAura.Repel = state
-    end
+    Callback = function(state) AntiAura.Repel = state end
 })
 
--- SPT Tycoon Section
-local TycoonCoreSection = SPT_Tycoon:AddSection("Tycoon Automation", "solar/gear-bold") -- Example icon
-TycoonCoreSection:AddToggle("Auto Claim Money", {
+-- ========== SPT TYCOON ==========
+local TycoonCoreSection = SPT_Tycoon:AddSection("Tycoon Automation")
+TycoonCoreSection:AddToggle({
     Title = "Auto Claim Money",
     Default = false,
     Callback = function(state)
@@ -1304,7 +1705,7 @@ TycoonCoreSection:AddToggle("Auto Claim Money", {
         if state then startClaimMoney() else stopClaimMoney() end
     end
 })
-TycoonCoreSection:AddToggle("Smart Auto Build", {
+TycoonCoreSection:AddToggle({
     Title = "Smart Auto Build",
     Default = false,
     Callback = function(state)
@@ -1313,21 +1714,24 @@ TycoonCoreSection:AddToggle("Smart Auto Build", {
     end
 })
 
-local AutoToolsSection = SPT_Tycoon:AddSection("Auto Get Tools", "solar/bag-bold") -- Example icon
-AutoToolsSection:AddToggle("Auto Grab Weapons", {
+local AutoToolsSection = SPT_Tycoon:AddSection("Auto Get Tools")
+AutoToolsSection:AddToggle({
     Title = "Auto Grab Weapons",
     Default = false,
     Callback = function(state)
         AutoGetTools = state
         if state then
             if grabLoopConn then grabLoopConn:Disconnect() end
-            grabLoopConn = RunService.PreSimulation:Connect(function() -- Changed to PreSimulation
+            grabLoopConn = RunService.PreSimulation:Connect(function()
                 if not AutoGetTools then return end
-                local myChar = player.Character; if not myChar then return end
-                local root = myChar:FindFirstChild("HumanoidRootPart"); if not root then return end
+                local myChar = player.Character
+                if not myChar then return end
+                local root = myChar:FindFirstChild("HumanoidRootPart")
+                if not root then return end
                 for toolName, base in pairs(toolToBase) do
                     if player.Backpack:FindFirstChild(toolName) or myChar:FindFirstChild(toolName) then continue end
-                    local pads = padsByBase[base]; if not pads then continue end
+                    local pads = padsByBase[base]
+                    if not pads then continue end
                     local closest, minDist = nil, 1000
                     for _, pad in ipairs(pads) do
                         local d = (pad.Position - root.Position).Magnitude
@@ -1347,34 +1751,42 @@ AutoToolsSection:AddToggle("Auto Grab Weapons", {
     end
 })
 
-local CooldownSection = SPT_Tycoon:AddSection("Tools & Cooldown", "solar/speedometer-bold") -- Example icon
-CooldownSection:AddToggle("Auto Use Tools (0 delay)", {
-    Title = "Auto Use Tools",
+local CooldownSection = SPT_Tycoon:AddSection("Tools & Cooldown")
+CooldownSection:AddToggle({
+    Title = "Auto Use Tools (0 delay)",
     Default = false,
     Callback = function(state)
         AutoTools = state
         if state then
-            toolLoopConn = RunService.RenderStepped:Connect(function() -- Kept RenderStepped for tool activation
+            toolLoopConn = RunService.RenderStepped:Connect(function()
                 if not AutoTools then return end
-                local myChar = player.Character; if not myChar or not myChar:FindFirstChild("Humanoid") or myChar.Humanoid.Health <= 0 then return end
-                for _, t in ipairs(myChar:GetChildren()) do if t:IsA("Tool") then pcall(function() t:Activate() end) end
-                for _, t in ipairs(player.Backpack:GetChildren()) do if t:IsA("Tool") then t.Parent = myChar; pcall(function() t:Activate() end) end
+                local myChar = player.Character
+                if not myChar or not myChar:FindFirstChild("Humanoid") or myChar.Humanoid.Health <= 0 then return end
+                for _, t in ipairs(myChar:GetChildren()) do
+                    if t:IsA("Tool") then pcall(function() t:Activate() end) end
+                end
+                for _, t in ipairs(player.Backpack:GetChildren()) do  -- ★ FIX: "for  , t" → "for _, t"
+                    if t:IsA("Tool") then
+                        t.Parent = myChar
+                        pcall(function() t:Activate() end)
+                    end
+                end
             end)
         else
             if toolLoopConn then toolLoopConn:Disconnect(); toolLoopConn = nil end
         end
     end
 })
-CooldownSection:AddToggle("No Cooldown (arms stick)", {
-    Title = "No Cooldown",
+CooldownSection:AddToggle({  -- ★ FIX: "AddTog gle" → "AddToggle"
+    Title = "No Cooldown (arms stick)",
     Default = false,
     Callback = function(state)
         NoCooldown = state
         if state then
             if not getgenv().NoCooldownHooked then
-                hookfunction(wait, function() return RunService.PostSimulation:Wait() end)
+                hookfunction(wait, function() return RunService.PostSimulation:Wait() end)  -- ★ FIX: "PostSimulatio n"
                 hookfunction(task.wait, function() return RunService.PostSimulation:Wait() end)
-                hookfunction(delay, function(_, func) task.spawn(func) end)
+                hookfunction(delay, function(_, func) task.spawn(func) end)  -- ★ FIX: "( , func)" → "(_, func)"
                 hookfunction(spawn, function(func) task.spawn(func) end)
                 getgenv().NoCooldownHooked = true
             end
@@ -1384,77 +1796,72 @@ CooldownSection:AddToggle("No Cooldown (arms stick)", {
                     if myChar then
                         for _, t in ipairs(myChar:GetChildren()) do
                             if t:IsA("Tool") and t:FindFirstChild("Handle") then
-                                pcall(function() t.Enabled = true; t.Cooldown = 0 end)
-                                local handle = t.Handle; if handle:IsA("BasePart") then handle.CanCollide = false
-                                    local rightArm = myChar:FindFirstChild("Right Arm") or myChar:FindFirstChild("RightArm")
-                                    if rightArm then
-                                        local weld = rightArm:FindFirstChild("RightGrip") or rightArm:FindFirstChild("RightShoulder")
-                                        if weld then weld.C0 = CFrame.new(0,-1,0) * CFrame.Angles(math.rad(90),0,0) end
-                                    end
+                                pcall(function() t.Enabled = true end)
+                                local handle = t.Handle
+                                if handle:IsA("BasePart") then
+                                    handle.CanCollide = false
                                 end
                             end
                         end
                     end
-                    RunService.RenderStepped:Wait() -- Wait for next frame to avoid infinite loop without yielding
+                    RunService.RenderStepped:Wait()
                 end
             end)
         end
     end
 })
 
--- SPT Misc Section
-local ReachSection = SPT_Misc:AddSection("Reach", "solar/stretch-bold") -- Example icon
-ReachSection:AddSlider("Reach Size", {
+-- ========== SPT MISC ==========
+local ReachSection = SPT_Misc:AddSection("Reach")
+ReachSection:AddSlider({
     Title = "Reach Size",
     Min = 1,
     Max = 10,
     Default = ReachSize,
     Rounding = 1,
     Callback = function(value)
-        ReachSize = value -- Update the stored size
-        if Reach then -- If reach is currently active, reapply the new size
-            stopReach() -- Stop and clear old highlights
-            startReach() -- Apply new size and recreate highlights
+        ReachSize = value
+        if Reach then
+            stopReach()
+            startReach()
         end
     end
 })
-ReachSection:AddToggle("Reach (hitbox + outline)", {
-    Title = "Reach",
+ReachSection:AddToggle({
+    Title = "Reach (hitbox + outline)",
     Default = false,
     Callback = function(state)
         Reach = state
-        if state then
-            startReach() -- Apply immediately using PreSimulation and no delay loop
-        else
-            stopReach() -- Remove highlights and reset sizes
-        end
+        if state then startReach() else stopReach() end
     end
 })
 
-local RespawnSection = SPT_Misc:AddSection("Respawn & Protection", "solar/refresh-bold") -- Example icon
-RespawnSection:AddToggle("Fast Respawn", {
+local RespawnSection = SPT_Misc:AddSection("Respawn & Protection")
+RespawnSection:AddToggle({
     Title = "Fast Respawn",
     Default = false,
     Callback = function(state)
         FastRespawn = state
-        if state then
-            startFastRespawn() -- Use improved respawn logic
-        end
+        if state then startFastRespawn() end
     end
 })
-RespawnSection:AddToggle("Anti Spawnkill (invincible 3s)", {
-    Title = "Anti Spawnkill",
+RespawnSection:AddToggle({
+    Title = "Anti Spawnkill (invincible 3s)",
     Default = false,
     Callback = function(state)
         AntiSpawnkill = state
         if state then
             player.CharacterAdded:Connect(function(c)
-                local hum = c:WaitForChild("Humanoid"); hum.MaxHealth = 9e9; hum.Health = 9e9
-                local dmgConn = hum.TakeDamage:Connect(function() return 0 end)
-                local ff = Instance.new("ForceField", c); ff.Visible = false
+                local hum = c:WaitForChild("Humanoid")
+                hum.MaxHealth = 9e9
+                hum.Health = 9e9
+                local ff = Instance.new("ForceField", c)
+                ff.Visible = false
                 task.delay(3, function()
-                    if hum and hum.Parent then hum.MaxHealth = 100; hum.Health = 100 end
-                    if dmgConn then dmgConn:Disconnect() end
+                    if hum and hum.Parent then
+                        hum.MaxHealth = 100
+                        hum.Health = 100
+                    end
                     if ff then ff:Destroy() end
                 end)
             end)
@@ -1462,175 +1869,211 @@ RespawnSection:AddToggle("Anti Spawnkill (invincible 3s)", {
     end
 })
 
--- SPT Utils Section
-local UtilsSection = SPT_Utils:AddSection("Tools", "solar/wrench-bold") -- Example icon
-UtilsSection:AddButton("Open Game Dumper", {
+-- ========== SPT UTILITIES ==========
+local UtilsSection = SPT_Utils:AddSection("Tools")
+UtilsSection:AddButton({
     Title = "Open Game Dumper",
     Callback = function()
         if CoreGui:FindFirstChild("DumperGUI") then return end
-        local dGui = Instance.new("ScreenGui", CoreGui); dGui.Name = "DumperGUI"; dGui.ResetOnSpawn = false
-        local frame = Instance.new("Frame", dGui); frame.Size = UDim2.new(0,650,0,500); frame.Position = UDim2.new(0.5,-325,0.5,-250); frame.BackgroundColor3 = Color3.fromRGB(15,15,20); frame.Active=true; frame.Draggable= true; Instance.new("UICorner",frame).CornerRadius = UDim.new(0,10)
-        local title = Instance.new("TextLabel", frame); title.Size=UDim2.new(1,0,0,35); title.BackgroundColor3=Color3.fromRGB(30,30,40); title.Text= "🔍 FULL GAME SCANNER "; title.TextColor3=Color3.fromRGB(255,255,255); title.Font=Enum.Font.GothamBold; title.TextSize=18
-        local scroll = Instance.new("ScrollingFrame", frame); scroll.Size=UDim2.new(1,-10,1,-80); scroll.Position=UDim2.new(0,5,0,40); scroll.BackgroundTransparency=1; scroll.ScrollBarThickness=8; scroll.AutomaticCanvasSize=Enum.AutomaticSize.Y
-        local list = Instance.new("UIListLayout", scroll); list.SortOrder=Enum.SortOrder.LayoutOrder; list.Padding=UDim.new(0,2)
-        local copyBtn = Instance.new("TextButton", frame); copyBtn.Size=UDim2.new(0,120,0,30); copyBtn.Position=UDim2.new(0.5,-160,1,-40); copyBtn.BackgroundColor3=Color3.fromRGB(40,120,200); copyBtn.Text= "📋 Copy Log "; copyBtn.TextColor3=Color3.fromRGB(255,255,255); copyBtn.Font=Enum.Font.GothamBold; copyBtn.TextSize=14
-        local closeBtn = Instance.new("TextButton", frame); closeBtn.Size=UDim2.new(0,100,0,30); closeBtn.Position=UDim2.new(0.5,30,1,-40); closeBtn.BackgroundColor3=Color3.fromRGB(200,40,40); closeBtn.Text= "✖ Close "; closeBtn.TextColor3=Color3.fromRGB(255,255,255); closeBtn.Font=Enum.Font.GothamBold; closeBtn.TextSize=14; closeBtn.MouseButton1Click:Connect(function() dGui:Destroy() end)
-        local logLines={}
-        local function addLog(text,color) table.insert(logLines,text); local lbl=Instance.new("TextLabel",scroll); lbl.Size=UDim2.new(1,0,0,20); lbl.BackgroundTransparency=1; lbl.Text=text; lbl.TextColor3=color or Color3.fromRGB(200,200,200); lbl.Font=Enum.Font.Gotham; lbl.TextSize=13; lbl.TextXAlignment=Enum.TextXAlignment.Left; lbl.TextWrapped=true end
-        copyBtn.MouseButton1Click:Connect(function() pcall(function() setclipboard(table.concat(logLines, "\n")) end); addLog("✅ Copied to clipboard!",Color3.fromRGB(100,255,100)) end)
-        addLog("🔎 SCANNING ALL GAME OBJECTS...",Color3.fromRGB(255,200,50))
-        local function scan(container,depth)
-            for _,child in ipairs(container:GetChildren()) do
-                local indent=string.rep("    ",depth); local icon= "📄  "
-                if child:IsA("Folder") then icon= "📁  "; addLog(indent..icon.. "   "..child.Name.. " (Folder) ",Color3.fromRGB(255,200,100)); scan(child,depth+1)
-                elseif child:IsA("Tool") then icon= "🔧  "; addLog(indent..icon.. "   "..child.Name.. " (Tool) ",Color3.fromRGB(100,255,100))
-                elseif child:IsA("Model") then icon= "🧩  "; addLog(indent..icon.. "   "..child.Name.. " (Model) ",Color3.fromRGB(200,200,255))
-                elseif child:IsA("RemoteEvent") then icon= "📡  "; addLog(indent..icon.. "   "..child.Name.. " (RemoteEvent) ",Color3.fromRGB(255,150,255))
-                elseif child:IsA("RemoteFunction") then icon= "📡  "; addLog(indent..icon.. "   "..child.Name.. " (RemoteFunction) ",Color3.fromRGB(255,150,255))
-                elseif child:IsA("BindableEvent") or child:IsA("BindableFunction") then icon= "🔗  "; addLog(indent..icon.. "   "..child.Name.. " ( "..child.ClassName.. " ) ",Color3.fromRGB(200,200,255))
+        local dGui = Instance.new("ScreenGui", CoreGui)
+        dGui.Name = "DumperGUI"
+        dGui.ResetOnSpawn = false
+        local frame = Instance.new("Frame", dGui)
+        frame.Size = UDim2.new(0, 650, 0, 500)
+        frame.Position = UDim2.new(0.5, -325, 0.5, -250)
+        frame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+        frame.Active = true
+        frame.Draggable = true
+        Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+
+        local title = Instance.new("TextLabel", frame)
+        title.Size = UDim2.new(1, 0, 0, 35)
+        title.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+        title.Text = "FULL GAME SCANNER"
+        title.TextColor3 = Color3.fromRGB(255, 255, 255)
+        title.Font = Enum.Font.GothamBold
+        title.TextSize = 18
+
+        local scroll = Instance.new("ScrollingFrame", frame)
+        scroll.Size = UDim2.new(1, -10, 1, -80)
+        scroll.Position = UDim2.new(0, 5, 0, 40)
+        scroll.BackgroundTransparency = 1
+        scroll.ScrollBarThickness = 8
+        scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+        scroll.BorderSizePixel = 0
+
+        local list = Instance.new("UIListLayout", scroll)
+        list.SortOrder = Enum.SortOrder.LayoutOrder
+        list.Padding = UDim.new(0, 2)
+
+        local copyBtn = Instance.new("TextButton", frame)
+        copyBtn.Size = UDim2.new(0, 120, 0, 30)
+        copyBtn.Position = UDim2.new(0.5, -160, 1, -40)
+        copyBtn.BackgroundColor3 = Color3.fromRGB(40, 120, 200)
+        copyBtn.Text = "Copy Log"
+        copyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        copyBtn.Font = Enum.Font.GothamBold
+        copyBtn.TextSize = 14
+
+        local closeBtn = Instance.new("TextButton", frame)
+        closeBtn.Size = UDim2.new(0, 100, 0, 30)
+        closeBtn.Position = UDim2.new(0.5, 30, 1, -40)
+        closeBtn.BackgroundColor3 = Color3.fromRGB(200, 40, 40)
+        closeBtn.Text = "Close"
+        closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        closeBtn.Font = Enum.Font.GothamBold
+        closeBtn.TextSize = 14
+        closeBtn.MouseButton1Click:Connect(function() dGui:Destroy() end)
+
+        local logLines = {}
+        local function addLog(text, color)
+            table.insert(logLines, text)
+            local lbl = Instance.new("TextLabel", scroll)
+            lbl.Size = UDim2.new(1, 0, 0, 20)
+            lbl.BackgroundTransparency = 1
+            lbl.Text = text
+            lbl.TextColor3 = color or Color3.fromRGB(200, 200, 200)
+            lbl.Font = Enum.Font.Gotham
+            lbl.TextSize = 13
+            lbl.TextXAlignment = Enum.TextXAlignment.Left
+            lbl.TextWrapped = true
+        end
+
+        copyBtn.MouseButton1Click:Connect(function()
+            pcall(function() setclipboard(table.concat(logLines, "\n")) end)
+            addLog("Copied to clipboard!", Color3.fromRGB(100, 255, 100))
+        end)
+
+        addLog("SCANNING ALL GAME OBJECTS...", Color3.fromRGB(255, 200, 50))
+
+        local function scan(container, depth)
+            for _, child in ipairs(container:GetChildren()) do
+                local indent = string.rep("  ", depth)
+                local icon = ""
+                if child:IsA("Folder") then icon = "[Folder] "
+                elseif child:IsA("Tool") then icon = "[Tool] "
+                elseif child:IsA("Model") then icon = "[Model] "
+                elseif child:IsA("RemoteEvent") then icon = "[RemoteEvent] "
+                elseif child:IsA("RemoteFunction") then icon = "[RemoteFunction] "
+                elseif child:IsA("BindableEvent") or child:IsA("BindableFunction") then icon = "["..child.ClassName.."] "
+                end
+                if icon ~= "" then
+                    addLog(indent .. icon .. child.Name, Color3.fromRGB(200, 200, 255))
+                    if child:IsA("Folder") then scan(child, depth + 1) end
                 end
             end
         end
-        addLog("━━━ WORKSPACE ━━━ ",Color3.fromRGB(100,200,255)); scan(workspace,0)
-        addLog("━━━ REPLICATEDSTORAGE ━━━ ",Color3.fromRGB(100,200,255)); scan(ReplicatedStorage,0)
-        addLog("━━━ REPLICATEDFIRST ━━━ ",Color3.fromRGB(100,200,255)); scan(game:GetService("ReplicatedFirst"),0)
-        addLog("━━━ LIGHTING ━━━ ",Color3.fromRGB(100,200,255)); scan(game:GetService("Lighting"),0)
-        addLog("━━━ PLAYER BACKPACK ━━━ ",Color3.fromRGB(100,200,255)); if player:FindFirstChild("Backpack") then scan(player.Backpack,0) end
-        addLog("━━━ PLAYER CHARACTER ━━━ ",Color3.fromRGB(100,200,255)); if player.Character then scan(player.Character,0) end
-        addLog("✅ SCAN COMPLETE! Use the Copy button to save all data.",Color3.fromRGB(100,255,255))
+
+        addLog("--- WORKSPACE ---", Color3.fromRGB(100, 200, 255)); scan(workspace, 0)
+        addLog("--- REPLICATEDSTORAGE ---", Color3.fromRGB(100, 200, 255)); scan(ReplicatedStorage, 0)
+        addLog("--- REPLICATEDFIRST ---", Color3.fromRGB(100, 200, 255)); scan(game:GetService("ReplicatedFirst"), 0)
+        addLog("--- LIGHTING ---", Color3.fromRGB(100, 200, 255)); scan(game:GetService("Lighting"), 0)
+        if player:FindFirstChild("Backpack") then
+            addLog("--- PLAYER BACKPACK ---", Color3.fromRGB(100, 200, 255)); scan(player.Backpack, 0)
+        end
+        if player.Character then
+            addLog("--- PLAYER CHARACTER ---", Color3.fromRGB(100, 200, 255)); scan(player.Character, 0)
+        end
+        addLog("SCAN COMPLETE!", Color3.fromRGB(100, 255, 255))
     end
 })
 
-UtilsSection:AddTextbox("Damage Remote Path", {
+UtilsSection:AddTextbox({
     Title = "Set Damage Remote",
     Placeholder = "game.ReplicatedStorage.DealDamage",
     Callback = function(text)
-        if text and text ~= " " then
+        if text and text ~= "" then
             local success, remote = pcall(function() return loadstring("return " .. text)() end)
-            if success and (remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction")) then
+            if success and remote and (remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction")) then
                 DAMAGE_REMOTE = remote
-                print("Damage remote set to: ", DAMAGE_REMOTE:GetFullName())
-                Fluent:Notify({Title = "Remote Set", Content = "Damage remote updated successfully.", Type="Info", Duration = 3})
+                print("Damage remote set to:", DAMAGE_REMOTE:GetFullName())
+                Fluent:Notify({Title="Remote Set", Content="Damage remote updated successfully.", Type="Info", Duration=3})
             else
-                warn("Invalid remote path. ")
-                Fluent:Notify({Title = "Error", Content = "Invalid remote path.", Type="Error", Duration = 3})
+                warn("Invalid remote path.")
+                Fluent:Notify({Title="Error", Content="Invalid remote path.", Type="Error", Duration=3})
             end
         end
     end
 })
 
--- MPT Section
-local MPT_CombatSec = MPT_Page:AddSection("Combat & Control", "solar/control-bold") -- Example icon
-MPT_CombatSec:AddToggle("Kill Aura", {
-    Title = "Kill Aura",
-    Default = false,
-    Callback = function(state) Aura.Enabled = state; if state then startAuraLoop() else stopAuraLoop() end end
-})
-MPT_CombatSec:AddToggle("Fast Kill", {
-    Title = "Fast Kill",
-    Default = false,
-    Callback = function(state) InstantKill = state end
-})
-
-local MPT_TycoonSec = MPT_Page:AddSection("Tycoon Automation", "solar/cash-bold") -- Example icon
-MPT_TycoonSec:AddToggle("Auto Claim Money", {
-    Title = "Auto Claim Money",
-    Default = false,
-    Callback = function(state) AutoClaimMoney = state; if state then startClaimMoney() else stopClaimMoney() end end
-})
-MPT_TycoonSec:AddToggle("Smart Auto Build", {
-    Title = "Smart Auto Build",
-    Default = false,
-    Callback = function(state) AutoBuild = state; if state then startAutoBuild() else stopAutoBuild() end end
-})
-
-local MPT_UtilsSec = MPT_Page:AddSection("Utilities", "solar/tools-bold") -- Example icon
-MPT_UtilsSec:AddToggle("Fast Respawn", {
-    Title = "Fast Respawn",
-    Default = false,
-    Callback = function(state) FastRespawn = state end
-})
-MPT_UtilsSec:AddToggle("Anti Spawn", {
-    Title = "Anti Spawn",
-    Default = false,
-    Callback = function(state) AntiSpawnkill = state end
-})
-MPT_UtilsSec:AddButton("Get Base", {
-    Title = "Get Base",
-    Callback = function()
-        local myRoot = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-        if not myRoot then return end
-        local tycoonsFolder = workspace:FindFirstChild("Tycoons")
-        if not tycoonsFolder then return end
-        local closestDoor, minDist = nil, math.huge
-        for _, tycoonFolder in ipairs(tycoonsFolder:GetChildren()) do
-            if tycoonFolder:IsA("Folder") then
-                local door = tycoonFolder:FindFirstChild("Door", true)
-                if door then
-                    local doorPart = door:FindFirstChildWhichIsA("BasePart")
-                    if doorPart then
-                        local dist = (doorPart.Position - myRoot.Position).Magnitude
-                        if dist  < minDist then minDist = dist; closestDoor = doorPart end
-                    end
-                end
-            end
-        end
-        if closestDoor then myRoot.CFrame = closestDoor.CFrame + Vector3.new(0, 5, 0) end
-    end
-})
-
--- Updates Section
-local UpdatesSection = Updates_Page:AddSection("ZyronX Hub Changelog", "solar/document-bold") -- Example icon
-UpdatesSection:AddLabel("v1.1 - July 25, 2026:")
-UpdatesSection:AddLabel("  - Improved Tool Follow: Now uses PreSimulation and ignores dead targets.")
-UpdatesSection:AddLabel("  - Improved Reach: Uses PreSimulation, adds size slider, remembers size, removes delay.")
-UpdatesSection:AddLabel("  - Improved Respawn: Prioritizes 'Guide' remote for faster respawn/equip.")
-UpdatesSection:AddLabel("  - Added Updates Tab.")
-UpdatesSection:AddLabel("  - Removed Hub Manage Tab.")
-UpdatesSection:AddLabel("  - Integrated with Official FluentPro UI.")
-UpdatesSection:AddLabel("  - Various minor optimizations.")
-UpdatesSection:AddLabel("v1.2 - August 02, 2026:")
-UpdatesSection:AddLabel("  - Applied Copilot UI fixes (LocalPlayer wait, API compatibility shim).")
-UpdatesSection:AddLabel("  - Ensured UI initialization robustness.")
-
--- Settings Section
-local AppearanceCard = Settings_Page:AddSection("UI Config", "solar/palette-bold") -- Example icon
-AppearanceCard:AddToggle("Transparency Toggle", {
-    Title = "Glass Architecture",
+-- ========== MPT: OMNI-KILL SUITE ==========
+local MPT_CombatSec = MPT_Page:AddSection("Omni-Kill Engine")
+MPT_CombatSec:AddToggle({
+    Title = "Enable Omni-Kill",
     Default = false,
     Callback = function(state)
-        -- FluentPro handles transparency/acrylic internally based on theme
-        -- This toggle could potentially switch themes or modify CustomTheme values
-        print("Transparency Toggle State:", state)
+        Aura.Enabled = state
+        InstantKill = state
+        if state then startAuraLoop() else stopAuraLoop() end
     end
 })
-
-local SavesCard = Settings_Page:AddSection("Config", "solar/save-bold") -- Example icon
--- FluentPro might have its own config saving mechanism
-SavesCard:AddButton("Save Config Placeholder", {
-    Title = "Save Config",
+MPT_CombatSec:AddSlider({
+    Title = "Kill Priority (Prediction)",
+    Min = 0.05,
+    Max = 0.2,
+    Default = 0.1,
+    Rounding = 0.01,
+    Callback = function(value)
+        latencyEstimate = value
+    end
+})
+MPT_CombatSec:AddButton({
+    Title = "Manual Omni-Kill Burst",
     Callback = function()
-        print("Saving config placeholder...")
-        -- Implement saving logic using writeJSON/writeFile
-    end
-})
-SavesCard:AddButton("Load Config Placeholder", {
-    Title = "Load Config",
-    Callback = function()
-        print("Loading config placeholder...")
-        -- Implement loading logic using readJSON/readFile
+        local originalEnabled = Aura.Enabled
+        Aura.Enabled = true
+        task.wait(0.1)
+        Aura.Enabled = originalEnabled
     end
 })
 
+-- ========== MPT: TYCOON SOVEREIGN ==========
+local MPT_TycoonSec = MPT_Tycoon:AddSection("Sovereign Economy")
+MPT_TycoonSec:AddToggle({
+    Title = "Enable Sovereign Economy",
+    Default = false,
+    Callback = function(state)
+        AutoClaimMoney = state
+        AutoBuild = state
+        if state then
+            startClaimMoney()
+            startAutoBuild()
+        else
+            stopClaimMoney()
+            stopAutoBuild()
+        end
+    end
+})
+MPT_TycoonSec:AddSlider({
+    Title = "Defense Threshold (Threat Radius)",
+    Min = 20,
+    Max = 100,
+    Default = ThreatRadius,
+    Rounding = 1,
+    Callback = function(value)
+        ThreatRadius = value
+    end
+})
+MPT_TycoonSec:AddLabel("Current Threat Level: " .. ThreatLevel)
 
--- ============================================
--- INITIALIZATION NOTIFICATION
--- ============================================
-Fluent:Notify({
-    Title = "Power Tycoon Hub Loaded",
-    Content = "Architectural Master Edition initialized. Anti-Aura Defense Active.",
-    Type = "Success",
-    Duration = 4
+-- ========== MPT: SPAWN SUPREMACY ==========
+local MPT_UtilsSec = MPT_Spawn:AddSection("Spawn Supremacy")
+MPT_UtilsSec:AddToggle({
+    Title = "Enable Supremacy Mode",
+    Default = false,
+    Callback = function(state)
+        AntiSpawnkill = state
+    end
+})
+MPT_UtilsSec:AddSlider({
+    Title = "Decoy Lifespan (seconds)",
+    Min = 1, Max = 10, Default = 5, Rounding = 1,
+    Callback = function(value) end
+})
+MPT_UtilsSec:AddSlider({
+    Title = "Teleport Offset Distance",
+    Min = 1, Max = 10, Default = 3, Rounding = 1,
+    Callback = function(value) end
 })
 
-print("⚡ Power Tycoon Hub – Architectural Master Edition. Ready.")
+-- ========== UP
