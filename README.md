@@ -1,292 +1,227 @@
-# ⚡ Power Tycoon Hub – Architectural Integration Edition
+# ⚡ EXO Hub v3.0 — Power Tycoon
 
-A sophisticated **Roblox Power Tycoon exploit hub** with **Native ZyronX UI**, premium custom overlays, and enterprise-grade security architecture.
-
-**Owner:** exo_blox | **Co-Owner:** city800
+> **The most advanced Power Tycoon exploit hub for Roblox.** Built on the Cerberus UI Library with a fully redesigned MPT engine, intelligent kill analysis, and a complete defense matrix.
 
 ---
 
-## 🎨 UI Architecture
+## 📋 Table of Contents
 
-This hub uses **Native ZyronX UI Library** (not Rayfield) with:
-- ✨ Modern dark theme with purple accents
-- 🎯 Premium custom overlay system
-- 🔐 Whitelisted administrative console
-- 📱 Responsive design & smooth animations
-- 🛡️ Enterprise-grade security layer
-
----
-
-## 🔐 Key System
-
-**Key:** `EXOSTAKEOVERR19$` (24-hour expiration)
-
-- 🔒 **Hardware ID Tracking** - Device-based bans
-- ⏱️ **Time-Limited Keys** - Auto-expire every 24 hours
-- 📝 **User/Device Ban System** - Dual-layer bans
-- 🔧 **Maintenance Mode** - Admin shutdown capability
+- [About](#-about)
+- [Supported Games](#-supported-games)
+- [Loadstring](#-loadstring)
+- [Key System](#-key-system)
+- [Features](#-features)
+  - [Super Power Tycoon (SPT)](#super-power-tycoon-spt)
+  - [Mega Power Tycoon (MPT)](#mega-power-tycoon-mpt)
+  - [Settings & Utilities](#settings--utilities)
+- [UI Themes](#-ui-themes)
+- [Changelog](#-changelog)
+- [Requirements](#-requirements)
+- [Disclaimer](#-disclaimer)
 
 ---
 
-## 📋 Features
+## 🔥 About
 
-### 🎯 Multi-Target Aura (Super Power Tycoon)
-- **Enable Aura** - Toggle damage aura on/off
-- **Instant Kill** - One-hit brute-force eliminations
-- **Auto Target Detection** - Works with any tool
-- **Damage Remote Auto-Detection** - Finds damage systems automatically
+EXO Hub is a **full-rewrite**, feature-rich script hub designed specifically for the Power Tycoon franchise on Roblox. Version 3.0 introduces a completely new architecture with predictive combat, overlap-scanned hit amplification, wave-based tool acquisition, and a behavioral kill-analysis notification system.
 
-### 🛠️ Tool Follow System
-- **Enable Tool Follow** - Stick tools to targets continuously
-- **Auto-detection** - Finds tool parts & hit boxes automatically
-- **Smooth Tracking** - Heartbeat-based positioning
-- **Touch Interest Firing** - Native Roblox damage triggering
-
-### ⚙️ Auto Grab Weapons (0 Delay)
-- **Auto Grab Weapons** - Automatically collects tycoon tools
-- **Supported Bases:**
-  - Stone
-  - Magic
-  - Storm
-  - Robotic
-- **Exclusions:** Insanity, Giant, Dark, Spike, Web, Strong
-- **Priority System** - Intelligent tool acquisition
-
-### 💪 Tools & Cooldown Management
-- **Auto Use Tools (0 delay)** - Continuous rapid activation
-- **No Cooldown** - Removes wait/task.wait delays via function hooking
-- **RenderStepped Loop** - Ultra-fast tool cycling
-- **Backpack Auto-Equip** - Tools automatically moved to character
-
-### 🎯 Reach Enhancement
-- **Reach (hitbox + outline)** - Expand tool hitboxes
-- **Visual Indicator** - Blue outline on expanded parts
-- **2x Size Multiplier** - Doubled weapon reach
-- **Massless Tools** - Improved collision detection
-
-### 💰 Tycoon Automation (Super Power Tycoon)
-- **Auto Claim Money** - Continuous cash register interaction
-- **Smart Auto Build** - Priority-based upgrade purchasing
-  - Buys gears first (priority 1)
-  - Then walls (priority 2)
-  - Then generators (priority 3)
-  - Then doors (priority 4)
-- **Cost Detection** - Reads Price/Cost/Value objects
-- **Cash Verification** - Only buys when affordable
-
-### 🎮 Mega Power Tycoon Tab
-- **Kill Aura** - Multi-target damage system
-- **Fast Kill** - Instant elimination mode
-- **Get Base** - Quick teleport to nearest tycoon door
+**UI Library:** [Cerberus](https://github.com/Jxereas/UI-Libraries) by Jxereas
 
 ---
 
-## 🔐 Administrative Console (Whitelisted)
+## 🎮 Supported Games
 
-**Hub Manage Tab** - Restricted Access
-
-### Authentication
-```
-Owner: exo_blox / Password: 03239461
-Operator: OP / Password: 0000
-```
-
-### Owner-Only Actions
-- 🚫 **Ban User (Account + HWID)** - Permanent dual-layer ban
-- 🔧 **Shutdown Hub** - Activate maintenance mode (1 hour auto-reset)
-- 👥 **Join Selected User** - Teleport to player
-- ⚠️ **Issue Official Warning** - Send warning to players
-
-### Real-Time Features
-- Live player list with avatars
-- Click to select target player
-- Auto-refresh every 3 seconds
+| Game | Status |
+|------|--------|
+| **Super Power Tycoon** | ✅ Full Support |
+| **Mega Power Tycoon** | ✅ Full Support |
 
 ---
 
-## 📦 Installation
+## 🚀 Loadstring
 
-### Method 1: Direct Executor (Recommended)
-```lua
-loadstring(game:HttpGet("https://raw.githubusercontent.com/kiden03230323-maker/Spt-mpt-hub-test/main/PowerTycoonHub_Rayfield.lua"))()
-```
+loadstring(game:HttpGet("https://raw.githubusercontent.com/kiden03230323-maker/Spt-mpt-hub-test/refs/heads/main/EXYO-HUB-SPT.lua"))()
 
-### Method 2: Manual Copy
-1. Copy entire script from `PowerTycoonHub_Rayfield.lua`
-2. Paste into your Roblox exploit executor
-3. Run and enter key: `EXOSTAKEOVERR19$`
+> 
 
 ---
 
-## 🎮 How to Use
+## 🔑 Key System
 
-### Getting Started
-1. **Execute the script** in your Roblox executor
-2. **Enter the key:** `EXOSTAKEOVERR19$`
-3. **Hub UI opens** with three main tabs
+The hub is gated by a premium key authentication system.
 
-### Multi-Target Aura Setup
-1. Go to **Super Power Tycoon** → **Combat**
-2. Toggle **Enable Aura** to activate damage aura
-3. Optional: Enable **Instant Kill** for one-shot eliminations
-4. Aura targets all nearby players automatically
+| Field | Value |
+|-------|-------|
+| **Key** | `EXOSTAKEOVERR19$` |
+| **Storage** | Saved locally to `exo_key_v3.dat` after first authentication |
 
-### Tool Follow
-1. Go to **Super Power Tycoon** → **Combat**
-2. Enable **Tool Follow** to make tools stick to targets
-3. Works with any equipped weapon in inventory
-
-### Auto Grab Weapons
-1. Go to **Super Power Tycoon** → **Tycoon** → **Auto Get Tools**
-2. Toggle **Auto Grab Weapons**
-3. Walk to any tycoon area
-4. Tools automatically grab from pads (Stone, Magic, Storm, Robotic)
-
-### Tool Activation & Cooldown
-1. Go to **Super Power Tycoon** → **Tycoon** → **Tools & Cooldown**
-2. **Auto Use Tools** - Continuously activates all tools
-3. **No Cooldown** - Removes wait delays for faster attacks
-
-### Reach Expansion
-1. Go to **Super Power Tycoon** → **Movement & Visuals**
-2. Toggle **Reach (hitbox + outline)**
-3. Weapon hitbox increases 2x
-4. Blue outline shows expanded reach
-
-### Auto Build Tycoon
-1. Go to **Super Power Tycoon** → **Tycoon**
-2. Toggle **Smart Auto Build**
-3. Automatically purchases upgrades in priority order
-4. Buys only when you have enough cash
-
-### Auto Claim Money
-1. Go to **Super Power Tycoon** → **Tycoon**
-2. Toggle **Auto Claim Money**
-3. Continuously collects from cash register
-
-### Mega Power Tycoon Tab
-1. Go to **Mega Power Tycoon** → **All Features**
-2. Quick access to Kill Aura and Fast Kill
-3. **Get Base** button teleports to nearest tycoon
-
-### Administrative Console
-1. Go to **Hub Manage** → **Console**
-2. Click **Launch Console**
-3. Enter credentials (Owner or Operator)
-4. Access player management tools
-5. Ban, warn, or join players in real-time
+- On first run, a sleek authentication card appears.
+- Enter the key and click **AUTHENTICATE & UNLOCK**.
+- The key is cached locally so you won't need to re-enter it.
 
 ---
 
-## 🔧 Configuration
+## ✨ Features
 
-### Damage Remote Detection
-The hub **auto-detects** damage remotes by scanning for:
-- "damage"
-- "hit"
-- "attack"
-- "deal"
+### Super Power Tycoon (SPT)
 
-### Tycoon Detection
-- Auto-detects player's tycoon type
-- Finds nearest tycoon by door proximity
-- Caches type for performance
-- Resets on character respawn
+#### ⚔️ Multi-Target Aura
+- Select individual targets from a dropdown or target all players
+- **Predictive hit registration** with adjustable latency offset
+- **Instant Kill** toggle (sets humanoid health to 0)
+- Raycast-validated hit confirmation
+- Falls back to `firetouchinterest` if no damage remote is found
 
-### Tool Base System
-```lua
-Energy Sword → Stone
-Staff → Magic
-Axe → Storm
-Fist → Robotic
-```
+#### 🎯 Tool Follow
+- Tools hover near selected players' torsos in real-time
+- Cached tool parts for performance
+- Auto-updates on character respawn and new tool equip
 
----
+#### 🛡️ Defense / Anti-Aura
+- **God Mode** — Invisible ForceField + auto-heal below 50% HP
+- **Repel** — Pushes enemy weapon handles away when within 10 studs
+- **Anti-Spawnkill** — 9 billion HP + ForceField for 3 seconds on spawn
 
-## 🚀 Performance Tips
+#### 🏗️ Tycoon Automation
+- **Auto Claim Money** — Fires touch interest on your CashRegister
+- **Smart Auto Build** — Priority-sorted purchasing (Generators → Walls → Gears → Upgrades)
+- Threat-aware building: prioritizes defensive structures when enemies are nearby
 
-- **Disable unused features** to maximize FPS
-- **Auto Use Tools** uses RenderStepped (fastest updates)
-- **No Cooldown** hooks wait/task.wait functions
-- **Tool Follow** updates on Heartbeat (60 FPS)
-- **Aura** runs on PreSimulation (physics-safe)
-- **Auto Build** includes 0.5s throttle to prevent spam
+#### 🔧 Auto Get Tools
+- Automatically grabs weapons from tycoon gear givers
+- Supports **Stone**, **Magic**, **Storm**, and **Robotic** bases
+- Excludes Insanity, Giant, Dark, Spike, Web, and Strong bases
 
----
+#### ⏱️ Tools & Cooldown
+- **Auto Use Tools** — Activates all tools at 0 delay (including backpack)
+- **No Cooldown** — Hooks `wait`, `task.wait`, `delay`, and `spawn`
 
-## 📊 Technical Details
+#### 📏 Reach
+- Multiplies tool hitbox size (slider: 1x–10x)
+- Stores original sizes for clean reset
+- Blue highlight outline on modified parts
 
-### Services Used
-- `Players` - Player management
-- `RunService` - Loop connections (PreSimulation, RenderStepped, Heartbeat)
-- `ReplicatedStorage` - Remote detection
-- `CoreGui` - UI rendering
-- `HttpService` - JSON key/ban file handling
-- `TweenService` - UI animations
-- `UserInputService` - Input handling
+#### 🔄 Respawn & Protection
+- **Fast Respawn** — Instant respawn on death via `Guide` remote or `LoadCharacter`
 
-### Loop Architecture
-- **PreSimulation** - Damage/aura/claim/build loops (physics-safe)
-- **RenderStepped** - Auto tool activation (high-frequency)
-- **Heartbeat** - Tool follow tracking (smooth motion)
-- **TouchTransmitter** - Hit box detection
-
-### Security Features
-- ✅ **Hardware ID Tracking** - `gethwid()` integration
-- ✅ **Time-Locked Keys** - 24-hour expiration
-- ✅ **Dual-Layer Bans** - User ID + HWID
-- ✅ **File Persistence** - JSON-based data storage
-- ✅ **Whitelisted Admin** - Username/password authentication
-- ✅ **Maintenance Mode** - Admin shutdown capability
+#### 🛠️ Utilities
+- **Full Game Scanner** — Opens a draggable dumper GUI that scans Workspace and ReplicatedStorage
+- **Custom Damage Remote** — Set your own remote path via text input
 
 ---
 
-## 🎨 UI Theme Colors
+### Mega Power Tycoon (MPT)
 
-```lua
-Base       = RGB(15, 15, 18)          -- Dark background
-Element    = RGB(22, 22, 26)          -- Card/panel background
-Accent     = RGB(190, 140, 255)       -- Purple accent
-AccentDark = RGB(140, 90, 200)        -- Dark purple
-Border     = RGB(35, 35, 42)          -- UI borders
-Text       = RGB(240, 240, 245)       -- Primary text
-SubText    = RGB(160, 160, 175)       -- Secondary text
-Danger     = RGB(220, 50, 50)         -- Red alerts
-Success    = RGB(50, 200, 100)        -- Green success
-Warning    = RGB(230, 180, 40)        -- Orange warnings
-```
+#### 💀 Omni-Kill Engine
+- Master toggle: enables Aura + Instant Kill + auto-targets all players
+- **Insta-Kill Micro-Burst** — 5-burst FightEvent spam at 60Hz on the nearest target
+- **Prediction Aggression** slider
+- **Manual Kill Burst** button for on-demand elimination
+- **Refresh Target List** button
+
+#### 💥 Hit Amplifier
+- **OverlapParams** 24×24×24 box scan around your character
+- Runs at **120Hz** with a **15ms** cooldown
+- Automatically fires FightEvent remotes or activates tools when targets are detected
+- Dual detection: spatial overlap + player distance fallback (20 studs)
+
+#### 🗡️ Tool Arsenal
+- **Wave-based** tool acquisition system
+- Scans tycoons for gear giver pads
+- Acquires: Energy Sword, Staff, Axe, Fist
+- **Force Acquire All** button for instant 8-burst grab
+
+#### 👑 Tycoon Sovereign
+- **Sovereign Economy** — Combines Auto Claim + Auto Build in one toggle
+- **Defense Threat Radius** slider (20–100 studs)
+- **Force Buy Next Upgrade** — Purchases the highest-priority affordable item
+
+#### 🏁 Spawn Supremacy
+- **Supremacy Mode** — 9B HP + invisible ForceField on spawn (3s duration)
+- **Fast Respawn** toggle
+
+#### 🛡️ Defense Matrix
+- Full Anti-Aura suite (ForceField God Mode + Weapon Repel)
+- **Emergency Heal** button — Instantly restores health to max
+
+---
+
+### Settings & Utilities
+
+| Feature | Description |
+|---------|-------------|
+| 🎨 **UI Themes** | Purple, Green, Red, Blue, Gold + custom color wheel |
+| 💾 **Config Save/Load** | Saves reach, threat radius, latency, theme, and toggles to `exo_config_v3.dat` |
+| 📉 **Anti-Lag Shield** | Disables particles, beams, trails, post-effects, textures, and drops render quality |
+| 👁️ **ESP (Minimal Dots)** | Red dot overlay on all player positions via `WorldToViewportPoint` |
+| ☠️ **Kill Notifications** | Behavioral analysis on death: killer, weapon, distance, suspected features, counter-advice, threat level (1–10) |
+| 📜 **Kill Logs** | Scrollable log viewer storing up to 50 kill events with full analysis |
+
+---
+
+## 🎨 UI Themes
+
+| Theme | Accent Color |
+|-------|-------------|
+| 💜 Purple (Default) | `RGB(190, 140, 255)` |
+| 💚 Green | `RGB(50, 200, 100)` |
+| ❤️ Red | `RGB(220, 50, 50)` |
+| 💙 Blue | `RGB(50, 120, 220)` |
+| 💛 Gold | `RGB(230, 180, 40)` |
+| 🎨 Custom | Use the color wheel in Settings |
+
+---
+
+## 📝 Changelog
+
+### v3.0 — Current Release
+- ✅ Full rewrite on **Cerberus UI Library**
+- ✅ Key system now properly gates the hub
+- ✅ MPT completely redesigned with 6 sections
+- ✅ Insta-Kill Micro-Burst engine
+- ✅ Hit Amplifier with OverlapParams scanning
+- ✅ Tool Arsenal wave-based acquisition
+- ✅ Safe Anti-Aura (ForceField, no broken hooks)
+- ✅ Reach slider with original size storage
+- ✅ Kill Notifications with behavioral analysis
+- ✅ Kill Log viewer with scrollable history
+- ✅ Config save/load system
+- ✅ Anti-Lag Shield & ESP
+
+### v2.0
+- Migrated to ZyronX UI (deprecated)
+- All syntax/string bugs fixed
+
+### v1.2
+- MPT Tab redesigned
+- Enhanced Aura with predictive hit registration
+
+### v1.1
+- Improved Tool Follow, Reach, Respawn
+- Added Updates Tab
+
+---
+
+## ⚙️ Requirements
+
+| Requirement | Details |
+|-------------|---------|
+| **Executor** | Any Level 7+ executor (Synapse X, Script-Ware, Fluxus, etc.) |
+| **Supported Functions** | `loadstring`, `game:HttpGet`, `isfile`, `readfile`, `writefile`, `firetouchinterest` |
+| **Game** | Super Power Tycoon or Mega Power Tycoon |
 
 ---
 
 ## ⚠️ Disclaimer
 
-This script is for **educational purposes only**. Use at your own risk. The author is not responsible for:
-- Account bans
-- Data loss
-- Game restrictions
-- Any other consequences
-
-**Use responsibly!**
+> This project is for **educational and research purposes only**. The use of exploit scripts in Roblox games violates the [Roblox Terms of Service](https://en.help.roblox.com/hc/en-us/articles/115004647846). The author is not responsible for any bans, account terminations, or other consequences resulting from the use of this script. Use at your own risk.
 
 ---
 
-## 🤝 Contributing
+<div align="center">
 
-Found a bug? Have a feature request?
-- Open an issue
-- Submit improvements
-- Suggest optimizations
+**⚡ EXO Hub v3.0 — Cerberus Edition ⚡**
 
----
+*All systems online. SPT + MPT + Settings + Updates.*
 
-## 📄 License
-
-This project is provided as-is. No warranty or support guaranteed.
-
----
-
-**Made with ⚡ for Power Tycoon**
-
-**Architectural Integration Edition | ZyronX UI**
-
-**Key:** `EXOSTAKEOVERR19$` (24-hour expiration)
+</div>
