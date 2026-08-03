@@ -1,10 +1,10 @@
 -- ═══════════════════════════════════════════════════════════════
---  EXO HUB v3.0 – Power Tycoon | ZyronX UI | Architectural Master
---  Full Rewrite – All bugs fixed, MPT redesigned, Settings complete
+--  EXO HUB v3.0 – Power Tycoon | Cerberus UI | Full Rewrite
+--  All bugs fixed | MPT redesigned | Settings complete | Key system works
 -- ═══════════════════════════════════════════════════════════════
 
--- ── 1. LOAD ZYRONX LIBRARY ──────────────────────────────────
-local Library = loadstring(game:HttpGetAsync("https://pastefy.app/YoX4PJmf/raw"))()
+-- ── 1. LOAD CERBERUS LIBRARY ────────────────────────────────
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Jxereas/UI-Libraries/main/cerberus.lua"))()
 
 -- ── 2. SERVICES ─────────────────────────────────────────────
 local Players           = game:GetService("Players")
@@ -15,11 +15,13 @@ local HttpService       = game:GetService("HttpService")
 local TweenService      = game:GetService("TweenService")
 local UserInputService  = game:GetService("UserInputService")
 local Lighting          = game:GetService("Lighting")
+local StarterGui        = game:GetService("StarterGui")
 local player            = Players.LocalPlayer
 
 -- ── 3. CONFIGURATION ────────────────────────────────────────
 local HUB_KEY  = "EXOSTAKEOVERR19$"
 local KEY_FILE = "exo_key_v3.dat"
+local CONFIG_FILE = "exo_config_v3.dat"
 
 -- ── 4. FILE I/O ─────────────────────────────────────────────
 local function readFile(path)
@@ -45,7 +47,74 @@ local function writeJSON(path, data)
     if ok then writeFile(path, e) end
 end
 
--- ── 5. KEY SYSTEM ───────────────────────────────────────────
+-- ── 5. CUSTOM NOTIFICATION SYSTEM ──────────────────────────
+local notifGui = Instance.new("ScreenGui")
+notifGui.Name = "EXO_Notifications"
+notifGui.ResetOnSpawn = false
+notifGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+notifGui.Parent = CoreGui
+
+local function notify(title, description, duration, notifType)
+    duration = duration or 3
+    notifType = notifType or "Info"
+
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 340, 0, 80)
+    frame.Position = UDim2.new(1, 10, 1, -90)
+    frame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+    frame.BorderSizePixel = 0
+    frame.Parent = notifGui
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+
+    local accent = Instance.new("Frame")
+    accent.Size = UDim2.new(0, 4, 1, 0)
+    accent.BackgroundColor3 = notifType == "Error" and Color3.fromRGB(220,50,50)
+        or notifType == "Success" and Color3.fromRGB(50,200,100)
+        or notifType == "Warning" and Color3.fromRGB(230,180,40)
+        or Color3.fromRGB(190,140,255)
+    accent.BorderSizePixel = 0
+    accent.Parent = frame
+    Instance.new("UICorner", accent).CornerRadius = UDim.new(0, 2)
+
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Size = UDim2.new(1, -16, 0, 24)
+    titleLabel.Position = UDim2.new(0, 12, 0, 6)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Text = title
+    titleLabel.TextColor3 = Color3.fromRGB(240, 240, 245)
+    titleLabel.Font = Enum.Font.GothamBold
+    titleLabel.TextSize = 14
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.Parent = frame
+
+    local descLabel = Instance.new("TextLabel")
+    descLabel.Size = UDim2.new(1, -16, 0, 40)
+    descLabel.Position = UDim2.new(0, 12, 0, 32)
+    descLabel.BackgroundTransparency = 1
+    descLabel.Text = description
+    descLabel.TextColor3 = Color3.fromRGB(160, 160, 175)
+    descLabel.Font = Enum.Font.Gotham
+    descLabel.TextSize = 12
+    descLabel.TextXAlignment = Enum.TextXAlignment.Left
+    descLabel.TextYAlignment = Enum.TextYAlignment.Top
+    descLabel.TextWrapped = true
+    descLabel.Parent = frame
+
+    TweenService:Create(frame, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+        Position = UDim2.new(1, -350, 1, -90)
+    }):Play()
+
+    task.delay(duration, function()
+        TweenService:Create(frame, TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
+            Position = UDim2.new(1, 10, 1, -90)
+        }):Play()
+        task.delay(0.35, function()
+            if frame and frame.Parent then frame:Destroy() end
+        end)
+    end)
+end
+
+-- ── 6. KEY SYSTEM ───────────────────────────────────────────
 local function createKeySystem(onSuccess)
     local gui = Instance.new("ScreenGui")
     gui.Name = "ExoKeySystem"
@@ -94,12 +163,12 @@ local function createKeySystem(onSuccess)
     logo.TextXAlignment = Enum.TextXAlignment.Left
     logo.Parent = topbar
 
-    local accent = Instance.new("Frame")
-    accent.Size = UDim2.new(1,0,0,2)
-    accent.Position = UDim2.new(0,0,1,0)
-    accent.BackgroundColor3 = Color3.fromRGB(190,140,255)
-    accent.BorderSizePixel = 0
-    accent.Parent = topbar
+    local accentLine = Instance.new("Frame")
+    accentLine.Size = UDim2.new(1,0,0,2)
+    accentLine.Position = UDim2.new(0,0,1,0)
+    accentLine.BackgroundColor3 = Color3.fromRGB(190,140,255)
+    accentLine.BorderSizePixel = 0
+    accentLine.Parent = topbar
 
     local desc = Instance.new("TextLabel")
     desc.Size = UDim2.new(1,-40,0,40)
@@ -179,7 +248,7 @@ local function createKeySystem(onSuccess)
     end)
 end
 
--- ── 6. STATE VARIABLES ──────────────────────────────────────
+-- ── 7. STATE VARIABLES ──────────────────────────────────────
 local DAMAGE_REMOTE    = nil
 local Aura             = {Enabled = false, TargetList = {}}
 local InstantKill      = false
@@ -207,7 +276,6 @@ local LastThreatCheck  = 0
 local ThreatRadius     = 50
 local latencyEstimate  = 0.1
 
--- MPT Insta-Kill state
 local InstaKillEnabled  = false
 local InstaKillConn     = nil
 local IK_ToolsCache     = {}
@@ -215,43 +283,29 @@ local IK_LastActivation = 0
 local IK_BurstActive    = false
 local IK_TargetParts    = {}
 
--- MPT Hit Amplifier state
 local HitAmpEnabled     = false
 local HitAmpConn        = nil
 local HA_CachedTools    = {}
 local HA_LastActivation = 0
 local HA_Accumulator    = 0
 
--- MPT Tool Grabber state
 local TG_Enabled        = false
 local TG_padsByBase     = {}
 local TG_registered     = {}
-local TG_TOOL_RULES     = {
-    {Pattern = "Energy Sword", Base = "Stone"},
-    {Pattern = "Staff",        Base = "Magic"},
-    {Pattern = "Axe",          Base = "Storm"},
-    {Pattern = "Fist",         Base = "Robotic"},
-}
-local TG_ALLOWED_BASES  = {Stone=true, Magic=true, Storm=true, Robotic=true}
-local TG_EXCLUDED_BASES = {Insanity=true, Giant=true, Dark=true, Spike=true, Web=true, Strong=true}
 
--- Kill Notification / Log state
 local KillNotifEnabled = false
 local KillLogEnabled   = false
 local KillLogs         = {}
 local ESPEnabled       = false
 local AntiLagEnabled   = false
 local espDots          = {}
+local espGui           = nil
 
--- UI Theme state
 local CurrentTheme = {
-    Accent     = Color3.fromRGB(190,140,255),
-    Background = Color3.fromRGB(15,15,18),
-    Panel      = Color3.fromRGB(22,22,26),
-    Text       = Color3.fromRGB(240,240,245),
+    Accent = Color3.fromRGB(190,140,255)
 }
 
--- ── 7. DAMAGE REMOTE DETECTION ──────────────────────────────
+-- ── 8. DAMAGE REMOTE DETECTION ──────────────────────────────
 local function findDamageRemotes()
     local remotes = {}
     for _, container in ipairs({ReplicatedStorage, workspace}) do
@@ -269,7 +323,7 @@ end
 local dmgRemotes = findDamageRemotes()
 if #dmgRemotes > 0 then DAMAGE_REMOTE = dmgRemotes[1] end
 
--- ── 8. TYCOON HELPERS ───────────────────────────────────────
+-- ── 9. TYCOON HELPERS ───────────────────────────────────────
 local function getPlayerTycoonType()
     if cachedTycoonType and workspace:FindFirstChild("Tycoons")
         and workspace.Tycoons:FindFirstChild(cachedTycoonType) then
@@ -404,7 +458,7 @@ local function getHRP(char)
     return char and (char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso"))
 end
 
--- ── 9. THREAT DETECTION ─────────────────────────────────────
+-- ── 10. THREAT DETECTION ────────────────────────────────────
 local function updateThreatLevel()
     if tick() - LastThreatCheck < 0.5 then return end
     LastThreatCheck = tick()
@@ -421,7 +475,7 @@ local function updateThreatLevel()
     end
 end
 
--- ── 10. AURA & KILL (SPT) ──────────────────────────────────
+-- ── 11. AURA & KILL ─────────────────────────────────────────
 local function startAuraLoop()
     if auraConn then auraConn:Disconnect() end
     auraConn = RunService.PreSimulation:Connect(function()
@@ -495,7 +549,7 @@ local function stopAuraLoop()
     if auraConn then auraConn:Disconnect(); auraConn = nil end
 end
 
--- ── 11. TOOL FOLLOW ─────────────────────────────────────────
+-- ── 12. TOOL FOLLOW ─────────────────────────────────────────
 local cachedToolParts = {}
 local cachedTorso = {}
 local function updateToolCache()
@@ -557,7 +611,7 @@ player.CharacterAdded:Connect(function(char)
 end)
 updateToolCache()
 
--- ── 12. AUTO CLAIM & BUILD ──────────────────────────────────
+-- ── 13. AUTO CLAIM & BUILD ──────────────────────────────────
 local function startClaimMoney()
     if claimConn then claimConn:Disconnect() end
     claimConn = RunService.PreSimulation:Connect(function()
@@ -661,7 +715,7 @@ local function stopAutoBuild()
     if buildConn then buildConn:Disconnect(); buildConn = nil end
 end
 
--- ── 13. ANTI-AURA (SAFE) ───────────────────────────────────
+-- ── 14. ANTI-AURA (SAFE) ───────────────────────────────────
 local function startAntiAura()
     if antiAuraConn then antiAuraConn:Disconnect() end
     antiAuraConn = RunService.Heartbeat:Connect(function()
@@ -714,7 +768,7 @@ local function stopAntiAura()
     if antiAuraFF and antiAuraFF.Parent then antiAuraFF:Destroy(); antiAuraFF = nil end
 end
 
--- ── 14. REACH (FIXED) ──────────────────────────────────────
+-- ── 15. REACH (FIXED) ──────────────────────────────────────
 local reachOriginalSizes = {}
 local reachHL = {}
 local function applyReach()
@@ -758,7 +812,7 @@ local function stopReach()
     table.clear(reachOriginalSizes)
 end
 
--- ── 15. FAST RESPAWN ────────────────────────────────────────
+-- ── 16. FAST RESPAWN ────────────────────────────────────────
 local function startFastRespawn()
     local Guide = ReplicatedStorage:FindFirstChild("Guide")
     local last = 0
@@ -779,7 +833,7 @@ local function startFastRespawn()
     player.CharacterAdded:Connect(hook)
 end
 
--- ── 16. MPT: INSTA-KILL MICRO-BURST (from TFL) ─────────────
+-- ── 17. MPT: INSTA-KILL MICRO-BURST ────────────────────────
 local function IK_RefreshTools()
     table.clear(IK_ToolsCache)
     local char = player.Character
@@ -874,7 +928,7 @@ local function stopInstaKill()
     if InstaKillConn then InstaKillConn:Disconnect(); InstaKillConn = nil end
 end
 
--- ── 17. MPT: HIT AMPLIFIER (from TFL) ──────────────────────
+-- ── 18. MPT: HIT AMPLIFIER ─────────────────────────────────
 local HA_OverlapParams = OverlapParams.new()
 HA_OverlapParams.FilterType = Enum.RaycastFilterType.Exclude
 
@@ -967,7 +1021,16 @@ local function stopHitAmplifier()
     if HitAmpConn then HitAmpConn:Disconnect(); HitAmpConn = nil end
 end
 
--- ── 18. MPT: TOOL GRABBER WAVE SYSTEM (from TFL) ───────────
+-- ── 19. MPT: TOOL GRABBER WAVE SYSTEM ──────────────────────
+local TG_TOOL_RULES = {
+    {Pattern = "Energy Sword", Base = "Stone"},
+    {Pattern = "Staff",        Base = "Magic"},
+    {Pattern = "Axe",          Base = "Storm"},
+    {Pattern = "Fist",         Base = "Robotic"},
+}
+local TG_ALLOWED_BASES  = {Stone=true, Magic=true, Storm=true, Robotic=true}
+local TG_EXCLUDED_BASES = {Insanity=true, Giant=true, Dark=true, Spike=true, Web=true, Strong=true}
+
 local function TG_RegisterPad(pad)
     if not pad or not pad:IsA("BasePart") then return end
     if not pad:FindFirstChildOfClass("TouchTransmitter") then return end
@@ -1053,7 +1116,7 @@ local function TG_AcquirePass(root, wave, burstCount)
     end
 end
 
--- ── 19. KILL NOTIFICATION SYSTEM (Behavioral Analysis) ─────
+-- ── 20. KILL NOTIFICATION SYSTEM ───────────────────────────
 local function analyzeKill(killer, weaponName, distance)
     local suspectedFeatures = {}
     local counterAdvice = {}
@@ -1125,14 +1188,6 @@ local function setupKillNotifications()
                             break
                         end
                     end
-                    if weaponName == "Unknown" then
-                        for _, tool in ipairs(killerChar:GetChildren()) do
-                            if tool:IsA("Model") and tool:FindFirstChild("Handle") then
-                                weaponName = tool.Name
-                                break
-                            end
-                        end
-                    end
                 end
             end
 
@@ -1148,14 +1203,9 @@ local function setupKillNotifications()
                     "Threat: " .. analysis.Threat .. "/10",
                 }
                 if analysis.Threat >= 10 then
-                    table.insert(descLines, "⚠ ENABLE ANTI-SPAWNKILL SHIELD NOW")
+                    table.insert(descLines, "ENABLE ANTI-SPAWNKILL SHIELD NOW")
                 end
-
-                Library:Notify({
-                    Title = "⚔ KILL DETECTED",
-                    Description = table.concat(descLines, "\n"),
-                    Duration = 6
-                })
+                notify("KILL DETECTED", table.concat(descLines, "\n"), 6, "Error")
             end
 
             if KillLogEnabled then
@@ -1166,7 +1216,7 @@ local function setupKillNotifications()
     end)
 end
 
--- ── 20. KILL LOG VIEWER ─────────────────────────────────────
+-- ── 21. KILL LOG VIEWER ─────────────────────────────────────
 local function openKillLogViewer()
     if CoreGui:FindFirstChild("EXO_KillLogViewer") then return end
     local gui = Instance.new("ScreenGui")
@@ -1194,7 +1244,6 @@ local function openKillLogViewer()
     title.Font = Enum.Font.GothamBold
     title.TextSize = 16
     title.Parent = frame
-    Instance.new("UICorner", title).CornerRadius = UDim.new(0,12)
 
     local scroll = Instance.new("ScrollingFrame")
     scroll.Size = UDim2.new(1,-10,1,-80)
@@ -1262,8 +1311,7 @@ local function openKillLogViewer()
     closeBtn.MouseButton1Click:Connect(function() gui:Destroy() end)
 end
 
--- ── 21. ESP (MINIMAL DOTS) ─────────────────────────────────
-local espGui = nil
+-- ── 22. ESP (MINIMAL DOTS) ─────────────────────────────────
 local function startESP()
     if espGui then return end
     espGui = Instance.new("ScreenGui")
@@ -1331,7 +1379,7 @@ local function stopESP()
     table.clear(espDots)
 end
 
--- ── 22. ANTI-LAG SHIELD ─────────────────────────────────────
+-- ── 23. ANTI-LAG SHIELD ─────────────────────────────────────
 local function startAntiLag()
     pcall(function()
         for _, obj in ipairs(workspace:GetDescendants()) do
@@ -1373,7 +1421,7 @@ local function stopAntiLag()
     end)
 end
 
--- ── 23. AUTO GET TOOLS (SPT) ───────────────────────────────
+-- ── 24. AUTO GET TOOLS (SPT) ───────────────────────────────
 local toolToBase = {
     ["Energy Sword"] = "Stone",
     ["Staff"] = "Magic",
@@ -1408,136 +1456,95 @@ if TycoonsFolder then
 end
 
 -- ═══════════════════════════════════════════════════════════
---  BUILD THE HUB UI
+--  BUILD THE HUB UI (CERBERUS)
 -- ═══════════════════════════════════════════════════════════
 local function buildHub()
 
-    Library.WhitelistedUsers = { player.Name }
+    local window = Library.new("EXO Hub", true, 700, 550, "RightControl")
+    window:LockScreenBoundaries(true)
 
-    local Window = Library:CreateWindow({
-        Title = "EXO Hub",
-        Subtitle = "Power Tycoon | Architectural Master Edition v3.0",
-        SubtitleColor = Color3.fromRGB(190,140,255),
-        Logo = "rbxassetid://82367817676382",
-        LogoSize = 32,
-        SphereText = true,
-        SphereWords = "E",
-        SphereImage = "rbxassetid://82367817676382",
-        SphereIconSize = 38
-    })
-
-    -- TABS
-    local SPT_Tab      = Window:CreateTab("Super Power Tycoon", true, false)
-    local MPT_Tab      = Window:CreateTab("Mega Power Tycoon", false, false)
-    local Updates_Tab  = Window:CreateTab("Updates", false, false)
-    local Settings_Tab = Window:CreateTab("Settings", false, false)
-
-    -- SPT PAGES
-    local SPT_Combat = SPT_Tab:CreatePage("Combat")
-    local SPT_Tycoon = SPT_Tab:CreatePage("Tycoon")
-    local SPT_Misc   = SPT_Tab:CreatePage("Movement & Visuals")
-    local SPT_Utils  = SPT_Tab:CreatePage("Utilities")
-
-    -- MPT PAGES (REDESIGNED)
-    local MPT_OmniKill  = MPT_Tab:CreatePage("Omni-Kill Engine")
-    local MPT_HitAmp    = MPT_Tab:CreatePage("Hit Amplifier")
-    local MPT_Arsenal   = MPT_Tab:CreatePage("Tool Arsenal")
-    local MPT_Sovereign = MPT_Tab:CreatePage("Tycoon Sovereign")
-    local MPT_Spawn     = MPT_Tab:CreatePage("Spawn Supremacy")
-    local MPT_Defense   = MPT_Tab:CreatePage("Defense Matrix")
-
-    -- OTHER PAGES
-    local Updates_Page  = Updates_Tab:CreatePage("Changelog")
-    local Settings_Page = Settings_Tab:CreatePage("Settings")
+    -- ── TABS ────────────────────────────────────────────────
+    local SPT_Tab      = window:Tab("Super Power Tycoon")
+    local MPT_Tab      = window:Tab("Mega Power Tycoon")
+    local Updates_Tab  = window:Tab("Updates")
+    local Settings_Tab = window:Tab("Settings")
 
     -- ═══════════════════════════════════════════════════════
-    --  SPT → COMBAT
+    --  SPT TAB
     -- ═══════════════════════════════════════════════════════
-    local AuraCard = SPT_Combat:CreateSection("Multi-Target Aura")
-    AuraCard:AddDropdown("Aura Targets", getServerPlayers(), true, function(selected)
-        table.clear(Aura.TargetList)
-        if selected then
-            for _, name in ipairs(selected) do
-                local plr = Players:FindFirstChild(name)
-                if plr then table.insert(Aura.TargetList, plr) end
-            end
-        end
-        Library:Notify({Title = "Aura Targets", Description = "Targeting " .. #Aura.TargetList .. " player(s).", Duration = 2})
-    end, {
-        Title = "Select Aura Targets",
-        Description = "Multi-select players for the aura to attack.",
-        Example = "Select multiple players to hit them all simultaneously."
-    })
-    AuraCard:AddToggle("Enable Aura", false, function(state)
+
+    -- COMBAT: AURA
+    local AuraSec = SPT_Tab:Section("Multi-Target Aura")
+    AuraSec:Label("Select targets from dropdown, enable aura to attack them.", 12, Color3.fromRGB(160,160,175))
+
+    local auraDropdown = AuraSec:Dropdown("Aura Targets")
+    for _, name in ipairs(getServerPlayers()) do
+        auraDropdown:Toggle(name)
+    end
+
+    AuraSec:Toggle("Enable Aura", function(state)
         Aura.Enabled = state
-        if state then startAuraLoop() else stopAuraLoop() end
-    end, {
-        Title = "Enable Aura",
-        Description = "Teleports your weapon hitbox to each target every frame.",
-        Example = "Requires at least one target and a tool equipped."
-    })
-    AuraCard:AddToggle("Instant Kill", false, function(state)
-        InstantKill = state
-    end, {
-        Title = "Instant Kill",
-        Description = "Attempts to set target health to 0 on contact.",
-        Example = "Combine with Aura for maximum lethality."
-    })
-    AuraCard:AddSlider("Prediction Offset", 0.05, 0.25, 0.1, function(val)
-        latencyEstimate = val
-    end, {
-        Title = "Hit Prediction",
-        Description = "How far ahead the aura predicts target movement.",
-        Example = "0.1 for normal ping, 0.2 for high ping."
-    })
-
-    local ToolFollowCard = SPT_Combat:CreateSection("Tool Follow")
-    ToolFollowCard:AddDropdown("Tool Follow Targets", getServerPlayers(), true, function(selected)
-        table.clear(ToolFollow.Targets)
-        if selected then
-            for _, name in ipairs(selected) do
-                local plr = Players:FindFirstChild(name)
-                if plr then table.insert(ToolFollow.Targets, plr) end
+        if state then
+            Aura.TargetList = {}
+            for _, plr in ipairs(Players:GetPlayers()) do
+                if plr ~= player then table.insert(Aura.TargetList, plr) end
             end
+            startAuraLoop()
+        else
+            stopAuraLoop()
         end
-    end, {
-        Title = "Select Tool Follow Targets",
-        Description = "Your tools will hover near selected players' torsos.",
-        Example = "Select a player and enable Tool Follow."
-    })
-    ToolFollowCard:AddToggle("Enable Tool Follow", false, function(state)
-        ToolFollow.Enabled = state
-        if state then startToolFollow() else stopToolFollow() end
-    end, {
-        Title = "Enable Tool Follow",
-        Description = "Makes your tool hitbox follow targets automatically.",
-        Example = "Works best with melee weapons."
-    })
+        notify("Aura", state and "Aura activated." or "Aura deactivated.", 2)
+    end)
 
-    local DefenseCard = SPT_Combat:CreateSection("Defense / Anti-Aura")
-    DefenseCard:AddToggle("Enable Anti-Aura", false, function(state)
+    AuraSec:Toggle("Instant Kill", function(state)
+        InstantKill = state
+    end)
+
+    AuraSec:Slider("Prediction Offset", function(val)
+        latencyEstimate = val / 100
+    end, 25, 5)
+
+    -- COMBAT: TOOL FOLLOW
+    local ToolFollowSec = SPT_Tab:Section("Tool Follow")
+    ToolFollowSec:Label("Tools hover near selected players' torsos.", 12, Color3.fromRGB(160,160,175))
+
+    local tfDropdown = ToolFollowSec:Dropdown("Tool Follow Targets")
+    for _, name in ipairs(getServerPlayers()) do
+        tfDropdown:Toggle(name)
+    end
+
+    ToolFollowSec:Toggle("Enable Tool Follow", function(state)
+        ToolFollow.Enabled = state
+        if state then
+            ToolFollow.Targets = {}
+            for _, plr in ipairs(Players:GetPlayers()) do
+                if plr ~= player then table.insert(ToolFollow.Targets, plr) end
+            end
+            startToolFollow()
+        else
+            stopToolFollow()
+        end
+    end)
+
+    -- COMBAT: DEFENSE
+    local DefenseSec = SPT_Tab:Section("Defense / Anti-Aura")
+    DefenseSec:Label("Safe ForceField-based protection. No broken hooks.", 12, Color3.fromRGB(160,160,175))
+
+    DefenseSec:Toggle("Enable Anti-Aura", function(state)
         AntiAura.Enabled = state
         if state then startAntiAura() else stopAntiAura() end
-    end, {
-        Title = "Enable Anti-Aura",
-        Description = "Master toggle for defensive features. Uses ForceField and safe velocity.",
-        Example = "Enable before entering PvP zones."
-    })
-    DefenseCard:AddToggle("God Mode (ForceField)", false, function(state)
+        notify("Anti-Aura", state and "Defense matrix online." or "Defense matrix offline.", 2)
+    end)
+
+    DefenseSec:Toggle("God Mode (ForceField)", function(state)
         AntiAura.GodMode = state
-    end, {
-        Title = "God Mode",
-        Description = "Invisible ForceField + auto-heal below 50% HP. No desync.",
-        Example = "Combine with Anti-Aura master toggle."
-    })
-    DefenseCard:AddToggle("Repel (Anti-Touch)", false, function(state)
+    end)
+
+    DefenseSec:Toggle("Repel (Anti-Touch)", function(state)
         AntiAura.Repel = state
-    end, {
-        Title = "Repel",
-        Description = "Pushes enemy weapon handles away within 10 studs.",
-        Example = "Effective against melee aura users."
-    })
-    DefenseCard:AddToggle("Anti Spawnkill", false, function(state)
+    end)
+
+    DefenseSec:Toggle("Anti Spawnkill", function(state)
         AntiSpawnkill = state
         if state then
             player.CharacterAdded:Connect(function(c)
@@ -1552,35 +1559,25 @@ local function buildHub()
                 end)
             end)
         end
-    end, {
-        Title = "Anti Spawnkill",
-        Description = "3 seconds of invincibility on every respawn.",
-        Example = "Prevents spawn camping."
-    })
+    end)
 
-    -- ═══════════════════════════════════════════════════════
-    --  SPT → TYCOON
-    -- ═══════════════════════════════════════════════════════
-    local TycoonCard = SPT_Tycoon:CreateSection("Tycoon Automation")
-    TycoonCard:AddToggle("Auto Claim Money", false, function(state)
+    -- TYCOON AUTOMATION
+    local TycoonSec = SPT_Tab:Section("Tycoon Automation")
+
+    TycoonSec:Toggle("Auto Claim Money", function(state)
         AutoClaimMoney = state
         if state then startClaimMoney() else stopClaimMoney() end
-    end, {
-        Title = "Auto Claim Money",
-        Description = "Automatically collects money from CashRegister.",
-        Example = "Enable and AFK."
-    })
-    TycoonCard:AddToggle("Smart Auto Build", false, function(state)
+    end)
+
+    TycoonSec:Toggle("Smart Auto Build", function(state)
         AutoBuild = state
         if state then startAutoBuild() else stopAutoBuild() end
-    end, {
-        Title = "Smart Auto Build",
-        Description = "Buys upgrades in priority order. Fortifies when threatened.",
-        Example = "Adaptive building based on threat level."
-    })
+    end)
 
-    local ToolsCard = SPT_Tycoon:CreateSection("Auto Get Tools")
-    ToolsCard:AddToggle("Auto Grab Weapons", false, function(state)
+    -- AUTO GET TOOLS
+    local ToolsSec = SPT_Tab:Section("Auto Get Tools")
+
+    ToolsSec:Toggle("Auto Grab Weapons", function(state)
         AutoGetTools = state
         if state then
             if grabLoopConn then grabLoopConn:Disconnect() end
@@ -1610,14 +1607,12 @@ local function buildHub()
         else
             if grabLoopConn then grabLoopConn:Disconnect(); grabLoopConn = nil end
         end
-    end, {
-        Title = "Auto Grab Weapons",
-        Description = "Touches nearest GearGiver pad for each weapon type.",
-        Example = "Skips excluded bases automatically."
-    })
+    end)
 
-    local CooldownCard = SPT_Tycoon:CreateSection("Tools & Cooldown")
-    CooldownCard:AddToggle("Auto Use Tools (0 delay)", false, function(state)
+    -- TOOLS & COOLDOWN
+    local CooldownSec = SPT_Tab:Section("Tools & Cooldown")
+
+    CooldownSec:Toggle("Auto Use Tools (0 delay)", function(state)
         AutoTools = state
         if state then
             toolLoopConn = RunService.RenderStepped:Connect(function()
@@ -1637,12 +1632,9 @@ local function buildHub()
         else
             if toolLoopConn then toolLoopConn:Disconnect(); toolLoopConn = nil end
         end
-    end, {
-        Title = "Auto Use Tools",
-        Description = "Activates every tool every frame with zero delay.",
-        Example = "Best with Auto Grab Weapons."
-    })
-    CooldownCard:AddToggle("No Cooldown", false, function(state)
+    end)
+
+    CooldownSec:Toggle("No Cooldown", function(state)
         NoCooldown = state
         if state then
             if not getgenv().NoCooldownHooked then
@@ -1652,64 +1644,36 @@ local function buildHub()
                 hookfunction(spawn, function(func) task.spawn(func) end)
                 getgenv().NoCooldownHooked = true
             end
-            task.spawn(function()
-                while NoCooldown do
-                    local myChar = player.Character
-                    if myChar then
-                        for _, t in ipairs(myChar:GetChildren()) do
-                            if t:IsA("Tool") and t:FindFirstChild("Handle") then
-                                pcall(function() t.Enabled = true end)
-                                local handle = t.Handle
-                                if handle:IsA("BasePart") then handle.CanCollide = false end
-                            end
-                        end
-                    end
-                    RunService.RenderStepped:Wait()
-                end
-            end)
         end
-    end, {
-        Title = "No Cooldown",
-        Description = "Hooks wait/delay/spawn to eliminate all tool cooldowns.",
-        Example = "Arms stick to targets."
-    })
+    end)
 
-    -- ═══════════════════════════════════════════════════════
-    --  SPT → MOVEMENT & VISUALS
-    -- ═══════════════════════════════════════════════════════
-    local ReachCard = SPT_Misc:CreateSection("Reach")
-    ReachCard:AddSlider("Reach Size", 1, 10, ReachSize, function(value)
-        ReachSize = value
+    -- REACH
+    local ReachSec = SPT_Tab:Section("Reach")
+    ReachSec:Label("Multiplies tool hitbox. Stores originals for clean reset.", 12, Color3.fromRGB(160,160,175))
+
+    ReachSec:Slider("Reach Size", function(val)
+        ReachSize = val
         if Reach then stopReach(); startReach() end
-    end, {
-        Title = "Reach Size Multiplier",
-        Description = "Multiplies tool hitbox size. Stores originals for clean reset.",
-        Example = "Set to 3 for moderate, 10 for maximum."
-    })
-    ReachCard:AddToggle("Reach (hitbox + outline)", false, function(state)
+    end, 10, 1)
+
+    ReachSec:Toggle("Enable Reach", function(state)
         Reach = state
         if state then startReach() else stopReach() end
-    end, {
-        Title = "Enable Reach",
-        Description = "Expands tool hitboxes with blue outline highlight.",
-        Example = "Toggle off restores normal sizes."
-    })
+    end)
 
-    local RespawnCard = SPT_Misc:CreateSection("Respawn & Protection")
-    RespawnCard:AddToggle("Fast Respawn", false, function(state)
+    -- RESPAWN
+    local RespawnSec = SPT_Tab:Section("Respawn & Protection")
+
+    RespawnSec:Toggle("Fast Respawn", function(state)
         FastRespawn = state
         if state then startFastRespawn() end
-    end, {
-        Title = "Fast Respawn",
-        Description = "Instant respawn via Guide remote or LoadCharacter.",
-        Example = "No more waiting on respawn timer."
-    })
+    end)
 
-    -- ═══════════════════════════════════════════════════════
-    --  SPT → UTILITIES
-    -- ═══════════════════════════════════════════════════════
-    local UtilsCard = SPT_Utils:CreateSection("Tools")
-    UtilsCard:AddButton("Open Game Dumper", function()
+    -- UTILITIES
+    local UtilsSec = SPT_Tab:Section("Utilities")
+
+    UtilsSec:Button("Open Game Dumper", function()
+        notify("Game Dumper", "Scanner opened. Check CoreGui for DumperGUI.", 3)
         if CoreGui:FindFirstChild("DumperGUI") then return end
         local dGui = Instance.new("ScreenGui", CoreGui)
         dGui.Name = "DumperGUI"
@@ -1720,14 +1684,14 @@ local function buildHub()
         frame.BackgroundColor3 = Color3.fromRGB(15,15,20)
         frame.Active = true
         frame.Draggable = true
-        Instance.new("UICorner", frame).CornerRadius = UDim.new(0,10)
-        local title = Instance.new("TextLabel", frame)
-        title.Size = UDim2.new(1,0,0,35)
-        title.BackgroundColor3 = Color3.fromRGB(30,30,40)
-        title.Text = "FULL GAME SCANNER"
-        title.TextColor3 = Color3.fromRGB(255,255,255)
-        title.Font = Enum.Font.GothamBold
-        title.TextSize = 18
+        Instance.new("UICorner",frame).CornerRadius = UDim.new(0,10)
+        local titleLbl = Instance.new("TextLabel", frame)
+        titleLbl.Size = UDim2.new(1,0,0,35)
+        titleLbl.BackgroundColor3 = Color3.fromRGB(30,30,40)
+        titleLbl.Text = "FULL GAME SCANNER"
+        titleLbl.TextColor3 = Color3.fromRGB(255,255,255)
+        titleLbl.Font = Enum.Font.GothamBold
+        titleLbl.TextSize = 18
         local scroll = Instance.new("ScrollingFrame", frame)
         scroll.Size = UDim2.new(1,-10,1,-80)
         scroll.Position = UDim2.new(0,5,0,40)
@@ -1751,28 +1715,16 @@ local function buildHub()
             lbl.TextXAlignment = Enum.TextXAlignment.Left
             lbl.TextWrapped = true
         end
-        local copyBtn = Instance.new("TextButton", frame)
-        copyBtn.Size = UDim2.new(0,120,0,30)
-        copyBtn.Position = UDim2.new(0.5,-160,1,-40)
-        copyBtn.BackgroundColor3 = Color3.fromRGB(40,120,200)
-        copyBtn.Text = "Copy Log"
-        copyBtn.TextColor3 = Color3.fromRGB(255,255,255)
-        copyBtn.Font = Enum.Font.GothamBold
-        copyBtn.TextSize = 14
-        copyBtn.MouseButton1Click:Connect(function()
-            pcall(function() setclipboard(table.concat(logLines, "\n")) end)
-            addLog("Copied to clipboard!", Color3.fromRGB(100,255,100))
-        end)
         local closeBtn = Instance.new("TextButton", frame)
         closeBtn.Size = UDim2.new(0,100,0,30)
-        closeBtn.Position = UDim2.new(0.5,30,1,-40)
+        closeBtn.Position = UDim2.new(0.5,-50,1,-38)
         closeBtn.BackgroundColor3 = Color3.fromRGB(200,40,40)
         closeBtn.Text = "Close"
         closeBtn.TextColor3 = Color3.fromRGB(255,255,255)
         closeBtn.Font = Enum.Font.GothamBold
         closeBtn.TextSize = 14
         closeBtn.MouseButton1Click:Connect(function() dGui:Destroy() end)
-        addLog("SCANNING ALL GAME OBJECTS...", Color3.fromRGB(255,200,50))
+        addLog("SCANNING...", Color3.fromRGB(255,200,50))
         local function scan(container, depth)
             for _, child in ipairs(container:GetChildren()) do
                 local indent = string.rep("  ", depth)
@@ -1791,116 +1743,86 @@ local function buildHub()
         end
         addLog("--- WORKSPACE ---", Color3.fromRGB(100,200,255)); scan(workspace, 0)
         addLog("--- REPLICATEDSTORAGE ---", Color3.fromRGB(100,200,255)); scan(ReplicatedStorage, 0)
-        addLog("--- LIGHTING ---", Color3.fromRGB(100,200,255)); scan(Lighting, 0)
         addLog("SCAN COMPLETE!", Color3.fromRGB(100,255,255))
-    end, {
-        Title = "Game Dumper",
-        Description = "Opens a full scanner window listing all game objects.",
-        Example = "Use to find the damage remote path."
-    })
-    UtilsCard:AddTextbox("Set Damage Remote", "game.ReplicatedStorage.DealDamage", function(text)
+    end)
+
+    UtilsSec:TextBox("Set Damage Remote", function(text)
         if text and text ~= "" then
             local success, remote = pcall(function() return loadstring("return " .. text)() end)
             if success and remote and (remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction")) then
                 DAMAGE_REMOTE = remote
-                Library:Notify({Title = "Remote Set", Description = "Damage remote updated.", Duration = 3})
+                notify("Remote Set", "Damage remote updated.", 3, "Success")
             else
-                Library:Notify({Title = "Error", Description = "Invalid remote path.", Duration = 3})
+                notify("Error", "Invalid remote path.", 3, "Error")
             end
         end
-    end, {
-        Title = "Set Damage Remote",
-        Description = "Manually set the remote used by Aura and Instant Kill.",
-        Example = "Format: game.ReplicatedStorage.YourRemoteName"
-    })
+    end)
 
     -- ═══════════════════════════════════════════════════════
-    --  MPT → OMNI-KILL ENGINE (REDESIGNED)
+    --  MPT TAB (REDESIGNED)
     -- ═══════════════════════════════════════════════════════
-    local OmniCard = MPT_OmniKill:CreateSection("Omni-Kill Engine")
-    OmniCard:AddToggle("Enable Omni-Kill", false, function(state)
+
+    -- OMNI-KILL ENGINE
+    local OmniSec = MPT_Tab:Section("Omni-Kill Engine")
+    OmniSec:Label("Master toggle: Aura + Instant Kill + Auto-target all.", 12, Color3.fromRGB(160,160,175))
+
+    OmniSec:Toggle("Enable Omni-Kill", function(state)
         Aura.Enabled = state
         InstantKill = state
         if state then
-            if #Aura.TargetList == 0 then
-                for _, plr in ipairs(Players:GetPlayers()) do
-                    if plr ~= player then table.insert(Aura.TargetList, plr) end
-                end
+            Aura.TargetList = {}
+            for _, plr in ipairs(Players:GetPlayers()) do
+                if plr ~= player then table.insert(Aura.TargetList, plr) end
             end
             startAuraLoop()
+            notify("Omni-Kill", "ENGAGED - targeting " .. #Aura.TargetList .. " players.", 3, "Warning")
         else
             stopAuraLoop()
+            notify("Omni-Kill", "Disengaged.", 2)
         end
-        Library:Notify({
-            Title = "Omni-Kill",
-            Description = state and "ENGAGED - targeting " .. #Aura.TargetList .. " players." or "Disengaged.",
-            Duration = 3
-        })
-    end, {
-        Title = "Enable Omni-Kill",
-        Description = "Master toggle: Aura + Instant Kill. Auto-targets all if none selected.",
-        Example = "One toggle for total server domination."
-    })
-    OmniCard:AddToggle("Insta-Kill Micro-Burst", false, function(state)
+    end)
+
+    OmniSec:Toggle("Insta-Kill Micro-Burst", function(state)
         InstaKillEnabled = state
         if state then startInstaKill() else stopInstaKill() end
-    end, {
-        Title = "Insta-Kill Micro-Burst",
-        Description = "FightEvent micro-burst activation on target detection. From TFL Insta-Kill V2.",
-        Example = "Fires 5 FightEvent bursts per frame when a target is in range."
-    })
-    OmniCard:AddSlider("Prediction Aggression", 0.05, 0.25, 0.1, function(val)
-        latencyEstimate = val
-    end, {
-        Title = "Prediction Aggression",
-        Description = "How far ahead the kill engine predicts movement.",
-        Example = "0.1 normal, 0.2 for laggy targets."
-    })
-    OmniCard:AddButton("Manual Kill Burst", function()
+    end)
+
+    OmniSec:Slider("Prediction Aggression", function(val)
+        latencyEstimate = val / 100
+    end, 25, 5)
+
+    OmniSec:Button("Manual Kill Burst", function()
         local orig = Aura.Enabled
         Aura.Enabled = true
         InstantKill = true
         task.wait(0.15)
         Aura.Enabled = orig
         if not orig then InstantKill = false end
-        Library:Notify({Title = "Kill Burst", Description = "Burst fired.", Duration = 2})
-    end, {
-        Title = "Manual Kill Burst",
-        Description = "Fires a single high-intensity burst kill pulse.",
-        Example = "Quick eliminations without keeping aura on."
-    })
-    OmniCard:AddButton("Refresh Target List", function()
+        notify("Kill Burst", "Burst fired.", 2)
+    end)
+
+    OmniSec:Button("Refresh Target List", function()
         table.clear(Aura.TargetList)
         for _, plr in ipairs(Players:GetPlayers()) do
             if plr ~= player then table.insert(Aura.TargetList, plr) end
         end
-        Library:Notify({Title = "Targets Refreshed", Description = "Now targeting " .. #Aura.TargetList .. " players.", Duration = 2})
-    end, {
-        Title = "Refresh Target List",
-        Description = "Re-scans server and updates target list.",
-        Example = "Use when new players join."
-    })
+        notify("Targets Refreshed", "Now targeting " .. #Aura.TargetList .. " players.", 2)
+    end)
 
-    -- ═══════════════════════════════════════════════════════
-    --  MPT → HIT AMPLIFIER (NEW - from TFL)
-    -- ═══════════════════════════════════════════════════════
-    local HitAmpCard = MPT_HitAmp:CreateSection("Overlap Hit Detection")
-    HitAmpCard:AddToggle("Enable Hit Amplifier", false, function(state)
+    -- HIT AMPLIFIER
+    local HitAmpSec = MPT_Tab:Section("Hit Amplifier")
+    HitAmpSec:Label("OverlapParams 24x24x24 box scan. 120Hz. 15ms cooldown.", 12, Color3.fromRGB(160,160,175))
+
+    HitAmpSec:Toggle("Enable Hit Amplifier", function(state)
         HitAmpEnabled = state
         if state then startHitAmplifier() else stopHitAmplifier() end
-    end, {
-        Title = "Enable Hit Amplifier",
-        Description = "OverlapParams box scanning + tool pulse system. From TFL Hit Amplifier V2.",
-        Example = "Scans a 24x24x24 box around you and pulses all tools when targets detected."
-    })
-    HitAmpCard:AddLabel("Scan Rate: 120Hz | Burst: 3x FightEvent")
-    HitAmpCard:AddLabel("Activation Cooldown: 15ms")
+    end)
 
-    -- ═══════════════════════════════════════════════════════
-    --  MPT → TOOL ARSENAL (NEW - from TFL Tool Grabber)
-    -- ═══════════════════════════════════════════════════════
-    local ArsenalCard = MPT_Arsenal:CreateSection("Wave-Based Tool Acquisition")
-    ArsenalCard:AddToggle("Enable Tool Arsenal", false, function(state)
+    -- TOOL ARSENAL
+    local ArsenalSec = MPT_Tab:Section("Tool Arsenal")
+    ArsenalSec:Label("Wave-based tool acquisition. Bases: Stone, Magic, Storm, Robotic.", 12, Color3.fromRGB(160,160,175))
+
+    ArsenalSec:Toggle("Enable Tool Arsenal", function(state)
         TG_Enabled = state
         if state then
             TG_ScanTycoons()
@@ -1922,12 +1844,9 @@ local function buildHub()
         else
             getgenv().EXO_TG_Loop = false
         end
-    end, {
-        Title = "Enable Tool Arsenal",
-        Description = "Wave-based tool acquisition from TFL Tool Grabber V9. Touches all GearGiver pads in priority order.",
-        Example = "Automatically grabs Stone, Magic, Storm, Robotic weapons."
-    })
-    ArsenalCard:AddButton("Force Acquire All", function()
+    end)
+
+    ArsenalSec:Button("Force Acquire All", function()
         local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
         if root then
             TG_ScanTycoons()
@@ -1937,38 +1856,25 @@ local function buildHub()
                 if pad then table.insert(wave, {Pad = pad, Base = baseName}) end
             end
             TG_AcquirePass(root, wave, 8)
-            Library:Notify({Title = "Tool Arsenal", Description = "Force acquire burst fired.", Duration = 2})
+            notify("Tool Arsenal", "Force acquire burst fired.", 2)
         end
-    end, {
-        Title = "Force Acquire All",
-        Description = "Immediately touches all base pads with 8x burst.",
-        Example = "Use when you need all weapons instantly."
-    })
-    ArsenalCard:AddLabel("Bases: Stone, Magic, Storm, Robotic")
-    ArsenalCard:AddLabel("Excluded: Insanity, Giant, Dark, Spike, Web, Strong")
+    end)
 
-    -- ═══════════════════════════════════════════════════════
-    --  MPT → TYCOON SOVEREIGN
-    -- ═══════════════════════════════════════════════════════
-    local SovCard = MPT_Sovereign:CreateSection("Sovereign Economy")
-    SovCard:AddToggle("Enable Sovereign Economy", false, function(state)
+    -- TYCOON SOVEREIGN
+    local SovSec = MPT_Tab:Section("Tycoon Sovereign")
+
+    SovSec:Toggle("Enable Sovereign Economy", function(state)
         AutoClaimMoney = state
         AutoBuild = state
         if state then startClaimMoney(); startAutoBuild()
         else stopClaimMoney(); stopAutoBuild() end
-    end, {
-        Title = "Sovereign Economy",
-        Description = "Auto Claim + Smart Auto Build in one toggle.",
-        Example = "Enable and walk away."
-    })
-    SovCard:AddSlider("Defense Threat Radius", 20, 100, ThreatRadius, function(val)
+    end)
+
+    SovSec:Slider("Defense Threat Radius", function(val)
         ThreatRadius = val
-    end, {
-        Title = "Defense Threshold",
-        Description = "How close an enemy must be before defensive building activates.",
-        Example = "Lower = more paranoid. Higher = economy-focused."
-    })
-    SovCard:AddButton("Force Buy Next Upgrade", function()
+    end, 100, 20)
+
+    SovSec:Button("Force Buy Next Upgrade", function()
         local myChar = player.Character
         if not myChar then return end
         local root = myChar:FindFirstChild("HumanoidRootPart")
@@ -1993,22 +1899,16 @@ local function buildHub()
                 pcall(firetouchinterest, root, part, 0)
                 pcall(firetouchinterest, root, part, 1)
             end
-            Library:Notify({Title = "Purchased", Description = "Bought: " .. best.Name, Duration = 2})
+            notify("Purchased", "Bought: " .. best.Name, 2, "Success")
         else
-            Library:Notify({Title = "No Purchase", Description = "Nothing affordable.", Duration = 2})
+            notify("No Purchase", "Nothing affordable.", 2)
         end
-    end, {
-        Title = "Force Buy",
-        Description = "Instantly buys highest-priority affordable upgrade.",
-        Example = "Skip the queue."
-    })
-    SovCard:AddLabel("Current Cash: " .. getPlayerCash())
+    end)
 
-    -- ═══════════════════════════════════════════════════════
-    --  MPT → SPAWN SUPREMACY
-    -- ═══════════════════════════════════════════════════════
-    local SpawnCard = MPT_Spawn:CreateSection("Spawn Supremacy")
-    SpawnCard:AddToggle("Enable Supremacy Mode", false, function(state)
+    -- SPAWN SUPREMACY
+    local SpawnSec = MPT_Tab:Section("Spawn Supremacy")
+
+    SpawnSec:Toggle("Enable Supremacy Mode", function(state)
         AntiSpawnkill = state
         if state then
             player.CharacterAdded:Connect(function(c)
@@ -2023,151 +1923,115 @@ local function buildHub()
                 end)
             end)
         end
-    end, {
-        Title = "Supremacy Mode",
-        Description = "3s godmode on every spawn via ForceField + health overflow.",
-        Example = "Prevents all spawn camping."
-    })
-    SpawnCard:AddToggle("Fast Respawn", false, function(state)
+    end)
+
+    SpawnSec:Toggle("Fast Respawn", function(state)
         FastRespawn = state
         if state then startFastRespawn() end
-    end, {
-        Title = "Fast Respawn",
-        Description = "Instant respawn using Guide remote or LoadCharacter.",
-        Example = "Minimize downtime."
-    })
-    SpawnCard:AddSlider("Invincibility Duration", 1, 10, 3, function(val) end, {
-        Title = "Invincibility Duration",
-        Description = "How long spawn protection lasts (seconds).",
-        Example = "3s default. Increase for heavily camped spawns."
-    })
+    end)
 
-    -- ═══════════════════════════════════════════════════════
-    --  MPT → DEFENSE MATRIX
-    -- ═══════════════════════════════════════════════════════
-    local DefCard = MPT_Defense:CreateSection("Defense Matrix")
-    DefCard:AddToggle("Enable Defense Matrix", false, function(state)
+    -- DEFENSE MATRIX
+    local DefSec = MPT_Tab:Section("Defense Matrix")
+
+    DefSec:Toggle("Enable Defense Matrix", function(state)
         AntiAura.Enabled = state
         if state then startAntiAura() else stopAntiAura() end
-    end, {
-        Title = "Defense Matrix",
-        Description = "Master toggle: ForceField godmode, repel, health monitoring.",
-        Example = "Activate before PvP."
-    })
-    DefCard:AddToggle("ForceField God Mode", false, function(state)
+    end)
+
+    DefSec:Toggle("ForceField God Mode", function(state)
         AntiAura.GodMode = state
-    end, {
-        Title = "ForceField God Mode",
-        Description = "Invisible ForceField + auto-heal below 50%.",
-        Example = "Safest possible godmode."
-    })
-    DefCard:AddToggle("Weapon Repel", false, function(state)
+    end)
+
+    DefSec:Toggle("Weapon Repel", function(state)
         AntiAura.Repel = state
-    end, {
-        Title = "Weapon Repel",
-        Description = "Pushes enemy handles away within 10 studs.",
-        Example = "Counters melee aura."
-    })
-    DefCard:AddButton("Emergency Heal", function()
+    end)
+
+    DefSec:Button("Emergency Heal", function()
         local myChar = player.Character
         if myChar then
             local hum = myChar:FindFirstChild("Humanoid")
             if hum then
                 hum.Health = hum.MaxHealth
-                Library:Notify({Title = "Healed", Description = "Health restored.", Duration = 2})
+                notify("Healed", "Health restored.", 2, "Success")
             end
         end
-    end, {
-        Title = "Emergency Heal",
-        Description = "Instantly restores health to maximum.",
-        Example = "Panic button."
-    })
+    end)
 
     -- ═══════════════════════════════════════════════════════
     --  UPDATES TAB
     -- ═══════════════════════════════════════════════════════
-    local ChangeCard = Updates_Page:CreateSection("EXO Hub Changelog")
-    ChangeCard:AddLabel("v3.0 - August 03, 2026:")
-    ChangeCard:AddLabel("  - FULL REWRITE on ZyronX UI Library")
-    ChangeCard:AddLabel("  - Logo changed to E")
-    ChangeCard:AddLabel("  - Key System now actually shows and gates the hub")
-    ChangeCard:AddLabel("  - MPT completely redesigned: 6 pages")
-    ChangeCard:AddLabel("  - Added Insta-Kill Micro-Burst (from TFL)")
-    ChangeCard:AddLabel("  - Added Hit Amplifier overlap scanning (from TFL)")
-    ChangeCard:AddLabel("  - Added Tool Arsenal wave system (from TFL)")
-    ChangeCard:AddLabel("  - Anti-Aura rewritten: safe ForceField, no broken hooks")
-    ChangeCard:AddLabel("  - Removed Micro-Dodge and deprecated BodyVelocity")
-    ChangeCard:AddLabel("  - Reach slider fixed with original size storage")
-    ChangeCard:AddLabel("  - Settings: UI themes, presets, color pickers")
-    ChangeCard:AddLabel("  - Settings: Anti-Lag, ESP, Kill Notifications, Kill Logs")
-    ChangeCard:AddLabel("  - Kill Notifications: behavioral analysis + threat level")
-    ChangeCard:AddLabel("  - Kill Logs: scrollable viewer with full history")
-    ChangeCard:AddLabel("  - Config save/load with theme persistence")
-    ChangeCard:AddLabel("")
-    ChangeCard:AddLabel("v2.0 - August 03, 2026:")
-    ChangeCard:AddLabel("  - Migrated to ZyronX UI")
-    ChangeCard:AddLabel("  - All syntax/string bugs fixed")
-    ChangeCard:AddLabel("")
-    ChangeCard:AddLabel("v1.2 - August 01, 2026:")
-    ChangeCard:AddLabel("  - MPT Tab Redesigned")
-    ChangeCard:AddLabel("  - Enhanced Aura with predictive hit registration")
-    ChangeCard:AddLabel("")
-    ChangeCard:AddLabel("v1.1 - July 25, 2026:")
-    ChangeCard:AddLabel("  - Improved Tool Follow, Reach, Respawn")
-    ChangeCard:AddLabel("  - Added Updates Tab")
+    local ChangeSec = Updates_Tab:Section("EXO Hub Changelog")
+
+    ChangeSec:Title("v3.0 - August 03, 2026")
+    ChangeSec:Label("  FULL REWRITE on Cerberus UI Library", 13)
+    ChangeSec:Label("  Key System now actually shows and gates the hub", 13)
+    ChangeSec:Label("  MPT completely redesigned: 6 sections", 13)
+    ChangeSec:Label("  Added Insta-Kill Micro-Burst (from TFL)", 13)
+    ChangeSec:Label("  Added Hit Amplifier overlap scanning (from TFL)", 13)
+    ChangeSec:Label("  Added Tool Arsenal wave system (from TFL)", 13)
+    ChangeSec:Label("  Anti-Aura rewritten: safe ForceField, no broken hooks", 13)
+    ChangeSec:Label("  Reach slider fixed with original size storage", 13)
+    ChangeSec:Label("  Settings: UI themes, configs, anti-lag, ESP, kill notifs", 13)
+    ChangeSec:Label("  Kill Notifications: behavioral analysis + threat level", 13)
+    ChangeSec:Label("  Kill Logs: scrollable viewer with full history", 13)
+
+    ChangeSec:Title("v2.0 - August 03, 2026")
+    ChangeSec:Label("  Migrated to ZyronX UI (deprecated)", 13)
+    ChangeSec:Label("  All syntax/string bugs fixed", 13)
+
+    ChangeSec:Title("v1.2 - August 01, 2026")
+    ChangeSec:Label("  MPT Tab Redesigned", 13)
+    ChangeSec:Label("  Enhanced Aura with predictive hit registration", 13)
+
+    ChangeSec:Title("v1.1 - July 25, 2026")
+    ChangeSec:Label("  Improved Tool Follow, Reach, Respawn", 13)
+    ChangeSec:Label("  Added Updates Tab", 13)
 
     -- ═══════════════════════════════════════════════════════
     --  SETTINGS TAB
     -- ═══════════════════════════════════════════════════════
 
-    -- UI CONFIG SECTION
-    local UICard = Settings_Page:CreateSection("UI Config")
-    UICard:AddToggle("Glass Architecture", false, function(state)
-        Window:SetTransparency(state and 0.2 or 0)
-    end, {
-        Title = "Glass Architecture",
-        Description = "Sets window background to 0.2 transparency.",
-        Example = "Toggle on for glassmorphism."
-    })
+    -- UI CONFIG
+    local UICard = Settings_Tab:Section("UI Config")
+    UICard:Label("Customize hub appearance.", 12, Color3.fromRGB(160,160,175))
 
-    UICard:AddColorPicker("Accent Color", Color3.fromRGB(190,140,255), function(color)
+    UICard:ColorWheel("Accent Color", function(color)
         CurrentTheme.Accent = color
-    end, {
-        Title = "Accent Color",
-        Description = "Change the main accent color of the hub.",
-        Example = "Set to purple, green, red, etc."
-    })
+    end)
 
-    UICard:AddButton("Theme: Purple", function()
+    UICard:Button("Theme: Purple", function()
         CurrentTheme.Accent = Color3.fromRGB(190,140,255)
-        Library:Notify({Title = "Theme", Description = "Purple theme applied.", Duration = 2})
+        notify("Theme", "Purple accent applied.", 2)
     end)
-    UICard:AddButton("Theme: Green", function()
+    UICard:Button("Theme: Green", function()
         CurrentTheme.Accent = Color3.fromRGB(50,200,100)
-        Library:Notify({Title = "Theme", Description = "Green theme applied.", Duration = 2})
+        notify("Theme", "Green accent applied.", 2)
     end)
-    UICard:AddButton("Theme: Red", function()
+    UICard:Button("Theme: Red", function()
         CurrentTheme.Accent = Color3.fromRGB(220,50,50)
-        Library:Notify({Title = "Theme", Description = "Red theme applied.", Duration = 2})
+        notify("Theme", "Red accent applied.", 2)
     end)
-    UICard:AddButton("Theme: Blue", function()
+    UICard:Button("Theme: Blue", function()
         CurrentTheme.Accent = Color3.fromRGB(50,120,220)
-        Library:Notify({Title = "Theme", Description = "Blue theme applied.", Duration = 2})
+        notify("Theme", "Blue accent applied.", 2)
     end)
-    UICard:AddButton("Theme: Gold", function()
+    UICard:Button("Theme: Gold", function()
         CurrentTheme.Accent = Color3.fromRGB(230,180,40)
-        Library:Notify({Title = "Theme", Description = "Gold theme applied.", Duration = 2})
+        notify("Theme", "Gold accent applied.", 2)
     end)
 
-    -- CONFIG SECTION
-    local ConfigCard = Settings_Page:CreateSection("Config")
-    ConfigCard:AddButton("Save Config", function()
+    -- CONFIG SAVE/LOAD
+    local ConfigCard = Settings_Tab:Section("Config")
+
+    ConfigCard:Button("Save Config", function()
         local config = {
             ReachSize = ReachSize,
             ThreatRadius = ThreatRadius,
             latencyEstimate = latencyEstimate,
             Theme = {
-                Accent = {R = CurrentTheme.Accent.R, G = CurrentTheme.Accent.G, B = CurrentTheme.Accent.B},
+                R = CurrentTheme.Accent.R,
+                G = CurrentTheme.Accent.G,
+                B = CurrentTheme.Accent.B,
             },
             Toggles = {
                 AntiAura = AntiAura.Enabled,
@@ -2179,110 +2043,78 @@ local function buildHub()
                 KillLog = KillLogEnabled,
             }
         }
-        writeJSON("exo_config_v3.dat", config)
-        Library:Notify({Title = "Config Saved", Description = "Settings saved to exo_config_v3.dat", Duration = 2})
-    end, {
-        Title = "Save Config",
-        Description = "Saves all settings including theme color.",
-        Example = "Load next session to restore setup."
-    })
-    ConfigCard:AddButton("Load Config", function()
-        local config = readJSON("exo_config_v3.dat")
+        writeJSON(CONFIG_FILE, config)
+        notify("Config Saved", "Settings saved to " .. CONFIG_FILE, 2, "Success")
+    end)
+
+    ConfigCard:Button("Load Config", function()
+        local config = readJSON(CONFIG_FILE)
         if config then
             ReachSize = config.ReachSize or 2
             ThreatRadius = config.ThreatRadius or 50
             latencyEstimate = config.latencyEstimate or 0.1
-            if config.Theme and config.Theme.Accent then
-                CurrentTheme.Accent = Color3.new(config.Theme.Accent.R, config.Theme.Accent.G, config.Theme.Accent.B)
+            if config.Theme then
+                CurrentTheme.Accent = Color3.new(config.Theme.R, config.Theme.G, config.Theme.B)
             end
-            Library:Notify({Title = "Config Loaded", Description = "Settings restored.", Duration = 2})
+            notify("Config Loaded", "Settings restored.", 2, "Success")
         else
-            Library:Notify({Title = "No Config", Description = "No saved config found.", Duration = 2})
+            notify("No Config", "No saved config found.", 2, "Error")
         end
-    end, {
-        Title = "Load Config",
-        Description = "Loads previously saved settings.",
-        Example = "Restores all values and theme."
-    })
-    ConfigCard:AddConfigManager("exoHubSavers")
+    end)
 
-    -- GENERAL SECTION
-    local GeneralCard = Settings_Page:CreateSection("General")
+    -- GENERAL
+    local GeneralCard = Settings_Tab:Section("General")
 
-    GeneralCard:AddToggle("Anti-Lag Shield", false, function(state)
+    GeneralCard:Toggle("Anti-Lag Shield", function(state)
         AntiLagEnabled = state
         if state then
             startAntiLag()
-            Library:Notify({Title = "Anti-Lag", Description = "Performance mode activated. Particles, shadows, effects disabled.", Duration = 3})
+            notify("Anti-Lag", "Performance mode activated.", 3, "Success")
         else
             stopAntiLag()
-            Library:Notify({Title = "Anti-Lag", Description = "Performance mode deactivated.", Duration = 2})
+            notify("Anti-Lag", "Performance mode deactivated.", 2)
         end
-    end, {
-        Title = "Anti-Lag Shield",
-        Description = "Disables particles, beams, trails, shadows, post-processing. Lowers graphics quality. Optimized for Arceus X Neo, Delta, Vega X, Codex.",
-        Example = "Enable on lower-end devices for smoother gameplay."
-    })
+    end)
 
-    GeneralCard:AddToggle("ESP (Minimal Dots)", false, function(state)
+    GeneralCard:Toggle("ESP (Minimal Dots)", function(state)
         ESPEnabled = state
         if state then
             startESP()
-            Library:Notify({Title = "ESP", Description = "Minimal player dots enabled.", Duration = 2})
+            notify("ESP", "Player dots enabled.", 2)
         else
             stopESP()
-            Library:Notify({Title = "ESP", Description = "ESP disabled.", Duration = 2})
+            notify("ESP", "ESP disabled.", 2)
         end
-    end, {
-        Title = "ESP",
-        Description = "Shows colored dots at player positions on screen. Minimal and lightweight.",
-        Example = "Red dots appear where other players are."
-    })
+    end)
 
-    GeneralCard:AddToggle("Kill Notifications", false, function(state)
+    GeneralCard:Toggle("Kill Notifications", function(state)
         KillNotifEnabled = state
         if state then
-            Library:Notify({Title = "Kill Notifications", Description = "You will now be notified when killed. Includes behavioral analysis, threat level, and counter advice.", Duration = 4})
+            notify("Kill Notifications", "You will be notified when killed.\nIncludes behavioral analysis + threat level.", 4)
         end
-    end, {
-        Title = "Kill Notifications",
-        Description = "In-game notification when you die. Shows killer name, weapon used, suspected hub features, counter advice, and threat level (1-10). At 10/10, recommends Anti-Spawnkill Shield.",
-        Example = "Styled like MPT error notifications. Clean and informative."
-    })
+    end)
 
-    GeneralCard:AddToggle("Kill Logs", false, function(state)
+    GeneralCard:Toggle("Kill Logs", function(state)
         KillLogEnabled = state
         if state then
-            Library:Notify({Title = "Kill Logs", Description = "All kill events will now be logged.", Duration = 2})
+            notify("Kill Logs", "All kill events will be logged.", 2)
         end
-    end, {
-        Title = "Kill Logs",
-        Description = "Keeps a running log of all Kill Notifications. View via the button below.",
-        Example = "Stores up to 50 recent kill events."
-    })
+    end)
 
-    GeneralCard:AddButton("Open Kill Log Viewer", function()
+    GeneralCard:Button("Open Kill Log Viewer", function()
         openKillLogViewer()
-    end, {
-        Title = "Kill Log Viewer",
-        Description = "Opens a scrollable window showing all recorded kill events with full analysis.",
-        Example = "Shows killer, weapon, distance, threat level, and counters."
-    })
+    end)
 
     -- SETUP KILL NOTIFICATIONS
     setupKillNotifications()
 
-    -- FINAL NOTIFICATION
-    Library:Notify({
-        Title = "EXO Hub v3.0 Loaded",
-        Description = "Architectural Master Edition. All systems online.\nSPT: 4 pages | MPT: 6 pages | Settings: Full",
-        Duration = 4
-    })
-    print("[EXO] Power Tycoon Hub v3.0 - ZyronX Edition. Ready.")
+    -- FINAL
+    notify("EXO Hub v3.0 Loaded", "Cerberus Edition. All systems online.\nSPT + MPT + Settings + Updates", 4, "Success")
+    print("[EXO] Power Tycoon Hub v3.0 - Cerberus Edition. Ready.")
 end
 
 -- ═══════════════════════════════════════════════════════════
---  KEY SYSTEM GATE (ACTUALLY CALLED NOW)
+--  KEY SYSTEM GATE (ACTUALLY CALLED)
 -- ═══════════════════════════════════════════════════════════
 local savedKey = readJSON(KEY_FILE)
 if savedKey and savedKey.key == HUB_KEY then
