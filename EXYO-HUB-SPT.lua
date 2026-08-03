@@ -1,6 +1,6 @@
 -- ═══════════════════════════════════════════════════════════════
---  EXO HUB v5.0 – WindUI Edition | Power Tycoon
---  Built-in Key System | Unlimited Elements | Mobile Compatible
+--  EXO HUB v5.0 – WindUI Edition (FIXED)
+--  Fix: Removed Tab:Show() call that caused nil method error
 -- ═══════════════════════════════════════════════════════════════
 
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/raw/main/dist/main.lua"))()
@@ -885,7 +885,7 @@ if TycoonsFolder then
 end
 
 -- ═══════════════════════════════════════════════════════════
---  BUILD THE HUB UI (WINDUI)
+--  BUILD THE HUB UI (WINDUI) – FIXED
 -- ═══════════════════════════════════════════════════════════
 
 local Window = WindUI:CreateWindow({
@@ -909,11 +909,11 @@ local Window = WindUI:CreateWindow({
         Key = {"EXOSTAKEOVERR19$"},
         Actions = {
             [1] = {
-                Text = "Join Discord",
+                Text = "Get Key",
                 OnPress = function()
                     WindUI:Notify({
-                        Title = "Discord",
-                        Content = "Key is: EXOSTAKEOVERR19$",
+                        Title = "Key Info",
+                        Content = "Key: EXOSTAKEOVERR19$",
                         Duration = 5,
                         Icon = "message-circle",
                     })
@@ -941,7 +941,7 @@ local MPT_Economy_Tab  = Window:Tab({Title = "MPT Economy", Icon = "crown"})
 local Updates_Tab      = Window:Tab({Title = "Updates", Icon = "scroll-text"})
 local Settings_Tab     = Window:Tab({Title = "Settings", Icon = "settings"})
 
-SPT_Combat_Tab:Show()
+-- ★ FIX: NO :Show() call here. WindUI auto-displays the first tab.
 
 -- ═══════════════════════════════════════════════════════════
 --  SPT COMBAT TAB
@@ -960,7 +960,7 @@ do
                     if plr ~= player then table.insert(Aura.TargetList, plr) end
                 end
                 startAuraLoop()
-                WindUI:Notify({Title = "Aura", Content = "Activated - targeting " .. #Aura.TargetList .. " players.", Duration = 2, Icon = "swords"})
+                WindUI:Notify({Title = "Aura", Content = "Activated - " .. #Aura.TargetList .. " targets.", Duration = 2, Icon = "swords"})
             else
                 stopAuraLoop()
             end
@@ -1550,17 +1550,15 @@ end
 do
     local ChangeSec = Updates_Tab:Section({Title = "EXO Hub Changelog"})
 
-    ChangeSec:Label({Title = "v5.0 - WindUI Edition"})
+    ChangeSec:Label({Title = "v5.0 - WindUI Edition (FIXED)"})
+    ChangeSec:Label({Title = "  - Fixed: Removed Tab:Show() nil method error"})
     ChangeSec:Label({Title = "  - WindUI: unlimited elements, built-in key system"})
-    ChangeSec:Label({Title = "  - Key system integrated into library (SaveKey = true)"})
-    ChangeSec:Label({Title = "  - MPT: Insta-Kill Micro-Burst, Hit Amplifier, Tool Arsenal"})
-    ChangeSec:Label({Title = "  - Anti-Aura: safe ForceField, no broken hooks"})
+    ChangeSec:Label({Title = "  - MPT: Insta-Kill, Hit Amplifier, Tool Arsenal"})
     ChangeSec:Label({Title = "  - Kill Notifications with behavioral analysis"})
     ChangeSec:Label({Title = "  - Kill Logs, ESP, Anti-Lag in Settings"})
-    ChangeSec:Label({Title = "  - Theme switching via WindUI"})
-    ChangeSec:Label({Title = "  - Config save/load"})
+    ChangeSec:Label({Title = "  - Config save/load with theme persistence"})
     ChangeSec:Label({Title = ""})
-    ChangeSec:Label({Title = "v4.0 - Embedded UI / Velocity / Cerberus attempts"})
+    ChangeSec:Label({Title = "v4.0 - Embedded/Velocity/Cerberus attempts"})
     ChangeSec:Label({Title = "v3.0 - ZyronX migration (capped)"})
     ChangeSec:Label({Title = "v2.0 - FluentPro fixes"})
     ChangeSec:Label({Title = "v1.1 - Initial release"})
@@ -1581,20 +1579,10 @@ do
         end
     })
 
-    UISec:ColorPicker({
-        Title = "Accent Color",
-        Default = Color3.fromRGB(190, 140, 255),
-        Callback = function(color)
-            pcall(function() WindUI:SetTheme("Default") end)
-        end
-    })
-
     UISec:Keybind({
         Title = "Toggle Hub",
         Default = Enum.KeyCode.RightControl,
-        Callback = function()
-            -- WindUI handles this internally
-        end
+        Callback = function() end
     })
 
     local GeneralSec = Settings_Tab:Section({Title = "General"})
@@ -1628,7 +1616,7 @@ do
         Callback = function(state)
             KillNotifEnabled = state
             if state then
-                WindUI:Notify({Title = "Kill Notifications", Content = "You will be notified when killed.\nBehavioral analysis + threat level.", Duration = 4, Icon = "bell"})
+                WindUI:Notify({Title = "Kill Notifications", Content = "Behavioral analysis + threat level enabled.", Duration = 4, Icon = "bell"})
             end
         end
     })
@@ -1636,9 +1624,7 @@ do
     GeneralSec:Toggle({
         Title = "Kill Logs",
         Default = false,
-        Callback = function(state)
-            KillLogEnabled = state
-        end
+        Callback = function(state) KillLogEnabled = state end
     })
 
     GeneralSec:Button({
@@ -1703,7 +1689,7 @@ setupKillNotifications()
 -- ── FINAL ───────────────────────────────────────────────────
 WindUI:Notify({
     Title = "EXO Hub v5.0 Loaded",
-    Content = "WindUI Edition. All systems online.\nSPT + MPT + Settings + Updates",
+    Content = "WindUI Edition. All systems online.",
     Duration = 4,
     Icon = "check-circle",
 })
