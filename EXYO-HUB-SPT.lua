@@ -1,9 +1,9 @@
 -- ═══════════════════════════════════════════════════════════════
---  EXO HUB v4.0 – Velocity.vip UI | Power Tycoon
---  SPT + MPT Redesigned | Settings | Updates | Key System
+--  EXO HUB v5.0 – WindUI Edition | Power Tycoon
+--  Built-in Key System | Unlimited Elements | Mobile Compatible
 -- ═══════════════════════════════════════════════════════════════
 
-local library = loadstring(game:HttpGet("https://github.com/GhostDuckyy/UI-Libraries/blob/main/Velocity.vip/source.lua?raw=true"))()
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/raw/main/dist/main.lua"))()
 
 -- ── SERVICES ────────────────────────────────────────────────
 local Players           = game:GetService("Players")
@@ -14,12 +14,11 @@ local HttpService       = game:GetService("HttpService")
 local TweenService      = game:GetService("TweenService")
 local UserInputService  = game:GetService("UserInputService")
 local Lighting          = game:GetService("Lighting")
+local TeleportService   = game:GetService("TeleportService")
 local player            = Players.LocalPlayer
 
 -- ── FILE I/O ────────────────────────────────────────────────
-local HUB_KEY     = "EXOSTAKEOVERR19$"
-local KEY_FILE    = "exo_key_v4.dat"
-local CONFIG_DIR  = "exo_hub"
+local CONFIG_FILE = "exo_config_v5.dat"
 
 local function readFile(path)
     if isfile and readfile and isfile(path) then
@@ -772,7 +771,15 @@ local function setupKillNotifications()
             end
             local analysis = analyzeKill(killerName, weaponName, distance)
             if KillNotifEnabled then
-                library.notify("KILL: " .. analysis.Killer .. " | " .. analysis.Weapon .. " | Threat: " .. analysis.Threat .. "/10")
+                WindUI:Notify({
+                    Title = "KILL DETECTED - Threat " .. analysis.Threat .. "/10",
+                    Content = "Killer: " .. analysis.Killer .. "\nWeapon: " .. analysis.Weapon
+                        .. "\nDist: " .. analysis.Distance .. " studs"
+                        .. "\nSuspected: " .. table.concat(analysis.Suspected, ", ")
+                        .. "\nCounter: " .. table.concat(analysis.Counter, " | "),
+                    Duration = 6,
+                    Icon = "alert-triangle",
+                })
             end
             if KillLogEnabled then
                 table.insert(KillLogs, analysis)
@@ -878,65 +885,125 @@ if TycoonsFolder then
 end
 
 -- ═══════════════════════════════════════════════════════════
---  BUILD THE HUB UI (VELOCITY)
+--  BUILD THE HUB UI (WINDUI)
 -- ═══════════════════════════════════════════════════════════
-local function buildHub()
 
-    local ui = {}
-    ui.window = library.init_window("EXO Hub", {
-        size = Vector2.new(650, 500),
-        name = "EXO Hub | Power Tycoon v4.0",
-        drag_tween = true
-    })
+local Window = WindUI:CreateWindow({
+    Title = "EXO Hub",
+    Icon = "swords",
+    Author = "Power Tycoon | v5.0",
+    Folder = "EXOHub",
+    Size = UDim2.fromOffset(650, 500),
+    Transparent = false,
+    Theme = "Default",
+    SideBarWidth = 170,
+    HasOutline = true,
+    KeySystem = true,
+    KeySettings = {
+        Title = "EXO Hub",
+        Subtitle = "Key Authentication",
+        Note = "Enter your premium key to unlock the hub.",
+        FileName = "EXOKeySystem",
+        SaveKey = true,
+        GrabKeyFromSite = false,
+        Key = {"EXOSTAKEOVERR19$"},
+        Actions = {
+            [1] = {
+                Text = "Join Discord",
+                OnPress = function()
+                    WindUI:Notify({
+                        Title = "Discord",
+                        Content = "Key is: EXOSTAKEOVERR19$",
+                        Duration = 5,
+                        Icon = "message-circle",
+                    })
+                end,
+            }
+        }
+    }
+})
 
-    ui.pages = {}
-    ui.pages.spt_combat   = ui.window.create_page(ui.window, {name = "SPT Combat"})
-    ui.pages.spt_tycoon   = ui.window.create_page(ui.window, {name = "SPT Tycoon"})
-    ui.pages.spt_misc     = ui.window.create_page(ui.window, {name = "SPT Misc"})
-    ui.pages.mpt_kill     = ui.window.create_page(ui.window, {name = "MPT Kill"})
-    ui.pages.mpt_economy  = ui.window.create_page(ui.window, {name = "MPT Economy"})
-    ui.pages.updates      = ui.window.create_page(ui.window, {name = "Updates"})
-    ui.pages.settings     = ui.window.create_page(ui.window, {name = "Settings"})
+Window:EditOpenButton({
+    Enabled = true,
+    Image = "swords",
+    Title = "E",
+    CornerRadius = UDim.new(1, 0),
+    StrokeThickness = 2,
+    Side = "Left",
+})
 
-    ui.pages.spt_combat:set_default()
+-- ── TABS ────────────────────────────────────────────────────
+local SPT_Combat_Tab   = Window:Tab({Title = "SPT Combat", Icon = "swords"})
+local SPT_Tycoon_Tab   = Window:Tab({Title = "SPT Tycoon", Icon = "building-2"})
+local SPT_Misc_Tab     = Window:Tab({Title = "SPT Misc", Icon = "move"})
+local MPT_Kill_Tab     = Window:Tab({Title = "MPT Kill", Icon = "skull"})
+local MPT_Economy_Tab  = Window:Tab({Title = "MPT Economy", Icon = "crown"})
+local Updates_Tab      = Window:Tab({Title = "Updates", Icon = "scroll-text"})
+local Settings_Tab     = Window:Tab({Title = "Settings", Icon = "settings"})
 
-    -- ═══════════════════════════════════════════════════════
-    --  SPT COMBAT PAGE
-    -- ═══════════════════════════════════════════════════════
-    do
-        local aura_section = ui.pages.spt_combat:new_section({name = "multi-target aura", side = "left", size = 220})
+SPT_Combat_Tab:Show()
 
-        aura_section:new_toggle({name = "enable aura", risky = true, flag = "spt_aura_enabled", callback = function()
-            Aura.Enabled = library.flags.spt_aura_enabled
-            if Aura.Enabled then
+-- ═══════════════════════════════════════════════════════════
+--  SPT COMBAT TAB
+-- ═══════════════════════════════════════════════════════════
+do
+    local AuraSec = SPT_Combat_Tab:Section({Title = "Multi-Target Aura"})
+
+    AuraSec:Toggle({
+        Title = "Enable Aura",
+        Default = false,
+        Callback = function(state)
+            Aura.Enabled = state
+            if state then
                 Aura.TargetList = {}
                 for _, plr in ipairs(Players:GetPlayers()) do
                     if plr ~= player then table.insert(Aura.TargetList, plr) end
                 end
                 startAuraLoop()
-                library.notify("Aura activated - targeting " .. #Aura.TargetList .. " players")
+                WindUI:Notify({Title = "Aura", Content = "Activated - targeting " .. #Aura.TargetList .. " players.", Duration = 2, Icon = "swords"})
             else
                 stopAuraLoop()
             end
-        end})
+        end
+    })
 
-        aura_section:new_toggle({name = "instant kill", risky = true, flag = "spt_instant_kill", callback = function()
-            InstantKill = library.flags.spt_instant_kill
-        end})
+    AuraSec:Toggle({
+        Title = "Instant Kill",
+        Default = false,
+        Callback = function(state) InstantKill = state end
+    })
 
-        aura_section:new_slider({name = "prediction offset", min = 5, max = 25, default = 10, flag = "spt_prediction", callback = function()
-            latencyEstimate = library.flags.spt_prediction / 100
-        end})
+    AuraSec:Slider({
+        Title = "Prediction Offset",
+        Min = 5,
+        Max = 25,
+        Default = 10,
+        Callback = function(val) latencyEstimate = val / 100 end
+    })
 
-        aura_section:new_dropdown({name = "aura targets", options = getServerPlayers(), flag = "spt_aura_targets", callback = function()
-            -- Dropdown selection handled via flags
-        end})
+    AuraSec:Dropdown({
+        Title = "Aura Targets",
+        Options = getServerPlayers(),
+        MultiSelection = true,
+        Callback = function(selected)
+            table.clear(Aura.TargetList)
+            if selected then
+                for _, name in ipairs(selected) do
+                    local plr = Players:FindFirstChild(name)
+                    if plr then table.insert(Aura.TargetList, plr) end
+                end
+            end
+        end
+    })
 
-        local toolfollow_section = ui.pages.spt_combat:new_section({name = "tool follow", side = "right", size = 180})
+    local ToolFollowSec = SPT_Combat_Tab:Section({Title = "Tool Follow"})
 
-        toolfollow_section:new_toggle({name = "enable tool follow", risky = true, flag = "spt_toolfollow_enabled", callback = function()
-            ToolFollow.Enabled = library.flags.spt_toolfollow_enabled
-            if ToolFollow.Enabled then
+    ToolFollowSec:Toggle({
+        Title = "Enable Tool Follow",
+        Default = false,
+        Callback = function(state)
+            ToolFollow.Enabled = state
+            if state then
                 ToolFollow.Targets = {}
                 for _, plr in ipairs(Players:GetPlayers()) do
                     if plr ~= player then table.insert(ToolFollow.Targets, plr) end
@@ -945,26 +1012,38 @@ local function buildHub()
             else
                 stopToolFollow()
             end
-        end})
+        end
+    })
 
-        local defense_section = ui.pages.spt_combat:new_section({name = "defense / anti-aura", side = "right", size = 200})
+    local DefenseSec = SPT_Combat_Tab:Section({Title = "Defense / Anti-Aura"})
 
-        defense_section:new_toggle({name = "enable anti-aura", risky = false, flag = "spt_antiaura_enabled", callback = function()
-            AntiAura.Enabled = library.flags.spt_antiaura_enabled
-            if AntiAura.Enabled then startAntiAura() else stopAntiAura() end
-        end})
+    DefenseSec:Toggle({
+        Title = "Enable Anti-Aura",
+        Default = false,
+        Callback = function(state)
+            AntiAura.Enabled = state
+            if state then startAntiAura() else stopAntiAura() end
+        end
+    })
 
-        defense_section:new_toggle({name = "god mode (forcefield)", risky = false, flag = "spt_godmode", callback = function()
-            AntiAura.GodMode = library.flags.spt_godmode
-        end})
+    DefenseSec:Toggle({
+        Title = "God Mode (ForceField)",
+        Default = false,
+        Callback = function(state) AntiAura.GodMode = state end
+    })
 
-        defense_section:new_toggle({name = "repel (anti-touch)", risky = false, flag = "spt_repel", callback = function()
-            AntiAura.Repel = library.flags.spt_repel
-        end})
+    DefenseSec:Toggle({
+        Title = "Repel (Anti-Touch)",
+        Default = false,
+        Callback = function(state) AntiAura.Repel = state end
+    })
 
-        defense_section:new_toggle({name = "anti spawnkill", risky = false, flag = "spt_antispawnkill", callback = function()
-            AntiSpawnkill = library.flags.spt_antispawnkill
-            if AntiSpawnkill then
+    DefenseSec:Toggle({
+        Title = "Anti Spawnkill",
+        Default = false,
+        Callback = function(state)
+            AntiSpawnkill = state
+            if state then
                 player.CharacterAdded:Connect(function(c)
                     local hum = c:WaitForChild("Humanoid")
                     hum.MaxHealth = 9e9; hum.Health = 9e9
@@ -975,28 +1054,40 @@ local function buildHub()
                     end)
                 end)
             end
-        end})
-    end
+        end
+    })
+end
 
-    -- ═══════════════════════════════════════════════════════
-    --  SPT TYCOON PAGE
-    -- ═══════════════════════════════════════════════════════
-    do
-        local tycoon_section = ui.pages.spt_tycoon:new_section({name = "tycoon automation", side = "left", size = 180})
+-- ═══════════════════════════════════════════════════════════
+--  SPT TYCOON TAB
+-- ═══════════════════════════════════════════════════════════
+do
+    local TycoonSec = SPT_Tycoon_Tab:Section({Title = "Tycoon Automation"})
 
-        tycoon_section:new_toggle({name = "auto claim money", risky = false, flag = "spt_autoclaim", callback = function()
-            AutoClaimMoney = library.flags.spt_autoclaim
-            if AutoClaimMoney then startClaimMoney() else stopClaimMoney() end
-        end})
+    TycoonSec:Toggle({
+        Title = "Auto Claim Money",
+        Default = false,
+        Callback = function(state)
+            AutoClaimMoney = state
+            if state then startClaimMoney() else stopClaimMoney() end
+        end
+    })
 
-        tycoon_section:new_toggle({name = "smart auto build", risky = false, flag = "spt_autobuild", callback = function()
-            AutoBuild = library.flags.spt_autobuild
-            if AutoBuild then startAutoBuild() else stopAutoBuild() end
-        end})
+    TycoonSec:Toggle({
+        Title = "Smart Auto Build",
+        Default = false,
+        Callback = function(state)
+            AutoBuild = state
+            if state then startAutoBuild() else stopAutoBuild() end
+        end
+    })
 
-        tycoon_section:new_toggle({name = "auto grab weapons", risky = false, flag = "spt_autograb", callback = function()
-            AutoGetTools = library.flags.spt_autograb
-            if AutoGetTools then
+    TycoonSec:Toggle({
+        Title = "Auto Grab Weapons",
+        Default = false,
+        Callback = function(state)
+            AutoGetTools = state
+            if state then
                 if grabLoopConn then grabLoopConn:Disconnect() end
                 grabLoopConn = RunService.PreSimulation:Connect(function()
                     if not AutoGetTools then return end
@@ -1024,13 +1115,17 @@ local function buildHub()
             else
                 if grabLoopConn then grabLoopConn:Disconnect(); grabLoopConn = nil end
             end
-        end})
+        end
+    })
 
-        local cooldown_section = ui.pages.spt_tycoon:new_section({name = "tools & cooldown", side = "right", size = 180})
+    local CooldownSec = SPT_Tycoon_Tab:Section({Title = "Tools & Cooldown"})
 
-        cooldown_section:new_toggle({name = "auto use tools (0 delay)", risky = true, flag = "spt_autotools", callback = function()
-            AutoTools = library.flags.spt_autotools
-            if AutoTools then
+    CooldownSec:Toggle({
+        Title = "Auto Use Tools (0 delay)",
+        Default = false,
+        Callback = function(state)
+            AutoTools = state
+            if state then
                 toolLoopConn = RunService.RenderStepped:Connect(function()
                     if not AutoTools then return end
                     local myChar = player.Character
@@ -1045,62 +1140,84 @@ local function buildHub()
             else
                 if toolLoopConn then toolLoopConn:Disconnect(); toolLoopConn = nil end
             end
-        end})
+        end
+    })
 
-        cooldown_section:new_toggle({name = "no cooldown", risky = true, flag = "spt_nocooldown", callback = function()
-            NoCooldown = library.flags.spt_nocooldown
-            if NoCooldown and not getgenv().NoCooldownHooked then
+    CooldownSec:Toggle({
+        Title = "No Cooldown",
+        Default = false,
+        Callback = function(state)
+            NoCooldown = state
+            if state and not getgenv().NoCooldownHooked then
                 hookfunction(wait, function() return RunService.PostSimulation:Wait() end)
                 hookfunction(task.wait, function() return RunService.PostSimulation:Wait() end)
                 hookfunction(delay, function(_, func) task.spawn(func) end)
                 hookfunction(spawn, function(func) task.spawn(func) end)
                 getgenv().NoCooldownHooked = true
             end
-        end})
-    end
+        end
+    })
+end
 
-    -- ═══════════════════════════════════════════════════════
-    --  SPT MISC PAGE
-    -- ═══════════════════════════════════════════════════════
-    do
-        local reach_section = ui.pages.spt_misc:new_section({name = "reach", side = "left", size = 160})
+-- ═══════════════════════════════════════════════════════════
+--  SPT MISC TAB
+-- ═══════════════════════════════════════════════════════════
+do
+    local ReachSec = SPT_Misc_Tab:Section({Title = "Reach"})
 
-        reach_section:new_toggle({name = "enable reach", risky = true, flag = "spt_reach_enabled", callback = function()
-            Reach = library.flags.spt_reach_enabled
-            if Reach then applyReach() else stopReach() end
-        end})
+    ReachSec:Toggle({
+        Title = "Enable Reach",
+        Default = false,
+        Callback = function(state)
+            Reach = state
+            if state then applyReach() else stopReach() end
+        end
+    })
 
-        reach_section:new_slider({name = "reach size", min = 1, max = 10, default = 2, flag = "spt_reach_size", callback = function()
-            ReachSize = library.flags.spt_reach_size
+    ReachSec:Slider({
+        Title = "Reach Size",
+        Min = 1,
+        Max = 10,
+        Default = 2,
+        Callback = function(val)
+            ReachSize = val
             if Reach then stopReach(); applyReach() end
-        end})
+        end
+    })
 
-        local respawn_section = ui.pages.spt_misc:new_section({name = "respawn & protection", side = "left", size = 120})
+    local RespawnSec = SPT_Misc_Tab:Section({Title = "Respawn & Protection"})
 
-        respawn_section:new_toggle({name = "fast respawn", risky = false, flag = "spt_fastrespawn", callback = function()
-            FastRespawn = library.flags.spt_fastrespawn
-            if FastRespawn then startFastRespawn() end
-        end})
+    RespawnSec:Toggle({
+        Title = "Fast Respawn",
+        Default = false,
+        Callback = function(state)
+            FastRespawn = state
+            if state then startFastRespawn() end
+        end
+    })
 
-        local utils_section = ui.pages.spt_misc:new_section({name = "utilities", side = "right", size = 160})
+    local UtilsSec = SPT_Misc_Tab:Section({Title = "Utilities"})
 
-        utils_section:new_textbox({placeholder = "damage remote path", flag = "spt_remote_path"})
-
-        utils_section:new_button({name = "set damage remote", confirm = false, callback = function()
-            local text = library.flags.spt_remote_path
+    UtilsSec:Textbox({
+        Title = "Set Damage Remote",
+        Placeholder = "game.ReplicatedStorage.DealDamage",
+        Callback = function(text)
             if text and text ~= "" then
                 local ok, remote = pcall(function() return loadstring("return " .. text)() end)
                 if ok and remote and (remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction")) then
                     DAMAGE_REMOTE = remote
-                    library.notify("Damage remote set successfully")
+                    WindUI:Notify({Title = "Remote Set", Content = "Damage remote updated.", Duration = 3, Icon = "check"})
                 else
-                    library.notify("Invalid remote path")
+                    WindUI:Notify({Title = "Error", Content = "Invalid remote path.", Duration = 3, Icon = "x"})
                 end
             end
-        end})
+        end
+    })
 
-        utils_section:new_button({name = "open game dumper", confirm = false, callback = function()
-            library.notify("Game Dumper opened - check CoreGui")
+    UtilsSec:Button({
+        Title = "Open Game Dumper",
+        Callback = function()
+            WindUI:Notify({Title = "Game Dumper", Content = "Scanner opened.", Duration = 2, Icon = "search"})
             if CoreGui:FindFirstChild("DumperGUI") then return end
             local dGui = Instance.new("ScreenGui", CoreGui)
             dGui.Name = "DumperGUI"
@@ -1112,16 +1229,9 @@ local function buildHub()
             frame.Active = true
             frame.Draggable = true
             Instance.new("UICorner",frame).CornerRadius = UDim.new(0,10)
-            local titleLbl = Instance.new("TextLabel", frame)
-            titleLbl.Size = UDim2.new(1,0,0,35)
-            titleLbl.BackgroundColor3 = Color3.fromRGB(30,30,40)
-            titleLbl.Text = "GAME SCANNER"
-            titleLbl.TextColor3 = Color3.fromRGB(255,255,255)
-            titleLbl.Font = Enum.Font.GothamBold
-            titleLbl.TextSize = 18
             local scroll = Instance.new("ScrollingFrame", frame)
-            scroll.Size = UDim2.new(1,-10,1,-80)
-            scroll.Position = UDim2.new(0,5,0,40)
+            scroll.Size = UDim2.new(1,-10,1,-50)
+            scroll.Position = UDim2.new(0,5,0,5)
             scroll.BackgroundTransparency = 1
             scroll.ScrollBarThickness = 8
             scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
@@ -1166,68 +1276,96 @@ local function buildHub()
             addLog("--- WORKSPACE ---", Color3.fromRGB(100,200,255)); scan(workspace, 0)
             addLog("--- REPLICATEDSTORAGE ---", Color3.fromRGB(100,200,255)); scan(ReplicatedStorage, 0)
             addLog("SCAN COMPLETE", Color3.fromRGB(100,255,255))
-        end})
-    end
+        end
+    })
+end
 
-    -- ═══════════════════════════════════════════════════════
-    --  MPT KILL PAGE
-    -- ═══════════════════════════════════════════════════════
-    do
-        local omni_section = ui.pages.mpt_kill:new_section({name = "omni-kill engine", side = "left", size = 240})
+-- ═══════════════════════════════════════════════════════════
+--  MPT KILL TAB
+-- ═══════════════════════════════════════════════════════════
+do
+    local OmniSec = MPT_Kill_Tab:Section({Title = "Omni-Kill Engine"})
 
-        omni_section:new_toggle({name = "enable omni-kill", risky = true, flag = "mpt_omnikill", callback = function()
-            Aura.Enabled = library.flags.mpt_omnikill
-            InstantKill = library.flags.mpt_omnikill
-            if Aura.Enabled then
+    OmniSec:Toggle({
+        Title = "Enable Omni-Kill",
+        Default = false,
+        Callback = function(state)
+            Aura.Enabled = state
+            InstantKill = state
+            if state then
                 Aura.TargetList = {}
                 for _, plr in ipairs(Players:GetPlayers()) do
                     if plr ~= player then table.insert(Aura.TargetList, plr) end
                 end
                 startAuraLoop()
-                library.notify("OMNI-KILL ENGAGED - " .. #Aura.TargetList .. " targets")
+                WindUI:Notify({Title = "OMNI-KILL", Content = "ENGAGED - " .. #Aura.TargetList .. " targets.", Duration = 3, Icon = "skull"})
             else
                 stopAuraLoop()
             end
-        end})
+        end
+    })
 
-        omni_section:new_toggle({name = "insta-kill micro-burst", risky = true, flag = "mpt_instakill", callback = function()
-            InstaKillEnabled = library.flags.mpt_instakill
-            if InstaKillEnabled then startInstaKill() else stopInstaKill() end
-        end})
+    OmniSec:Toggle({
+        Title = "Insta-Kill Micro-Burst",
+        Default = false,
+        Callback = function(state)
+            InstaKillEnabled = state
+            if state then startInstaKill() else stopInstaKill() end
+        end
+    })
 
-        omni_section:new_slider({name = "prediction aggression", min = 5, max = 25, default = 10, flag = "mpt_prediction", callback = function()
-            latencyEstimate = library.flags.mpt_prediction / 100
-        end})
+    OmniSec:Slider({
+        Title = "Prediction Aggression",
+        Min = 5,
+        Max = 25,
+        Default = 10,
+        Callback = function(val) latencyEstimate = val / 100 end
+    })
 
-        omni_section:new_button({name = "manual kill burst", confirm = false, callback = function()
+    OmniSec:Button({
+        Title = "Manual Kill Burst",
+        Callback = function()
             local orig = Aura.Enabled
             Aura.Enabled = true; InstantKill = true
             task.wait(0.15)
             Aura.Enabled = orig
             if not orig then InstantKill = false end
-            library.notify("Kill burst fired")
-        end})
+            WindUI:Notify({Title = "Kill Burst", Content = "Burst fired.", Duration = 2, Icon = "zap"})
+        end
+    })
 
-        omni_section:new_button({name = "refresh target list", confirm = false, callback = function()
+    OmniSec:Button({
+        Title = "Refresh Target List",
+        Callback = function()
             table.clear(Aura.TargetList)
             for _, plr in ipairs(Players:GetPlayers()) do
                 if plr ~= player then table.insert(Aura.TargetList, plr) end
             end
-            library.notify("Targets refreshed: " .. #Aura.TargetList .. " players")
-        end})
+            WindUI:Notify({Title = "Targets", Content = "Refreshed: " .. #Aura.TargetList .. " players.", Duration = 2, Icon = "refresh-cw"})
+        end
+    })
 
-        local hitamp_section = ui.pages.mpt_kill:new_section({name = "hit amplifier", side = "right", size = 160})
+    local HitAmpSec = MPT_Kill_Tab:Section({Title = "Hit Amplifier"})
 
-        hitamp_section:new_toggle({name = "enable hit amplifier", risky = true, flag = "mpt_hitamp", callback = function()
-            HitAmpEnabled = library.flags.mpt_hitamp
-            if HitAmpEnabled then startHitAmplifier() else stopHitAmplifier() end
-        end})
+    HitAmpSec:Toggle({
+        Title = "Enable Hit Amplifier",
+        Default = false,
+        Callback = function(state)
+            HitAmpEnabled = state
+            if state then startHitAmplifier() else stopHitAmplifier() end
+        end
+    })
 
-        local arsenal_section = ui.pages.mpt_kill:new_section({name = "tool arsenal", side = "right", size = 180})
+    HitAmpSec:Label({Title = "OverlapParams 24x24x24 | 120Hz | 15ms cooldown"})
 
-        arsenal_section:new_toggle({name = "enable tool arsenal", risky = false, flag = "mpt_toolarsenal", callback = function()
-            TG_Enabled = library.flags.mpt_toolarsenal
-            if TG_Enabled then
+    local ArsenalSec = MPT_Kill_Tab:Section({Title = "Tool Arsenal"})
+
+    ArsenalSec:Toggle({
+        Title = "Enable Tool Arsenal",
+        Default = false,
+        Callback = function(state)
+            TG_Enabled = state
+            if state then
                 TG_ScanTycoons()
                 if not getgenv().EXO_TG_Loop then
                     getgenv().EXO_TG_Loop = true
@@ -1256,9 +1394,12 @@ local function buildHub()
             else
                 getgenv().EXO_TG_Loop = false
             end
-        end})
+        end
+    })
 
-        arsenal_section:new_button({name = "force acquire all", confirm = false, callback = function()
+    ArsenalSec:Button({
+        Title = "Force Acquire All",
+        Callback = function()
             local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
             if root then
                 TG_ScanTycoons()
@@ -1271,29 +1412,41 @@ local function buildHub()
                         end
                     end
                 end
-                library.notify("Force acquire burst fired")
+                WindUI:Notify({Title = "Tool Arsenal", Content = "Force acquire burst fired.", Duration = 2, Icon = "package"})
             end
-        end})
-    end
+        end
+    })
 
-    -- ═══════════════════════════════════════════════════════
-    --  MPT ECONOMY PAGE
-    -- ═══════════════════════════════════════════════════════
-    do
-        local sov_section = ui.pages.mpt_economy:new_section({name = "tycoon sovereign", side = "left", size = 200})
+    ArsenalSec:Label({Title = "Bases: Stone, Magic, Storm, Robotic"})
+end
 
-        sov_section:new_toggle({name = "enable sovereign economy", risky = false, flag = "mpt_sovereign", callback = function()
-            AutoClaimMoney = library.flags.mpt_sovereign
-            AutoBuild = library.flags.mpt_sovereign
-            if AutoClaimMoney then startClaimMoney(); startAutoBuild()
+-- ═══════════════════════════════════════════════════════════
+--  MPT ECONOMY TAB
+-- ═══════════════════════════════════════════════════════════
+do
+    local SovSec = MPT_Economy_Tab:Section({Title = "Tycoon Sovereign"})
+
+    SovSec:Toggle({
+        Title = "Enable Sovereign Economy",
+        Default = false,
+        Callback = function(state)
+            AutoClaimMoney = state; AutoBuild = state
+            if state then startClaimMoney(); startAutoBuild()
             else stopClaimMoney(); stopAutoBuild() end
-        end})
+        end
+    })
 
-        sov_section:new_slider({name = "defense threat radius", min = 20, max = 100, default = 50, flag = "mpt_threatradius", callback = function()
-            ThreatRadius = library.flags.mpt_threatradius
-        end})
+    SovSec:Slider({
+        Title = "Defense Threat Radius",
+        Min = 20,
+        Max = 100,
+        Default = 50,
+        Callback = function(val) ThreatRadius = val end
+    })
 
-        sov_section:new_button({name = "force buy next upgrade", confirm = false, callback = function()
+    SovSec:Button({
+        Title = "Force Buy Next Upgrade",
+        Callback = function()
             local myChar = player.Character
             if not myChar then return end
             local root = myChar:FindFirstChild("HumanoidRootPart")
@@ -1316,17 +1469,21 @@ local function buildHub()
                     pcall(firetouchinterest, root, part, 0)
                     pcall(firetouchinterest, root, part, 1)
                 end
-                library.notify("Purchased: " .. best.Name)
+                WindUI:Notify({Title = "Purchased", Content = "Bought: " .. best.Name, Duration = 2, Icon = "check"})
             else
-                library.notify("Nothing affordable")
+                WindUI:Notify({Title = "No Purchase", Content = "Nothing affordable.", Duration = 2, Icon = "x"})
             end
-        end})
+        end
+    })
 
-        local spawn_section = ui.pages.mpt_economy:new_section({name = "spawn supremacy", side = "right", size = 160})
+    local SpawnSec = MPT_Economy_Tab:Section({Title = "Spawn Supremacy"})
 
-        spawn_section:new_toggle({name = "enable supremacy mode", risky = false, flag = "mpt_supremacy", callback = function()
-            AntiSpawnkill = library.flags.mpt_supremacy
-            if AntiSpawnkill then
+    SpawnSec:Toggle({
+        Title = "Enable Supremacy Mode",
+        Default = false,
+        Callback = function(state)
+            AntiSpawnkill = state
+            if state then
                 player.CharacterAdded:Connect(function(c)
                     local hum = c:WaitForChild("Humanoid")
                     hum.MaxHealth = 9e9; hum.Health = 9e9
@@ -1337,237 +1494,216 @@ local function buildHub()
                     end)
                 end)
             end
-        end})
+        end
+    })
 
-        spawn_section:new_toggle({name = "fast respawn", risky = false, flag = "mpt_fastrespawn", callback = function()
-            FastRespawn = library.flags.mpt_fastrespawn
-            if FastRespawn then startFastRespawn() end
-        end})
+    SpawnSec:Toggle({
+        Title = "Fast Respawn",
+        Default = false,
+        Callback = function(state)
+            FastRespawn = state
+            if state then startFastRespawn() end
+        end
+    })
 
-        local def_section = ui.pages.mpt_economy:new_section({name = "defense matrix", side = "right", size = 200})
+    local DefSec = MPT_Economy_Tab:Section({Title = "Defense Matrix"})
 
-        def_section:new_toggle({name = "enable defense matrix", risky = false, flag = "mpt_defense", callback = function()
-            AntiAura.Enabled = library.flags.mpt_defense
-            if AntiAura.Enabled then startAntiAura() else stopAntiAura() end
-        end})
+    DefSec:Toggle({
+        Title = "Enable Defense Matrix",
+        Default = false,
+        Callback = function(state)
+            AntiAura.Enabled = state
+            if state then startAntiAura() else stopAntiAura() end
+        end
+    })
 
-        def_section:new_toggle({name = "forcefield god mode", risky = false, flag = "mpt_godmode", callback = function()
-            AntiAura.GodMode = library.flags.mpt_godmode
-        end})
+    DefSec:Toggle({
+        Title = "ForceField God Mode",
+        Default = false,
+        Callback = function(state) AntiAura.GodMode = state end
+    })
 
-        def_section:new_toggle({name = "weapon repel", risky = false, flag = "mpt_repel", callback = function()
-            AntiAura.Repel = library.flags.mpt_repel
-        end})
+    DefSec:Toggle({
+        Title = "Weapon Repel",
+        Default = false,
+        Callback = function(state) AntiAura.Repel = state end
+    })
 
-        def_section:new_button({name = "emergency heal", confirm = false, callback = function()
+    DefSec:Button({
+        Title = "Emergency Heal",
+        Callback = function()
             local myChar = player.Character
             if myChar then
                 local hum = myChar:FindFirstChild("Humanoid")
                 if hum then
                     hum.Health = hum.MaxHealth
-                    library.notify("Health restored")
+                    WindUI:Notify({Title = "Healed", Content = "Health restored.", Duration = 2, Icon = "heart"})
                 end
             end
-        end})
-    end
-
-    -- ═══════════════════════════════════════════════════════
-    --  UPDATES PAGE
-    -- ═══════════════════════════════════════════════════════
-    do
-        local changelog_section = ui.pages.updates:new_section({name = "exo hub changelog", side = "left", size = 400})
-
-        changelog_section:new_button({name = "v4.0 - velocity ui edition", confirm = false, callback = function()
-            library.notify("v4.0: Velocity UI, all features working, key system fixed")
-        end})
-        changelog_section:new_button({name = "v3.0 - embedded ui attempt", confirm = false, callback = function()
-            library.notify("v3.0: Embedded UI engine, mobile compatible")
-        end})
-        changelog_section:new_button({name = "v2.0 - zyronx migration", confirm = false, callback = function()
-            library.notify("v2.0: ZyronX UI (capped), syntax fixes")
-        end})
-        changelog_section:new_button({name = "v1.1 - initial release", confirm = false, callback = function()
-            library.notify("v1.1: FluentPro, basic features")
-        end})
-    end
-
-    -- ═══════════════════════════════════════════════════════
-    --  SETTINGS PAGE
-    -- ═══════════════════════════════════════════════════════
-    do
-        local ui_section = ui.pages.settings:new_section({name = "ui config", side = "left", size = 200})
-
-        ui_section:new_colorpicker({name = "menu accent", default = Color3.fromRGB(190, 140, 255), flag = "ui_accent", callback = function()
-            library:ChangeThemeOption("Accent", library.flags.ui_accent)
-        end})
-
-        ui_section:new_keybind({name = "open / close", default = Enum.KeyCode.End, mode = "Toggle", flag = "ui_toggle_key", callback = function()
-            library:SetOpen(library.flags.ui_toggle_key)
-        end})
-
-        local general_section = ui.pages.settings:new_section({name = "general", side = "left", size = 250})
-
-        general_section:new_toggle({name = "anti-lag shield", risky = false, flag = "settings_antilag", callback = function()
-            AntiLagEnabled = library.flags.settings_antilag
-            if AntiLagEnabled then startAntiLag() else stopAntiLag() end
-        end})
-
-        general_section:new_toggle({name = "esp (minimal dots)", risky = false, flag = "settings_esp", callback = function()
-            ESPEnabled = library.flags.settings_esp
-            if ESPEnabled then startESP() else stopESP() end
-        end})
-
-        general_section:new_toggle({name = "kill notifications", risky = false, flag = "settings_killnotif", callback = function()
-            KillNotifEnabled = library.flags.settings_killnotif
-        end})
-
-        general_section:new_toggle({name = "kill logs", risky = false, flag = "settings_killlog", callback = function()
-            KillLogEnabled = library.flags.settings_killlog
-        end})
-
-        local config_section = ui.pages.settings:new_section({name = "configuration", side = "right", size = 200})
-
-        config_section:new_button({name = "save config", confirm = false, callback = function()
-            local config = ui.window:get_config()
-            writeJSON(CONFIG_DIR .. "_config.dat", {config = tostring(config)})
-            library.notify("Config saved")
-        end})
-
-        config_section:new_button({name = "load config", confirm = false, callback = function()
-            local data = readJSON(CONFIG_DIR .. "_config.dat")
-            if data and data.config then
-                library.notify("Config loaded")
-            else
-                library.notify("No config found")
-            end
-        end})
-
-        config_section:new_button({name = "rejoin server", confirm = true, callback = function()
-            game:GetService("TeleportService"):Teleport(game.PlaceId, player)
-        end})
-    end
-
-    -- SETUP KILL NOTIFICATIONS
-    setupKillNotifications()
-
-    -- OPEN UI
-    library:SetOpen(true)
-    library.notify("EXO Hub v4.0 loaded - Velocity UI Edition")
-end
-
--- ── KEY SYSTEM ──────────────────────────────────────────────
-local function createKeySystem(onSuccess)
-    local gui = Instance.new("ScreenGui")
-    gui.Name = "ExoKeySystem"
-    gui.ResetOnSpawn = false
-    pcall(function() gui.Parent = CoreGui end)
-    if not gui.Parent then gui.Parent = player:WaitForChild("PlayerGui") end
-
-    local overlay = Instance.new("Frame")
-    overlay.Size = UDim2.new(1,0,1,0)
-    overlay.BackgroundColor3 = Color3.fromRGB(0,0,0)
-    overlay.BackgroundTransparency = 0.4
-    overlay.Parent = gui
-
-    local card = Instance.new("Frame")
-    card.Size = UDim2.new(0,420,0,300)
-    card.Position = UDim2.new(0.5,-210,0.5,-150)
-    card.BackgroundColor3 = Color3.fromRGB(15,15,18)
-    card.BorderSizePixel = 0
-    card.Parent = gui
-    Instance.new("UICorner",card).CornerRadius = UDim.new(0,12)
-    Instance.new("UIStroke",card).Color = Color3.fromRGB(190,140,255)
-
-    local title = Instance.new("TextLabel")
-    title.Size = UDim2.new(1,-20,0,40)
-    title.Position = UDim2.new(0,10,0,10)
-    title.BackgroundTransparency = 1
-    title.Text = "EXO | Key Authentication"
-    title.TextColor3 = Color3.fromRGB(240,240,245)
-    title.Font = Enum.Font.GothamBold
-    title.TextSize = 16
-    title.TextXAlignment = Enum.TextXAlignment.Left
-    title.Parent = card
-
-    local desc = Instance.new("TextLabel")
-    desc.Size = UDim2.new(1,-40,0,30)
-    desc.Position = UDim2.new(0,20,0,55)
-    desc.BackgroundTransparency = 1
-    desc.Text = "Enter your premium key to access the hub."
-    desc.TextColor3 = Color3.fromRGB(160,160,175)
-    desc.Font = Enum.Font.Gotham
-    desc.TextSize = 13
-    desc.TextXAlignment = Enum.TextXAlignment.Left
-    desc.Parent = card
-
-    local inputBg = Instance.new("Frame")
-    inputBg.Size = UDim2.new(1,-40,0,44)
-    inputBg.Position = UDim2.new(0,20,0,100)
-    inputBg.BackgroundColor3 = Color3.fromRGB(22,22,26)
-    inputBg.BorderSizePixel = 0
-    inputBg.Parent = card
-    Instance.new("UICorner",inputBg).CornerRadius = UDim.new(0,8)
-
-    local input = Instance.new("TextBox")
-    input.Size = UDim2.new(1,-20,1,0)
-    input.Position = UDim2.new(0,10,0,0)
-    input.BackgroundTransparency = 1
-    input.PlaceholderText = "Paste your premium key here..."
-    input.PlaceholderColor3 = Color3.fromRGB(160,160,175)
-    input.Text = ""
-    input.TextColor3 = Color3.fromRGB(240,240,245)
-    input.Font = Enum.Font.Gotham
-    input.TextSize = 14
-    input.ClearTextOnFocus = false
-    input.Parent = inputBg
-
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1,-40,0,44)
-    btn.Position = UDim2.new(0,20,0,160)
-    btn.BackgroundColor3 = Color3.fromRGB(190,140,255)
-    btn.Text = "AUTHENTICATE"
-    btn.TextColor3 = Color3.fromRGB(20,20,20)
-    btn.Font = Enum.Font.GothamBlack
-    btn.TextSize = 14
-    btn.BorderSizePixel = 0
-    btn.Parent = card
-    Instance.new("UICorner",btn).CornerRadius = UDim.new(0,8)
-
-    local status = Instance.new("TextLabel")
-    status.Size = UDim2.new(1,-40,0,20)
-    status.Position = UDim2.new(0,20,0,215)
-    status.BackgroundTransparency = 1
-    status.Text = ""
-    status.TextColor3 = Color3.fromRGB(220,50,50)
-    status.Font = Enum.Font.GothamBold
-    status.TextSize = 12
-    status.Parent = card
-
-    btn.MouseButton1Click:Connect(function()
-        if input.Text == HUB_KEY then
-            writeJSON(KEY_FILE, {key = HUB_KEY, time = os.time()})
-            status.Text = "Success. Loading Hub..."
-            status.TextColor3 = Color3.fromRGB(50,200,100)
-            btn.BackgroundColor3 = Color3.fromRGB(50,200,100)
-            task.wait(1)
-            gui:Destroy()
-            if onSuccess then onSuccess() end
-        else
-            status.Text = "Invalid Key."
-            input.Text = ""
         end
-    end)
-    input.FocusLost:Connect(function(enter)
-        if enter then btn.MouseButton1Click:Fire() end
-    end)
+    })
 end
 
--- ── ENTRY POINT ─────────────────────────────────────────────
-local savedKey = readJSON(KEY_FILE)
-if savedKey and savedKey.key == HUB_KEY then
-    buildHub()
-else
-    createKeySystem(function()
-        buildHub()
-    end)
+-- ═══════════════════════════════════════════════════════════
+--  UPDATES TAB
+-- ═══════════════════════════════════════════════════════════
+do
+    local ChangeSec = Updates_Tab:Section({Title = "EXO Hub Changelog"})
+
+    ChangeSec:Label({Title = "v5.0 - WindUI Edition"})
+    ChangeSec:Label({Title = "  - WindUI: unlimited elements, built-in key system"})
+    ChangeSec:Label({Title = "  - Key system integrated into library (SaveKey = true)"})
+    ChangeSec:Label({Title = "  - MPT: Insta-Kill Micro-Burst, Hit Amplifier, Tool Arsenal"})
+    ChangeSec:Label({Title = "  - Anti-Aura: safe ForceField, no broken hooks"})
+    ChangeSec:Label({Title = "  - Kill Notifications with behavioral analysis"})
+    ChangeSec:Label({Title = "  - Kill Logs, ESP, Anti-Lag in Settings"})
+    ChangeSec:Label({Title = "  - Theme switching via WindUI"})
+    ChangeSec:Label({Title = "  - Config save/load"})
+    ChangeSec:Label({Title = ""})
+    ChangeSec:Label({Title = "v4.0 - Embedded UI / Velocity / Cerberus attempts"})
+    ChangeSec:Label({Title = "v3.0 - ZyronX migration (capped)"})
+    ChangeSec:Label({Title = "v2.0 - FluentPro fixes"})
+    ChangeSec:Label({Title = "v1.1 - Initial release"})
 end
+
+-- ═══════════════════════════════════════════════════════════
+--  SETTINGS TAB
+-- ═══════════════════════════════════════════════════════════
+do
+    local UISec = Settings_Tab:Section({Title = "UI Config"})
+
+    UISec:Dropdown({
+        Title = "Theme",
+        Options = {"Default", "Dark", "Light", "Rose", "Ocean", "Amethyst"},
+        Default = 1,
+        Callback = function(option)
+            pcall(function() WindUI:SetTheme(option) end)
+        end
+    })
+
+    UISec:ColorPicker({
+        Title = "Accent Color",
+        Default = Color3.fromRGB(190, 140, 255),
+        Callback = function(color)
+            pcall(function() WindUI:SetTheme("Default") end)
+        end
+    })
+
+    UISec:Keybind({
+        Title = "Toggle Hub",
+        Default = Enum.KeyCode.RightControl,
+        Callback = function()
+            -- WindUI handles this internally
+        end
+    })
+
+    local GeneralSec = Settings_Tab:Section({Title = "General"})
+
+    GeneralSec:Toggle({
+        Title = "Anti-Lag Shield",
+        Default = false,
+        Callback = function(state)
+            AntiLagEnabled = state
+            if state then
+                startAntiLag()
+                WindUI:Notify({Title = "Anti-Lag", Content = "Performance mode activated.", Duration = 3, Icon = "zap"})
+            else
+                stopAntiLag()
+            end
+        end
+    })
+
+    GeneralSec:Toggle({
+        Title = "ESP (Minimal Dots)",
+        Default = false,
+        Callback = function(state)
+            ESPEnabled = state
+            if state then startESP() else stopESP() end
+        end
+    })
+
+    GeneralSec:Toggle({
+        Title = "Kill Notifications",
+        Default = false,
+        Callback = function(state)
+            KillNotifEnabled = state
+            if state then
+                WindUI:Notify({Title = "Kill Notifications", Content = "You will be notified when killed.\nBehavioral analysis + threat level.", Duration = 4, Icon = "bell"})
+            end
+        end
+    })
+
+    GeneralSec:Toggle({
+        Title = "Kill Logs",
+        Default = false,
+        Callback = function(state)
+            KillLogEnabled = state
+        end
+    })
+
+    GeneralSec:Button({
+        Title = "View Kill Logs",
+        Callback = function()
+            if #KillLogs == 0 then
+                WindUI:Notify({Title = "Kill Logs", Content = "No kills recorded yet.", Duration = 2, Icon = "info"})
+                return
+            end
+            local lastLog = KillLogs[#KillLogs]
+            WindUI:Notify({
+                Title = "Last Kill Log",
+                Content = "Killer: " .. lastLog.Killer .. "\nWeapon: " .. lastLog.Weapon
+                    .. "\nThreat: " .. lastLog.Threat .. "/10\nTotal logs: " .. #KillLogs,
+                Duration = 5,
+                Icon = "scroll-text",
+            })
+        end
+    })
+
+    local ConfigSec = Settings_Tab:Section({Title = "Config"})
+
+    ConfigSec:Button({
+        Title = "Save Config",
+        Callback = function()
+            local config = {
+                ReachSize = ReachSize,
+                ThreatRadius = ThreatRadius,
+                latencyEstimate = latencyEstimate,
+            }
+            writeJSON(CONFIG_FILE, config)
+            WindUI:Notify({Title = "Config Saved", Content = "Settings saved.", Duration = 2, Icon = "save"})
+        end
+    })
+
+    ConfigSec:Button({
+        Title = "Load Config",
+        Callback = function()
+            local config = readJSON(CONFIG_FILE)
+            if config then
+                ReachSize = config.ReachSize or 2
+                ThreatRadius = config.ThreatRadius or 50
+                latencyEstimate = config.latencyEstimate or 0.1
+                WindUI:Notify({Title = "Config Loaded", Content = "Settings restored.", Duration = 2, Icon = "folder-open"})
+            else
+                WindUI:Notify({Title = "No Config", Content = "No saved config found.", Duration = 2, Icon = "x"})
+            end
+        end
+    })
+
+    ConfigSec:Button({
+        Title = "Rejoin Server",
+        Callback = function()
+            TeleportService:Teleport(game.PlaceId, player)
+        end
+    })
+end
+
+-- ── SETUP KILL NOTIFICATIONS ────────────────────────────────
+setupKillNotifications()
+
+-- ── FINAL ───────────────────────────────────────────────────
+WindUI:Notify({
+    Title = "EXO Hub v5.0 Loaded",
+    Content = "WindUI Edition. All systems online.\nSPT + MPT + Settings + Updates",
+    Duration = 4,
+    Icon = "check-circle",
+})
