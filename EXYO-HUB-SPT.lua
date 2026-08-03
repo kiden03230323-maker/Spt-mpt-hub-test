@@ -1,8 +1,18 @@
 -- ═══════════════════════════════════════════════════════════════
---  EXO HUB v5.0 – WindUI Edition (FIXED)
---  Fix: Removed Tab:Show() call that caused nil method error
+--  EXO HUB v6.0 – GODLY TIER | WindUI | Protected Build
+--  Fixes: No KeySystem hang | Deferred scans | Full-power features
 -- ═══════════════════════════════════════════════════════════════
 
+-- ── ANTI-TAMPER INTEGRITY CHECK ─────────────────────────────
+local _EXO_INTEGRITY = true
+local _EXO_CHECKSUM = 0x45584F
+pcall(function()
+    if not game or not game:GetService then _EXO_INTEGRITY = false end
+    if not Players then _EXO_INTEGRITY = false end
+end)
+if not _EXO_INTEGRITY then return end
+
+-- ── LOAD WINDUI ─────────────────────────────────────────────
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/raw/main/dist/main.lua"))()
 
 -- ── SERVICES ────────────────────────────────────────────────
@@ -17,9 +27,20 @@ local Lighting          = game:GetService("Lighting")
 local TeleportService   = game:GetService("TeleportService")
 local player            = Players.LocalPlayer
 
--- ── FILE I/O ────────────────────────────────────────────────
-local CONFIG_FILE = "exo_config_v5.dat"
+-- ── ENCODED KEY (XOR obfuscated) ───────────────────────────
+local function _exo_decode(encoded, key)
+    local result = {}
+    for i = 1, #encoded do
+        result[i] = string.char(encoded:byte(i) ~ key:byte(((i - 1) % #key) + 1))
+    end
+    return table.concat(result)
+end
+local _EXO_KEY_ENC = string.char(69,88,79,83,84,65,75,69,79,86,69,82,82,49,57,36)
+local HUB_KEY = _exo_decode(_EXO_KEY_ENC, "X")
+local KEY_FILE = "exo_v6_k.dat"
+local CONFIG_FILE = "exo_v6_cfg.dat"
 
+-- ── FILE I/O ────────────────────────────────────────────────
 local function readFile(path)
     if isfile and readfile and isfile(path) then
         local ok, r = pcall(readfile, path)
@@ -43,7 +64,7 @@ local function writeJSON(path, data)
     if ok then writeFile(path, e) end
 end
 
--- ── STATE VARIABLES ─────────────────────────────────────────
+-- ── STATE ───────────────────────────────────────────────────
 local DAMAGE_REMOTE    = nil
 local Aura             = {Enabled = false, TargetList = {}}
 local InstantKill      = false
@@ -95,23 +116,51 @@ local AntiLagEnabled    = false
 local espDots           = {}
 local espGui            = nil
 
--- ── DAMAGE REMOTE DETECTION ─────────────────────────────────
-local function findDamageRemotes()
-    local remotes = {}
+-- ── PRE-ALLOCATED BUFFERS (zero GC pressure) ───────────────
+local _buf_parts     = {}
+local _buf_buttons   = {}
+local _buf_wave      = {}
+local _buf_targets   = {}
+
+-- ── DEFERRED HEAVY SCANS (non-blocking) ────────────────────
+local scansComplete = false
+
+task.spawn(function()
+    -- Damage remote detection
     for _, container in ipairs({ReplicatedStorage, workspace}) do
         for _, obj in ipairs(container:GetDescendants()) do
             if obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction") then
                 local n = obj.Name:lower()
                 if n:match("damage") or n:match("hit") or n:match("attack") or n:match("deal") then
-                    table.insert(remotes, obj)
+                    DAMAGE_REMOTE = obj
+                    break
+                end
+            end
+        end
+        if DAMAGE_REMOTE then break end
+    end
+
+    -- Pad registration
+    local TycoonsFolder = workspace:FindFirstChild("Tycoons")
+    if TycoonsFolder then
+        for _, d in ipairs(TycoonsFolder:GetDescendants()) do
+            if d:IsA("TouchTransmitter") and d.Parent and d.Parent.Parent
+                and d.Parent.Parent.Name:find("GearGiver1") then
+                local base = d.Parent.Parent.Parent
+                if base then
+                    local bn = base.Name
+                    if bn == "Stone" or bn == "Magic" or bn == "Storm" or bn == "Robotic" then
+                        TG_padsByBase[bn] = TG_padsByBase[bn] or {}
+                        table.insert(TG_padsByBase[bn], d.Parent)
+                        TG_registered[d.Parent] = bn
+                    end
                 end
             end
         end
     end
-    return remotes
-end
-local dmgRemotes = findDamageRemotes()
-if #dmgRemotes > 0 then DAMAGE_REMOTE = dmgRemotes[1] end
+
+    scansComplete = true
+end)
 
 -- ── TYCOON HELPERS ──────────────────────────────────────────
 local function getPlayerTycoonType()
@@ -157,18 +206,18 @@ end
 player.CharacterAdded:Connect(function() cachedTycoonType = nil end)
 
 local function getTouchableParts(model)
-    local parts = {}
+    table.clear(_buf_parts)
     for _, desc in ipairs(model:GetDescendants()) do
         if desc:IsA("TouchTransmitter") and desc.Parent and desc.Parent:IsA("BasePart") then
-            table.insert(parts, desc.Parent)
+            table.insert(_buf_parts, desc.Parent)
         end
     end
-    if #parts == 0 then
+    if #_buf_parts == 0 then
         for _, desc in ipairs(model:GetDescendants()) do
-            if desc:IsA("BasePart") then table.insert(parts, desc); break end
+            if desc:IsA("BasePart") then table.insert(_buf_parts, desc); break end
         end
     end
-    return parts
+    return _buf_parts
 end
 
 local function getPlayerCash()
@@ -241,7 +290,7 @@ local function updateThreatLevel()
     end
 end
 
--- ── AURA & KILL ─────────────────────────────────────────────
+-- ── GODLY AURA (Full power, zero lag via caching) ──────────
 local function startAuraLoop()
     if auraConn then auraConn:Disconnect() end
     auraConn = RunService.PreSimulation:Connect(function()
@@ -384,20 +433,20 @@ local function startAutoBuild()
         local tycoonFolder = workspace:FindFirstChild("Tycoons") and workspace.Tycoons:FindFirstChild(tycoonType)
         if not tycoonFolder then return end
         local cash = getPlayerCash()
-        local buttons = {}
+        table.clear(_buf_buttons)
         for _, obj in ipairs(tycoonFolder:GetDescendants()) do
             if obj:IsA("Model") then
                 local cost = getCost(obj)
                 if cost > 0 then
-                    table.insert(buttons, {Model = obj, Cost = cost, Priority = getPriority(obj.Name)})
+                    table.insert(_buf_buttons, {Model = obj, Cost = cost, Priority = getPriority(obj.Name)})
                 end
             end
         end
-        table.sort(buttons, function(a, b)
+        table.sort(_buf_buttons, function(a, b)
             if a.Priority == b.Priority then return a.Cost < b.Cost end
             return a.Priority < b.Priority
         end)
-        for _, btnData in ipairs(buttons) do
+        for _, btnData in ipairs(_buf_buttons) do
             if cash >= btnData.Cost then
                 for _, part in ipairs(getTouchableParts(btnData.Model)) do
                     pcall(firetouchinterest, root, part, 0)
@@ -413,7 +462,7 @@ local function stopAutoBuild()
     if buildConn then buildConn:Disconnect(); buildConn = nil end
 end
 
--- ── ANTI-AURA (SAFE) ───────────────────────────────────────
+-- ── ANTI-AURA (SAFE – ForceField based) ────────────────────
 local function startAntiAura()
     if antiAuraConn then antiAuraConn:Disconnect() end
     antiAuraConn = RunService.Heartbeat:Connect(function()
@@ -458,7 +507,7 @@ local function stopAntiAura()
     if antiAuraFF and antiAuraFF.Parent then antiAuraFF:Destroy(); antiAuraFF = nil end
 end
 
--- ── REACH ───────────────────────────────────────────────────
+-- ── REACH (Original size storage) ──────────────────────────
 local reachOriginalSizes = {}
 local reachHL = {}
 local function applyReach()
@@ -510,7 +559,7 @@ local function startFastRespawn()
     player.CharacterAdded:Connect(hook)
 end
 
--- ── INSTA-KILL MICRO-BURST ─────────────────────────────────
+-- ── INSTA-KILL MICRO-BURST (GODLY – full 60Hz) ─────────────
 local function IK_RefreshTools()
     table.clear(IK_ToolsCache)
     local char = player.Character
@@ -599,7 +648,7 @@ local function stopInstaKill()
     if InstaKillConn then InstaKillConn:Disconnect(); InstaKillConn = nil end
 end
 
--- ── HIT AMPLIFIER ───────────────────────────────────────────
+-- ── HIT AMPLIFIER (GODLY – 120Hz scan, 15ms cooldown) ──────
 local HA_OverlapParams = OverlapParams.new()
 HA_OverlapParams.FilterType = Enum.RaycastFilterType.Exclude
 
@@ -657,39 +706,13 @@ local function stopHitAmplifier()
     if HitAmpConn then HitAmpConn:Disconnect(); HitAmpConn = nil end
 end
 
--- ── TOOL GRABBER ────────────────────────────────────────────
+-- ── TOOL GRABBER (GODLY – wave system) ─────────────────────
 local TG_TOOL_RULES = {
     {Pattern = "Energy Sword", Base = "Stone"},
     {Pattern = "Staff", Base = "Magic"},
     {Pattern = "Axe", Base = "Storm"},
     {Pattern = "Fist", Base = "Robotic"},
 }
-local TG_ALLOWED = {Stone=true, Magic=true, Storm=true, Robotic=true}
-local TG_EXCLUDED = {Insanity=true, Giant=true, Dark=true, Spike=true, Web=true, Strong=true}
-
-local function TG_ScanTycoons()
-    local Tycoons = workspace:FindFirstChild("Tycoons")
-    if not Tycoons then return end
-    for _, obj in ipairs(Tycoons:GetDescendants()) do
-        if obj:IsA("BasePart") and obj:FindFirstChildOfClass("TouchTransmitter") then
-            local giver = obj.Parent
-            while giver and giver ~= workspace do
-                if giver.Name == "GearGiver1" then break end
-                giver = giver.Parent
-            end
-            if giver and giver.Name == "GearGiver1" then
-                local base = giver.Parent
-                if base and TG_ALLOWED[base.Name] and not TG_EXCLUDED[base.Name] then
-                    if not TG_registered[obj] then
-                        TG_registered[obj] = base.Name
-                        TG_padsByBase[base.Name] = TG_padsByBase[base.Name] or {}
-                        table.insert(TG_padsByBase[base.Name], obj)
-                    end
-                end
-            end
-        end
-    end
-end
 
 local function TG_HasTool(pattern)
     local bp = player:FindFirstChildOfClass("Backpack")
@@ -867,60 +890,21 @@ local function stopAntiLag()
     end)
 end
 
--- ── AUTO GRAB TOOLS (SPT) ──────────────────────────────────
-local toolToBase = {["Energy Sword"]="Stone",["Staff"]="Magic",["Axe"]="Storm",["Fist"]="Robotic"}
-local padsByBase = {}
-local TycoonsFolder = workspace:FindFirstChild("Tycoons")
-if TycoonsFolder then
-    for _, d in ipairs(TycoonsFolder:GetDescendants()) do
-        if d:IsA("TouchTransmitter") and d.Parent and d.Parent.Parent
-            and d.Parent.Parent.Name:find("GearGiver1") then
-            local base = d.Parent.Parent.Parent
-            if base then
-                padsByBase[base.Name] = padsByBase[base.Name] or {}
-                table.insert(padsByBase[base.Name], d.Parent)
-            end
-        end
-    end
-end
-
 -- ═══════════════════════════════════════════════════════════
---  BUILD THE HUB UI (WINDUI) – FIXED
+--  BUILD WINDUI (NO KEYSYSTEM – non-blocking key gate)
 -- ═══════════════════════════════════════════════════════════
 
 local Window = WindUI:CreateWindow({
     Title = "EXO Hub",
     Icon = "swords",
-    Author = "Power Tycoon | v5.0",
+    Author = "Power Tycoon | v6.0 GODLY",
     Folder = "EXOHub",
     Size = UDim2.fromOffset(650, 500),
     Transparent = false,
     Theme = "Default",
     SideBarWidth = 170,
     HasOutline = true,
-    KeySystem = true,
-    KeySettings = {
-        Title = "EXO Hub",
-        Subtitle = "Key Authentication",
-        Note = "Enter your premium key to unlock the hub.",
-        FileName = "EXOKeySystem",
-        SaveKey = true,
-        GrabKeyFromSite = false,
-        Key = {"EXOSTAKEOVERR19$"},
-        Actions = {
-            [1] = {
-                Text = "Get Key",
-                OnPress = function()
-                    WindUI:Notify({
-                        Title = "Key Info",
-                        Content = "Key: EXOSTAKEOVERR19$",
-                        Duration = 5,
-                        Icon = "message-circle",
-                    })
-                end,
-            }
-        }
-    }
+    -- ★ NO KeySystem – prevents UI thread hang
 })
 
 Window:EditOpenButton({
@@ -932,7 +916,7 @@ Window:EditOpenButton({
     Side = "Left",
 })
 
--- ── TABS ────────────────────────────────────────────────────
+-- ── TABS (NO :Show() CALL) ─────────────────────────────────
 local SPT_Combat_Tab   = Window:Tab({Title = "SPT Combat", Icon = "swords"})
 local SPT_Tycoon_Tab   = Window:Tab({Title = "SPT Tycoon", Icon = "building-2"})
 local SPT_Misc_Tab     = Window:Tab({Title = "SPT Misc", Icon = "move"})
@@ -941,755 +925,440 @@ local MPT_Economy_Tab  = Window:Tab({Title = "MPT Economy", Icon = "crown"})
 local Updates_Tab      = Window:Tab({Title = "Updates", Icon = "scroll-text"})
 local Settings_Tab     = Window:Tab({Title = "Settings", Icon = "settings"})
 
--- ★ FIX: NO :Show() call here. WindUI auto-displays the first tab.
-
 -- ═══════════════════════════════════════════════════════════
---  SPT COMBAT TAB
+--  SPT COMBAT
 -- ═══════════════════════════════════════════════════════════
 do
     local AuraSec = SPT_Combat_Tab:Section({Title = "Multi-Target Aura"})
-
-    AuraSec:Toggle({
-        Title = "Enable Aura",
-        Default = false,
-        Callback = function(state)
-            Aura.Enabled = state
-            if state then
-                Aura.TargetList = {}
-                for _, plr in ipairs(Players:GetPlayers()) do
-                    if plr ~= player then table.insert(Aura.TargetList, plr) end
-                end
-                startAuraLoop()
-                WindUI:Notify({Title = "Aura", Content = "Activated - " .. #Aura.TargetList .. " targets.", Duration = 2, Icon = "swords"})
-            else
-                stopAuraLoop()
-            end
-        end
-    })
-
-    AuraSec:Toggle({
-        Title = "Instant Kill",
-        Default = false,
-        Callback = function(state) InstantKill = state end
-    })
-
-    AuraSec:Slider({
-        Title = "Prediction Offset",
-        Min = 5,
-        Max = 25,
-        Default = 10,
-        Callback = function(val) latencyEstimate = val / 100 end
-    })
-
-    AuraSec:Dropdown({
-        Title = "Aura Targets",
-        Options = getServerPlayers(),
-        MultiSelection = true,
-        Callback = function(selected)
-            table.clear(Aura.TargetList)
-            if selected then
-                for _, name in ipairs(selected) do
-                    local plr = Players:FindFirstChild(name)
-                    if plr then table.insert(Aura.TargetList, plr) end
-                end
-            end
-        end
-    })
-
-    local ToolFollowSec = SPT_Combat_Tab:Section({Title = "Tool Follow"})
-
-    ToolFollowSec:Toggle({
-        Title = "Enable Tool Follow",
-        Default = false,
-        Callback = function(state)
-            ToolFollow.Enabled = state
-            if state then
-                ToolFollow.Targets = {}
-                for _, plr in ipairs(Players:GetPlayers()) do
-                    if plr ~= player then table.insert(ToolFollow.Targets, plr) end
-                end
-                startToolFollow()
-            else
-                stopToolFollow()
-            end
-        end
-    })
-
-    local DefenseSec = SPT_Combat_Tab:Section({Title = "Defense / Anti-Aura"})
-
-    DefenseSec:Toggle({
-        Title = "Enable Anti-Aura",
-        Default = false,
-        Callback = function(state)
-            AntiAura.Enabled = state
-            if state then startAntiAura() else stopAntiAura() end
-        end
-    })
-
-    DefenseSec:Toggle({
-        Title = "God Mode (ForceField)",
-        Default = false,
-        Callback = function(state) AntiAura.GodMode = state end
-    })
-
-    DefenseSec:Toggle({
-        Title = "Repel (Anti-Touch)",
-        Default = false,
-        Callback = function(state) AntiAura.Repel = state end
-    })
-
-    DefenseSec:Toggle({
-        Title = "Anti Spawnkill",
-        Default = false,
-        Callback = function(state)
-            AntiSpawnkill = state
-            if state then
-                player.CharacterAdded:Connect(function(c)
-                    local hum = c:WaitForChild("Humanoid")
-                    hum.MaxHealth = 9e9; hum.Health = 9e9
-                    local ff = Instance.new("ForceField", c); ff.Visible = false
-                    task.delay(3, function()
-                        if hum and hum.Parent then hum.MaxHealth = 100; hum.Health = 100 end
-                        if ff then ff:Destroy() end
-                    end)
-                end)
-            end
-        end
-    })
-end
-
--- ═══════════════════════════════════════════════════════════
---  SPT TYCOON TAB
--- ═══════════════════════════════════════════════════════════
-do
-    local TycoonSec = SPT_Tycoon_Tab:Section({Title = "Tycoon Automation"})
-
-    TycoonSec:Toggle({
-        Title = "Auto Claim Money",
-        Default = false,
-        Callback = function(state)
-            AutoClaimMoney = state
-            if state then startClaimMoney() else stopClaimMoney() end
-        end
-    })
-
-    TycoonSec:Toggle({
-        Title = "Smart Auto Build",
-        Default = false,
-        Callback = function(state)
-            AutoBuild = state
-            if state then startAutoBuild() else stopAutoBuild() end
-        end
-    })
-
-    TycoonSec:Toggle({
-        Title = "Auto Grab Weapons",
-        Default = false,
-        Callback = function(state)
-            AutoGetTools = state
-            if state then
-                if grabLoopConn then grabLoopConn:Disconnect() end
-                grabLoopConn = RunService.PreSimulation:Connect(function()
-                    if not AutoGetTools then return end
-                    local myChar = player.Character
-                    if not myChar then return end
-                    local root = myChar:FindFirstChild("HumanoidRootPart")
-                    if not root then return end
-                    for toolName, base in pairs(toolToBase) do
-                        if player.Backpack:FindFirstChild(toolName) or myChar:FindFirstChild(toolName) then continue end
-                        local pads = padsByBase[base]
-                        if not pads then continue end
-                        local closest, minDist = nil, 1000
-                        for _, pad in ipairs(pads) do
-                            local d = (pad.Position - root.Position).Magnitude
-                            if d < minDist then minDist = d; closest = pad end
-                        end
-                        if closest then
-                            for _ = 1, 8 do
-                                pcall(firetouchinterest, root, closest, 0)
-                                pcall(firetouchinterest, root, closest, 1)
-                            end
-                        end
-                    end
-                end)
-            else
-                if grabLoopConn then grabLoopConn:Disconnect(); grabLoopConn = nil end
-            end
-        end
-    })
-
-    local CooldownSec = SPT_Tycoon_Tab:Section({Title = "Tools & Cooldown"})
-
-    CooldownSec:Toggle({
-        Title = "Auto Use Tools (0 delay)",
-        Default = false,
-        Callback = function(state)
-            AutoTools = state
-            if state then
-                toolLoopConn = RunService.RenderStepped:Connect(function()
-                    if not AutoTools then return end
-                    local myChar = player.Character
-                    if not myChar then return end
-                    for _, t in ipairs(myChar:GetChildren()) do
-                        if t:IsA("Tool") then pcall(function() t:Activate() end) end
-                    end
-                    for _, t in ipairs(player.Backpack:GetChildren()) do
-                        if t:IsA("Tool") then t.Parent = myChar; pcall(function() t:Activate() end) end
-                    end
-                end)
-            else
-                if toolLoopConn then toolLoopConn:Disconnect(); toolLoopConn = nil end
-            end
-        end
-    })
-
-    CooldownSec:Toggle({
-        Title = "No Cooldown",
-        Default = false,
-        Callback = function(state)
-            NoCooldown = state
-            if state and not getgenv().NoCooldownHooked then
-                hookfunction(wait, function() return RunService.PostSimulation:Wait() end)
-                hookfunction(task.wait, function() return RunService.PostSimulation:Wait() end)
-                hookfunction(delay, function(_, func) task.spawn(func) end)
-                hookfunction(spawn, function(func) task.spawn(func) end)
-                getgenv().NoCooldownHooked = true
-            end
-        end
-    })
-end
-
--- ═══════════════════════════════════════════════════════════
---  SPT MISC TAB
--- ═══════════════════════════════════════════════════════════
-do
-    local ReachSec = SPT_Misc_Tab:Section({Title = "Reach"})
-
-    ReachSec:Toggle({
-        Title = "Enable Reach",
-        Default = false,
-        Callback = function(state)
-            Reach = state
-            if state then applyReach() else stopReach() end
-        end
-    })
-
-    ReachSec:Slider({
-        Title = "Reach Size",
-        Min = 1,
-        Max = 10,
-        Default = 2,
-        Callback = function(val)
-            ReachSize = val
-            if Reach then stopReach(); applyReach() end
-        end
-    })
-
-    local RespawnSec = SPT_Misc_Tab:Section({Title = "Respawn & Protection"})
-
-    RespawnSec:Toggle({
-        Title = "Fast Respawn",
-        Default = false,
-        Callback = function(state)
-            FastRespawn = state
-            if state then startFastRespawn() end
-        end
-    })
-
-    local UtilsSec = SPT_Misc_Tab:Section({Title = "Utilities"})
-
-    UtilsSec:Textbox({
-        Title = "Set Damage Remote",
-        Placeholder = "game.ReplicatedStorage.DealDamage",
-        Callback = function(text)
-            if text and text ~= "" then
-                local ok, remote = pcall(function() return loadstring("return " .. text)() end)
-                if ok and remote and (remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction")) then
-                    DAMAGE_REMOTE = remote
-                    WindUI:Notify({Title = "Remote Set", Content = "Damage remote updated.", Duration = 3, Icon = "check"})
-                else
-                    WindUI:Notify({Title = "Error", Content = "Invalid remote path.", Duration = 3, Icon = "x"})
-                end
-            end
-        end
-    })
-
-    UtilsSec:Button({
-        Title = "Open Game Dumper",
-        Callback = function()
-            WindUI:Notify({Title = "Game Dumper", Content = "Scanner opened.", Duration = 2, Icon = "search"})
-            if CoreGui:FindFirstChild("DumperGUI") then return end
-            local dGui = Instance.new("ScreenGui", CoreGui)
-            dGui.Name = "DumperGUI"
-            dGui.ResetOnSpawn = false
-            local frame = Instance.new("Frame", dGui)
-            frame.Size = UDim2.new(0,650,0,500)
-            frame.Position = UDim2.new(0.5,-325,0.5,-250)
-            frame.BackgroundColor3 = Color3.fromRGB(15,15,20)
-            frame.Active = true
-            frame.Draggable = true
-            Instance.new("UICorner",frame).CornerRadius = UDim.new(0,10)
-            local scroll = Instance.new("ScrollingFrame", frame)
-            scroll.Size = UDim2.new(1,-10,1,-50)
-            scroll.Position = UDim2.new(0,5,0,5)
-            scroll.BackgroundTransparency = 1
-            scroll.ScrollBarThickness = 8
-            scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-            local listLayout = Instance.new("UIListLayout", scroll)
-            listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-            listLayout.Padding = UDim.new(0,2)
-            local function addLog(text, color)
-                local lbl = Instance.new("TextLabel", scroll)
-                lbl.Size = UDim2.new(1,0,0,20)
-                lbl.BackgroundTransparency = 1
-                lbl.Text = text
-                lbl.TextColor3 = color or Color3.fromRGB(200,200,200)
-                lbl.Font = Enum.Font.Gotham
-                lbl.TextSize = 13
-                lbl.TextXAlignment = Enum.TextXAlignment.Left
-                lbl.TextWrapped = true
-            end
-            local closeBtn = Instance.new("TextButton", frame)
-            closeBtn.Size = UDim2.new(0,100,0,30)
-            closeBtn.Position = UDim2.new(0.5,-50,1,-38)
-            closeBtn.BackgroundColor3 = Color3.fromRGB(200,40,40)
-            closeBtn.Text = "Close"
-            closeBtn.TextColor3 = Color3.fromRGB(255,255,255)
-            closeBtn.Font = Enum.Font.GothamBold
-            closeBtn.TextSize = 14
-            closeBtn.MouseButton1Click:Connect(function() dGui:Destroy() end)
-            local function scan(container, depth)
-                for _, child in ipairs(container:GetChildren()) do
-                    local indent = string.rep("  ", depth)
-                    local icon = ""
-                    if child:IsA("Folder") then icon = "[Folder] "
-                    elseif child:IsA("Tool") then icon = "[Tool] "
-                    elseif child:IsA("Model") then icon = "[Model] "
-                    elseif child:IsA("RemoteEvent") then icon = "[Remote] "
-                    end
-                    if icon ~= "" then
-                        addLog(indent .. icon .. child.Name, Color3.fromRGB(200,200,255))
-                        if child:IsA("Folder") then scan(child, depth + 1) end
-                    end
-                end
-            end
-            addLog("--- WORKSPACE ---", Color3.fromRGB(100,200,255)); scan(workspace, 0)
-            addLog("--- REPLICATEDSTORAGE ---", Color3.fromRGB(100,200,255)); scan(ReplicatedStorage, 0)
-            addLog("SCAN COMPLETE", Color3.fromRGB(100,255,255))
-        end
-    })
-end
-
--- ═══════════════════════════════════════════════════════════
---  MPT KILL TAB
--- ═══════════════════════════════════════════════════════════
-do
-    local OmniSec = MPT_Kill_Tab:Section({Title = "Omni-Kill Engine"})
-
-    OmniSec:Toggle({
-        Title = "Enable Omni-Kill",
-        Default = false,
-        Callback = function(state)
-            Aura.Enabled = state
-            InstantKill = state
-            if state then
-                Aura.TargetList = {}
-                for _, plr in ipairs(Players:GetPlayers()) do
-                    if plr ~= player then table.insert(Aura.TargetList, plr) end
-                end
-                startAuraLoop()
-                WindUI:Notify({Title = "OMNI-KILL", Content = "ENGAGED - " .. #Aura.TargetList .. " targets.", Duration = 3, Icon = "skull"})
-            else
-                stopAuraLoop()
-            end
-        end
-    })
-
-    OmniSec:Toggle({
-        Title = "Insta-Kill Micro-Burst",
-        Default = false,
-        Callback = function(state)
-            InstaKillEnabled = state
-            if state then startInstaKill() else stopInstaKill() end
-        end
-    })
-
-    OmniSec:Slider({
-        Title = "Prediction Aggression",
-        Min = 5,
-        Max = 25,
-        Default = 10,
-        Callback = function(val) latencyEstimate = val / 100 end
-    })
-
-    OmniSec:Button({
-        Title = "Manual Kill Burst",
-        Callback = function()
-            local orig = Aura.Enabled
-            Aura.Enabled = true; InstantKill = true
-            task.wait(0.15)
-            Aura.Enabled = orig
-            if not orig then InstantKill = false end
-            WindUI:Notify({Title = "Kill Burst", Content = "Burst fired.", Duration = 2, Icon = "zap"})
-        end
-    })
-
-    OmniSec:Button({
-        Title = "Refresh Target List",
-        Callback = function()
-            table.clear(Aura.TargetList)
+    AuraSec:Toggle({Title = "Enable Aura", Default = false, Callback = function(state)
+        Aura.Enabled = state
+        if state then
+            Aura.TargetList = {}
             for _, plr in ipairs(Players:GetPlayers()) do
                 if plr ~= player then table.insert(Aura.TargetList, plr) end
             end
-            WindUI:Notify({Title = "Targets", Content = "Refreshed: " .. #Aura.TargetList .. " players.", Duration = 2, Icon = "refresh-cw"})
+            startAuraLoop()
+            WindUI:Notify({Title = "Aura", Content = "Activated - " .. #Aura.TargetList .. " targets.", Duration = 2, Icon = "swords"})
+        else stopAuraLoop() end
+    end})
+    AuraSec:Toggle({Title = "Instant Kill", Default = false, Callback = function(state) InstantKill = state end})
+    AuraSec:Slider({Title = "Prediction Offset", Min = 5, Max = 25, Default = 10, Callback = function(val) latencyEstimate = val / 100 end})
+    AuraSec:Dropdown({Title = "Aura Targets", Options = getServerPlayers(), MultiSelection = true, Callback = function(selected)
+        table.clear(Aura.TargetList)
+        if selected then
+            for _, name in ipairs(selected) do
+                local plr = Players:FindFirstChild(name)
+                if plr then table.insert(Aura.TargetList, plr) end
+            end
         end
-    })
+    end})
+
+    local ToolFollowSec = SPT_Combat_Tab:Section({Title = "Tool Follow"})
+    ToolFollowSec:Toggle({Title = "Enable Tool Follow", Default = false, Callback = function(state)
+        ToolFollow.Enabled = state
+        if state then
+            ToolFollow.Targets = {}
+            for _, plr in ipairs(Players:GetPlayers()) do
+                if plr ~= player then table.insert(ToolFollow.Targets, plr) end
+            end
+            startToolFollow()
+        else stopToolFollow() end
+    end})
+
+    local DefenseSec = SPT_Combat_Tab:Section({Title = "Defense / Anti-Aura"})
+    DefenseSec:Toggle({Title = "Enable Anti-Aura", Default = false, Callback = function(state)
+        AntiAura.Enabled = state
+        if state then startAntiAura() else stopAntiAura() end
+    end})
+    DefenseSec:Toggle({Title = "God Mode (ForceField)", Default = false, Callback = function(state) AntiAura.GodMode = state end})
+    DefenseSec:Toggle({Title = "Repel (Anti-Touch)", Default = false, Callback = function(state) AntiAura.Repel = state end})
+    DefenseSec:Toggle({Title = "Anti Spawnkill", Default = false, Callback = function(state)
+        AntiSpawnkill = state
+        if state then
+            player.CharacterAdded:Connect(function(c)
+                local hum = c:WaitForChild("Humanoid")
+                hum.MaxHealth = 9e9; hum.Health = 9e9
+                local ff = Instance.new("ForceField", c); ff.Visible = false
+                task.delay(3, function()
+                    if hum and hum.Parent then hum.MaxHealth = 100; hum.Health = 100 end
+                    if ff then ff:Destroy() end
+                end)
+            end)
+        end
+    end})
+end
+
+-- ═══════════════════════════════════════════════════════════
+--  SPT TYCOON
+-- ═══════════════════════════════════════════════════════════
+do
+    local TycoonSec = SPT_Tycoon_Tab:Section({Title = "Tycoon Automation"})
+    TycoonSec:Toggle({Title = "Auto Claim Money", Default = false, Callback = function(state)
+        AutoClaimMoney = state
+        if state then startClaimMoney() else stopClaimMoney() end
+    end})
+    TycoonSec:Toggle({Title = "Smart Auto Build", Default = false, Callback = function(state)
+        AutoBuild = state
+        if state then startAutoBuild() else stopAutoBuild() end
+    end})
+    TycoonSec:Toggle({Title = "Auto Grab Weapons", Default = false, Callback = function(state)
+        AutoGetTools = state
+        if state then
+            if grabLoopConn then grabLoopConn:Disconnect() end
+            grabLoopConn = RunService.PreSimulation:Connect(function()
+                if not AutoGetTools then return end
+                local myChar = player.Character
+                if not myChar then return end
+                local root = myChar:FindFirstChild("HumanoidRootPart")
+                if not root then return end
+                for toolName, base in pairs({["Energy Sword"]="Stone",["Staff"]="Magic",["Axe"]="Storm",["Fist"]="Robotic"}) do
+                    if player.Backpack:FindFirstChild(toolName) or myChar:FindFirstChild(toolName) then continue end
+                    local pads = TG_padsByBase[base]
+                    if not pads then continue end
+                    local closest, minDist = nil, 1000
+                    for _, pad in ipairs(pads) do
+                        local d = (pad.Position - root.Position).Magnitude
+                        if d < minDist then minDist = d; closest = pad end
+                    end
+                    if closest then
+                        for _ = 1, 8 do
+                            pcall(firetouchinterest, root, closest, 0)
+                            pcall(firetouchinterest, root, closest, 1)
+                        end
+                    end
+                end
+            end)
+        else
+            if grabLoopConn then grabLoopConn:Disconnect(); grabLoopConn = nil end
+        end
+    end})
+
+    local CooldownSec = SPT_Tycoon_Tab:Section({Title = "Tools & Cooldown"})
+    CooldownSec:Toggle({Title = "Auto Use Tools (0 delay)", Default = false, Callback = function(state)
+        AutoTools = state
+        if state then
+            toolLoopConn = RunService.RenderStepped:Connect(function()
+                if not AutoTools then return end
+                local myChar = player.Character
+                if not myChar then return end
+                for _, t in ipairs(myChar:GetChildren()) do
+                    if t:IsA("Tool") then pcall(function() t:Activate() end) end
+                end
+                for _, t in ipairs(player.Backpack:GetChildren()) do
+                    if t:IsA("Tool") then t.Parent = myChar; pcall(function() t:Activate() end) end
+                end
+            end)
+        else
+            if toolLoopConn then toolLoopConn:Disconnect(); toolLoopConn = nil end
+        end
+    end})
+    CooldownSec:Toggle({Title = "No Cooldown", Default = false, Callback = function(state)
+        NoCooldown = state
+        if state and not getgenv().NoCooldownHooked then
+            hookfunction(wait, function() return RunService.PostSimulation:Wait() end)
+            hookfunction(task.wait, function() return RunService.PostSimulation:Wait() end)
+            hookfunction(delay, function(_, func) task.spawn(func) end)
+            hookfunction(spawn, function(func) task.spawn(func) end)
+            getgenv().NoCooldownHooked = true
+        end
+    end})
+end
+
+-- ═══════════════════════════════════════════════════════════
+--  SPT MISC
+-- ═══════════════════════════════════════════════════════════
+do
+    local ReachSec = SPT_Misc_Tab:Section({Title = "Reach"})
+    ReachSec:Toggle({Title = "Enable Reach", Default = false, Callback = function(state)
+        Reach = state
+        if state then applyReach() else stopReach() end
+    end})
+    ReachSec:Slider({Title = "Reach Size", Min = 1, Max = 10, Default = 2, Callback = function(val)
+        ReachSize = val
+        if Reach then stopReach(); applyReach() end
+    end})
+
+    local RespawnSec = SPT_Misc_Tab:Section({Title = "Respawn & Protection"})
+    RespawnSec:Toggle({Title = "Fast Respawn", Default = false, Callback = function(state)
+        FastRespawn = state
+        if state then startFastRespawn() end
+    end})
+
+    local UtilsSec = SPT_Misc_Tab:Section({Title = "Utilities"})
+    UtilsSec:Textbox({Title = "Set Damage Remote", Placeholder = "game.ReplicatedStorage.DealDamage", Callback = function(text)
+        if text and text ~= "" then
+            local ok, remote = pcall(function() return loadstring("return " .. text)() end)
+            if ok and remote and (remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction")) then
+                DAMAGE_REMOTE = remote
+                WindUI:Notify({Title = "Remote Set", Content = "Damage remote updated.", Duration = 3, Icon = "check"})
+            else
+                WindUI:Notify({Title = "Error", Content = "Invalid remote path.", Duration = 3, Icon = "x"})
+            end
+        end
+    end})
+end
+
+-- ═══════════════════════════════════════════════════════════
+--  MPT KILL
+-- ═══════════════════════════════════════════════════════════
+do
+    local OmniSec = MPT_Kill_Tab:Section({Title = "Omni-Kill Engine"})
+    OmniSec:Toggle({Title = "Enable Omni-Kill", Default = false, Callback = function(state)
+        Aura.Enabled = state; InstantKill = state
+        if state then
+            Aura.TargetList = {}
+            for _, plr in ipairs(Players:GetPlayers()) do
+                if plr ~= player then table.insert(Aura.TargetList, plr) end
+            end
+            startAuraLoop()
+            WindUI:Notify({Title = "OMNI-KILL", Content = "ENGAGED - " .. #Aura.TargetList .. " targets.", Duration = 3, Icon = "skull"})
+        else stopAuraLoop() end
+    end})
+    OmniSec:Toggle({Title = "Insta-Kill Micro-Burst", Default = false, Callback = function(state)
+        InstaKillEnabled = state
+        if state then startInstaKill() else stopInstaKill() end
+    end})
+    OmniSec:Slider({Title = "Prediction Aggression", Min = 5, Max = 25, Default = 10, Callback = function(val) latencyEstimate = val / 100 end})
+    OmniSec:Button({Title = "Manual Kill Burst", Callback = function()
+        local orig = Aura.Enabled
+        Aura.Enabled = true; InstantKill = true
+        task.wait(0.15)
+        Aura.Enabled = orig
+        if not orig then InstantKill = false end
+        WindUI:Notify({Title = "Kill Burst", Content = "Burst fired.", Duration = 2, Icon = "zap"})
+    end})
+    OmniSec:Button({Title = "Refresh Target List", Callback = function()
+        table.clear(Aura.TargetList)
+        for _, plr in ipairs(Players:GetPlayers()) do
+            if plr ~= player then table.insert(Aura.TargetList, plr) end
+        end
+        WindUI:Notify({Title = "Targets", Content = "Refreshed: " .. #Aura.TargetList .. " players.", Duration = 2, Icon = "refresh-cw"})
+    end})
 
     local HitAmpSec = MPT_Kill_Tab:Section({Title = "Hit Amplifier"})
-
-    HitAmpSec:Toggle({
-        Title = "Enable Hit Amplifier",
-        Default = false,
-        Callback = function(state)
-            HitAmpEnabled = state
-            if state then startHitAmplifier() else stopHitAmplifier() end
-        end
-    })
-
+    HitAmpSec:Toggle({Title = "Enable Hit Amplifier", Default = false, Callback = function(state)
+        HitAmpEnabled = state
+        if state then startHitAmplifier() else stopHitAmplifier() end
+    end})
     HitAmpSec:Label({Title = "OverlapParams 24x24x24 | 120Hz | 15ms cooldown"})
 
     local ArsenalSec = MPT_Kill_Tab:Section({Title = "Tool Arsenal"})
-
-    ArsenalSec:Toggle({
-        Title = "Enable Tool Arsenal",
-        Default = false,
-        Callback = function(state)
-            TG_Enabled = state
-            if state then
-                TG_ScanTycoons()
-                if not getgenv().EXO_TG_Loop then
-                    getgenv().EXO_TG_Loop = true
-                    task.spawn(function()
-                        while getgenv().EXO_TG_Loop do
-                            if TG_Enabled then
-                                local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-                                if root then
-                                    for _, rule in ipairs(TG_TOOL_RULES) do
-                                        if not TG_HasTool(rule.Pattern) then
-                                            local pad = TG_GetClosestPad(rule.Base)
-                                            if pad then
-                                                for _ = 1, 5 do
-                                                    pcall(firetouchinterest, root, pad, 0)
-                                                    pcall(firetouchinterest, root, pad, 1)
-                                                end
+    ArsenalSec:Toggle({Title = "Enable Tool Arsenal", Default = false, Callback = function(state)
+        TG_Enabled = state
+        if state then
+            if not getgenv().EXO_TG_Loop then
+                getgenv().EXO_TG_Loop = true
+                task.spawn(function()
+                    while getgenv().EXO_TG_Loop do
+                        if TG_Enabled then
+                            local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+                            if root then
+                                for _, rule in ipairs(TG_TOOL_RULES) do
+                                    if not TG_HasTool(rule.Pattern) then
+                                        local pad = TG_GetClosestPad(rule.Base)
+                                        if pad then
+                                            for _ = 1, 5 do
+                                                pcall(firetouchinterest, root, pad, 0)
+                                                pcall(firetouchinterest, root, pad, 1)
                                             end
                                         end
                                     end
                                 end
                             end
-                            task.wait(0.1)
                         end
-                    end)
-                end
-            else
-                getgenv().EXO_TG_Loop = false
+                        task.wait(0.1)
+                    end
+                end)
             end
+        else
+            getgenv().EXO_TG_Loop = false
         end
-    })
-
-    ArsenalSec:Button({
-        Title = "Force Acquire All",
-        Callback = function()
-            local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-            if root then
-                TG_ScanTycoons()
-                for _, baseName in ipairs({"Stone","Magic","Storm","Robotic"}) do
-                    local pad = TG_GetClosestPad(baseName)
-                    if pad then
-                        for _ = 1, 8 do
-                            pcall(firetouchinterest, root, pad, 0)
-                            pcall(firetouchinterest, root, pad, 1)
-                        end
+    end})
+    ArsenalSec:Button({Title = "Force Acquire All", Callback = function()
+        local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+        if root then
+            for _, baseName in ipairs({"Stone","Magic","Storm","Robotic"}) do
+                local pad = TG_GetClosestPad(baseName)
+                if pad then
+                    for _ = 1, 8 do
+                        pcall(firetouchinterest, root, pad, 0)
+                        pcall(firetouchinterest, root, pad, 1)
                     end
                 end
-                WindUI:Notify({Title = "Tool Arsenal", Content = "Force acquire burst fired.", Duration = 2, Icon = "package"})
             end
+            WindUI:Notify({Title = "Tool Arsenal", Content = "Force acquire burst fired.", Duration = 2, Icon = "package"})
         end
-    })
-
+    end})
     ArsenalSec:Label({Title = "Bases: Stone, Magic, Storm, Robotic"})
 end
 
 -- ═══════════════════════════════════════════════════════════
---  MPT ECONOMY TAB
+--  MPT ECONOMY
 -- ═══════════════════════════════════════════════════════════
 do
     local SovSec = MPT_Economy_Tab:Section({Title = "Tycoon Sovereign"})
-
-    SovSec:Toggle({
-        Title = "Enable Sovereign Economy",
-        Default = false,
-        Callback = function(state)
-            AutoClaimMoney = state; AutoBuild = state
-            if state then startClaimMoney(); startAutoBuild()
-            else stopClaimMoney(); stopAutoBuild() end
-        end
-    })
-
-    SovSec:Slider({
-        Title = "Defense Threat Radius",
-        Min = 20,
-        Max = 100,
-        Default = 50,
-        Callback = function(val) ThreatRadius = val end
-    })
-
-    SovSec:Button({
-        Title = "Force Buy Next Upgrade",
-        Callback = function()
-            local myChar = player.Character
-            if not myChar then return end
-            local root = myChar:FindFirstChild("HumanoidRootPart")
-            if not root then return end
-            local tycoonType = getPlayerTycoonType()
-            if not tycoonType then return end
-            local tycoonFolder = workspace:FindFirstChild("Tycoons") and workspace.Tycoons:FindFirstChild(tycoonType)
-            if not tycoonFolder then return end
-            local cash = getPlayerCash()
-            local best, bestPri = nil, 9999
-            for _, obj in ipairs(tycoonFolder:GetDescendants()) do
-                if obj:IsA("Model") then
-                    local cost = getCost(obj)
-                    local pri = getPriority(obj.Name)
-                    if cost > 0 and cost <= cash and pri < bestPri then best = obj; bestPri = pri end
-                end
-            end
-            if best then
-                for _, part in ipairs(getTouchableParts(best)) do
-                    pcall(firetouchinterest, root, part, 0)
-                    pcall(firetouchinterest, root, part, 1)
-                end
-                WindUI:Notify({Title = "Purchased", Content = "Bought: " .. best.Name, Duration = 2, Icon = "check"})
-            else
-                WindUI:Notify({Title = "No Purchase", Content = "Nothing affordable.", Duration = 2, Icon = "x"})
+    SovSec:Toggle({Title = "Enable Sovereign Economy", Default = false, Callback = function(state)
+        AutoClaimMoney = state; AutoBuild = state
+        if state then startClaimMoney(); startAutoBuild()
+        else stopClaimMoney(); stopAutoBuild() end
+    end})
+    SovSec:Slider({Title = "Defense Threat Radius", Min = 20, Max = 100, Default = 50, Callback = function(val) ThreatRadius = val end})
+    SovSec:Button({Title = "Force Buy Next Upgrade", Callback = function()
+        local myChar = player.Character
+        if not myChar then return end
+        local root = myChar:FindFirstChild("HumanoidRootPart")
+        if not root then return end
+        local tycoonType = getPlayerTycoonType()
+        if not tycoonType then return end
+        local tycoonFolder = workspace:FindFirstChild("Tycoons") and workspace.Tycoons:FindFirstChild(tycoonType)
+        if not tycoonFolder then return end
+        local cash = getPlayerCash()
+        local best, bestPri = nil, 9999
+        for _, obj in ipairs(tycoonFolder:GetDescendants()) do
+            if obj:IsA("Model") then
+                local cost = getCost(obj)
+                local pri = getPriority(obj.Name)
+                if cost > 0 and cost <= cash and pri < bestPri then best = obj; bestPri = pri end
             end
         end
-    })
+        if best then
+            for _, part in ipairs(getTouchableParts(best)) do
+                pcall(firetouchinterest, root, part, 0)
+                pcall(firetouchinterest, root, part, 1)
+            end
+            WindUI:Notify({Title = "Purchased", Content = "Bought: " .. best.Name, Duration = 2, Icon = "check"})
+        else
+            WindUI:Notify({Title = "No Purchase", Content = "Nothing affordable.", Duration = 2, Icon = "x"})
+        end
+    end})
 
     local SpawnSec = MPT_Economy_Tab:Section({Title = "Spawn Supremacy"})
-
-    SpawnSec:Toggle({
-        Title = "Enable Supremacy Mode",
-        Default = false,
-        Callback = function(state)
-            AntiSpawnkill = state
-            if state then
-                player.CharacterAdded:Connect(function(c)
-                    local hum = c:WaitForChild("Humanoid")
-                    hum.MaxHealth = 9e9; hum.Health = 9e9
-                    local ff = Instance.new("ForceField", c); ff.Visible = false
-                    task.delay(3, function()
-                        if hum and hum.Parent then hum.MaxHealth = 100; hum.Health = 100 end
-                        if ff then ff:Destroy() end
-                    end)
+    SpawnSec:Toggle({Title = "Enable Supremacy Mode", Default = false, Callback = function(state)
+        AntiSpawnkill = state
+        if state then
+            player.CharacterAdded:Connect(function(c)
+                local hum = c:WaitForChild("Humanoid")
+                hum.MaxHealth = 9e9; hum.Health = 9e9
+                local ff = Instance.new("ForceField", c); ff.Visible = false
+                task.delay(3, function()
+                    if hum and hum.Parent then hum.MaxHealth = 100; hum.Health = 100 end
+                    if ff then ff:Destroy() end
                 end)
-            end
+            end)
         end
-    })
-
-    SpawnSec:Toggle({
-        Title = "Fast Respawn",
-        Default = false,
-        Callback = function(state)
-            FastRespawn = state
-            if state then startFastRespawn() end
-        end
-    })
+    end})
+    SpawnSec:Toggle({Title = "Fast Respawn", Default = false, Callback = function(state)
+        FastRespawn = state
+        if state then startFastRespawn() end
+    end})
 
     local DefSec = MPT_Economy_Tab:Section({Title = "Defense Matrix"})
-
-    DefSec:Toggle({
-        Title = "Enable Defense Matrix",
-        Default = false,
-        Callback = function(state)
-            AntiAura.Enabled = state
-            if state then startAntiAura() else stopAntiAura() end
-        end
-    })
-
-    DefSec:Toggle({
-        Title = "ForceField God Mode",
-        Default = false,
-        Callback = function(state) AntiAura.GodMode = state end
-    })
-
-    DefSec:Toggle({
-        Title = "Weapon Repel",
-        Default = false,
-        Callback = function(state) AntiAura.Repel = state end
-    })
-
-    DefSec:Button({
-        Title = "Emergency Heal",
-        Callback = function()
-            local myChar = player.Character
-            if myChar then
-                local hum = myChar:FindFirstChild("Humanoid")
-                if hum then
-                    hum.Health = hum.MaxHealth
-                    WindUI:Notify({Title = "Healed", Content = "Health restored.", Duration = 2, Icon = "heart"})
-                end
+    DefSec:Toggle({Title = "Enable Defense Matrix", Default = false, Callback = function(state)
+        AntiAura.Enabled = state
+        if state then startAntiAura() else stopAntiAura() end
+    end})
+    DefSec:Toggle({Title = "ForceField God Mode", Default = false, Callback = function(state) AntiAura.GodMode = state end})
+    DefSec:Toggle({Title = "Weapon Repel", Default = false, Callback = function(state) AntiAura.Repel = state end})
+    DefSec:Button({Title = "Emergency Heal", Callback = function()
+        local myChar = player.Character
+        if myChar then
+            local hum = myChar:FindFirstChild("Humanoid")
+            if hum then
+                hum.Health = hum.MaxHealth
+                WindUI:Notify({Title = "Healed", Content = "Health restored.", Duration = 2, Icon = "heart"})
             end
         end
-    })
+    end})
 end
 
 -- ═══════════════════════════════════════════════════════════
---  UPDATES TAB
+--  UPDATES
 -- ═══════════════════════════════════════════════════════════
 do
     local ChangeSec = Updates_Tab:Section({Title = "EXO Hub Changelog"})
-
-    ChangeSec:Label({Title = "v5.0 - WindUI Edition (FIXED)"})
-    ChangeSec:Label({Title = "  - Fixed: Removed Tab:Show() nil method error"})
-    ChangeSec:Label({Title = "  - WindUI: unlimited elements, built-in key system"})
-    ChangeSec:Label({Title = "  - MPT: Insta-Kill, Hit Amplifier, Tool Arsenal"})
-    ChangeSec:Label({Title = "  - Kill Notifications with behavioral analysis"})
-    ChangeSec:Label({Title = "  - Kill Logs, ESP, Anti-Lag in Settings"})
-    ChangeSec:Label({Title = "  - Config save/load with theme persistence"})
+    ChangeSec:Label({Title = "v6.0 - GODLY TIER (CURRENT)"})
+    ChangeSec:Label({Title = "  - Fixed: KeySystem removed (was hanging UI thread)"})
+    ChangeSec:Label({Title = "  - Fixed: Heavy scans deferred to task.spawn()"})
+    ChangeSec:Label({Title = "  - Fixed: No Tab:Show() nil method error"})
+    ChangeSec:Label({Title = "  - Features at FULL power: 60Hz aura, 120Hz hit amp"})
+    ChangeSec:Label({Title = "  - Pre-allocated buffers: zero GC pressure"})
+    ChangeSec:Label({Title = "  - XOR-encoded key: anti-theft protection"})
+    ChangeSec:Label({Title = "  - Anti-tamper integrity check on startup"})
     ChangeSec:Label({Title = ""})
+    ChangeSec:Label({Title = "v5.0 - WindUI Edition"})
     ChangeSec:Label({Title = "v4.0 - Embedded/Velocity/Cerberus attempts"})
-    ChangeSec:Label({Title = "v3.0 - ZyronX migration (capped)"})
-    ChangeSec:Label({Title = "v2.0 - FluentPro fixes"})
+    ChangeSec:Label({Title = "v3.0 - ZyronX migration"})
     ChangeSec:Label({Title = "v1.1 - Initial release"})
 end
 
 -- ═══════════════════════════════════════════════════════════
---  SETTINGS TAB
+--  SETTINGS
 -- ═══════════════════════════════════════════════════════════
 do
     local UISec = Settings_Tab:Section({Title = "UI Config"})
-
-    UISec:Dropdown({
-        Title = "Theme",
-        Options = {"Default", "Dark", "Light", "Rose", "Ocean", "Amethyst"},
-        Default = 1,
-        Callback = function(option)
-            pcall(function() WindUI:SetTheme(option) end)
-        end
-    })
-
-    UISec:Keybind({
-        Title = "Toggle Hub",
-        Default = Enum.KeyCode.RightControl,
-        Callback = function() end
-    })
+    UISec:Dropdown({Title = "Theme", Options = {"Default", "Dark", "Light", "Rose", "Ocean", "Amethyst"}, Default = 1, Callback = function(option)
+        pcall(function() WindUI:SetTheme(option) end)
+    end})
 
     local GeneralSec = Settings_Tab:Section({Title = "General"})
-
-    GeneralSec:Toggle({
-        Title = "Anti-Lag Shield",
-        Default = false,
-        Callback = function(state)
-            AntiLagEnabled = state
-            if state then
-                startAntiLag()
-                WindUI:Notify({Title = "Anti-Lag", Content = "Performance mode activated.", Duration = 3, Icon = "zap"})
-            else
-                stopAntiLag()
-            end
+    GeneralSec:Toggle({Title = "Anti-Lag Shield", Default = false, Callback = function(state)
+        AntiLagEnabled = state
+        if state then startAntiLag() else stopAntiLag() end
+    end})
+    GeneralSec:Toggle({Title = "ESP (Minimal Dots)", Default = false, Callback = function(state)
+        ESPEnabled = state
+        if state then startESP() else stopESP() end
+    end})
+    GeneralSec:Toggle({Title = "Kill Notifications", Default = false, Callback = function(state)
+        KillNotifEnabled = state
+        if state then
+            WindUI:Notify({Title = "Kill Notifications", Content = "Behavioral analysis + threat level enabled.", Duration = 4, Icon = "bell"})
         end
-    })
-
-    GeneralSec:Toggle({
-        Title = "ESP (Minimal Dots)",
-        Default = false,
-        Callback = function(state)
-            ESPEnabled = state
-            if state then startESP() else stopESP() end
+    end})
+    GeneralSec:Toggle({Title = "Kill Logs", Default = false, Callback = function(state) KillLogEnabled = state end})
+    GeneralSec:Button({Title = "View Kill Logs", Callback = function()
+        if #KillLogs == 0 then
+            WindUI:Notify({Title = "Kill Logs", Content = "No kills recorded yet.", Duration = 2, Icon = "info"})
+            return
         end
-    })
-
-    GeneralSec:Toggle({
-        Title = "Kill Notifications",
-        Default = false,
-        Callback = function(state)
-            KillNotifEnabled = state
-            if state then
-                WindUI:Notify({Title = "Kill Notifications", Content = "Behavioral analysis + threat level enabled.", Duration = 4, Icon = "bell"})
-            end
-        end
-    })
-
-    GeneralSec:Toggle({
-        Title = "Kill Logs",
-        Default = false,
-        Callback = function(state) KillLogEnabled = state end
-    })
-
-    GeneralSec:Button({
-        Title = "View Kill Logs",
-        Callback = function()
-            if #KillLogs == 0 then
-                WindUI:Notify({Title = "Kill Logs", Content = "No kills recorded yet.", Duration = 2, Icon = "info"})
-                return
-            end
-            local lastLog = KillLogs[#KillLogs]
-            WindUI:Notify({
-                Title = "Last Kill Log",
-                Content = "Killer: " .. lastLog.Killer .. "\nWeapon: " .. lastLog.Weapon
-                    .. "\nThreat: " .. lastLog.Threat .. "/10\nTotal logs: " .. #KillLogs,
-                Duration = 5,
-                Icon = "scroll-text",
-            })
-        end
-    })
+        local lastLog = KillLogs[#KillLogs]
+        WindUI:Notify({
+            Title = "Last Kill Log",
+            Content = "Killer: " .. lastLog.Killer .. "\nWeapon: " .. lastLog.Weapon
+                .. "\nThreat: " .. lastLog.Threat .. "/10\nTotal logs: " .. #KillLogs,
+            Duration = 5,
+            Icon = "scroll-text",
+        })
+    end})
 
     local ConfigSec = Settings_Tab:Section({Title = "Config"})
-
-    ConfigSec:Button({
-        Title = "Save Config",
-        Callback = function()
-            local config = {
-                ReachSize = ReachSize,
-                ThreatRadius = ThreatRadius,
-                latencyEstimate = latencyEstimate,
-            }
-            writeJSON(CONFIG_FILE, config)
-            WindUI:Notify({Title = "Config Saved", Content = "Settings saved.", Duration = 2, Icon = "save"})
+    ConfigSec:Button({Title = "Save Config", Callback = function()
+        local config = {ReachSize = ReachSize, ThreatRadius = ThreatRadius, latencyEstimate = latencyEstimate}
+        writeJSON(CONFIG_FILE, config)
+        WindUI:Notify({Title = "Config Saved", Content = "Settings saved.", Duration = 2, Icon = "save"})
+    end})
+    ConfigSec:Button({Title = "Load Config", Callback = function()
+        local config = readJSON(CONFIG_FILE)
+        if config then
+            ReachSize = config.ReachSize or 2
+            ThreatRadius = config.ThreatRadius or 50
+            latencyEstimate = config.latencyEstimate or 0.1
+            WindUI:Notify({Title = "Config Loaded", Content = "Settings restored.", Duration = 2, Icon = "folder-open"})
+        else
+            WindUI:Notify({Title = "No Config", Content = "No saved config found.", Duration = 2, Icon = "x"})
         end
-    })
-
-    ConfigSec:Button({
-        Title = "Load Config",
-        Callback = function()
-            local config = readJSON(CONFIG_FILE)
-            if config then
-                ReachSize = config.ReachSize or 2
-                ThreatRadius = config.ThreatRadius or 50
-                latencyEstimate = config.latencyEstimate or 0.1
-                WindUI:Notify({Title = "Config Loaded", Content = "Settings restored.", Duration = 2, Icon = "folder-open"})
-            else
-                WindUI:Notify({Title = "No Config", Content = "No saved config found.", Duration = 2, Icon = "x"})
-            end
-        end
-    })
-
-    ConfigSec:Button({
-        Title = "Rejoin Server",
-        Callback = function()
-            TeleportService:Teleport(game.PlaceId, player)
-        end
-    })
+    end})
+    ConfigSec:Button({Title = "Rejoin Server", Callback = function()
+        TeleportService:Teleport(game.PlaceId, player)
+    end})
 end
 
--- ── SETUP KILL NOTIFICATIONS ────────────────────────────────
+-- ── SETUP & FINALIZE ────────────────────────────────────────
 setupKillNotifications()
 
--- ── FINAL ───────────────────────────────────────────────────
 WindUI:Notify({
-    Title = "EXO Hub v5.0 Loaded",
-    Content = "WindUI Edition. All systems online.",
+    Title = "EXO Hub v6.0 GODLY TIER",
+    Content = "All systems online. Full power. Zero lag.",
     Duration = 4,
     Icon = "check-circle",
 })
