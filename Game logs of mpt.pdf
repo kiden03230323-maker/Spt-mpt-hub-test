@@ -1,0 +1,236 @@
+SCANNING ALL GAME OBJECTS...
+--- WORKSPACE ---
+[Model] The Box
+[Model] Walls
+[Model] Road
+[Folder] Tycoons
+  [Folder] Nuclear
+    [Model] Door
+    [Model] CashRegister
+    [Model] ShopModel
+    [Model] CashEffect1
+    [Model] CashEffect2
+    [Model] Ladders
+    [Model] Gen
+    [Model] GearGiver2
+    [Model] DoorButton
+    [Model] Robux1
+    [Model] Robux2
+    [Model] Gen1
+    [Model] Gen2
+    [Model] Gen7
+    [Model] Wall1
+    [Model] Wall2
+    [Model] Wall3
+    [Model] Gen3
+    [Model] Wall4
+    [Model] UpStairs
+    [Model] GearGiver1
+    [Model] Gen4
+    [Model] Gen5
+    [Model] Gen6
+    [Model] UltimaPad
+    [Model] UltimaP1
+  [Folder] Magma
+    [Model] Door
+    [Model] CashRegister
+    [Model] ShopModel
+    [Model] CashEffect1
+    [Model] CashEffect2
+    [Model] Gen
+    [Model] GearButton2
+    [Model] Robux1
+    [Model] Robux2
+    [Model] DoorButton
+    [Model] Gen1
+    [Model] GenB5
+    [Model] Wall1
+    [Model] UPButton
+    [Model] Gen2
+    [Model] Wall2
+    [Model] Gen3
+    [Model] Wall3
+    [Model] GearGiver1
+    [Model] Wall4
+    [Model] Gen4
+  [Folder] Toxic
+    [Model] Door
+    [Model] CashRegister
+    [Model] ShopModel
+    [Model] CashEffect1
+    [Model] CashEffect2
+  [Folder] Kong
+    [Model] Door
+    [Model] CashRegister
+    [Model] ShopModel
+    [Model] CashEffect1
+    [Model] CashEffect2
+    [Model] Ladders
+    [Model] Gen
+    [Model] GunPadButton1
+    [Model] DoorButton
+    [Model] Robux1
+    [Model] Robux2
+    [Model] Gen1
+    [Model] Gen2
+    [Model] Gen7
+    [Model] Gen3
+    [Model] Gen4
+    [Model] Gen5
+    [Model] Gen6
+    [Model] Wall1
+    [Model] Wall2
+    [Model] Wall4
+    [Model] Wall3
+    [Model] UpStairs
+    [Model] UltimaPad
+    [Model] UltimaP2
+    [Model] Ultima
+  [Folder] Void
+    [Model] Door
+    [Model] CashRegister
+    [Model] ShopModel
+    [Model] CashEffect1
+    [Model] CashEffect2
+    [Model] Robux2
+    [Model] Robux1
+    [Model] DoorButton
+    [Model] Gen
+    [Model] Gen1
+    [Model] Gen2
+    [Model] GearGiver3
+    [Model] Ladders
+    [Model] UpStairs
+    [Model] Wall4
+    [Model] Wall3
+    [Model] Wall2
+    [Model] Wall1
+    [Model] GearGiver2
+    [Model] GearGiver1
+    [Model] Gen7
+    [Model] Gen6
+    [Model] Gen3
+    [Model] Gen4
+    [Model] Gen5
+    [Model] GearGiver4
+    [Model] GearGiver5
+    [Model] GearGiver6
+    [Model] GearGiver7
+  [Folder] Shadow
+    [Model] Door
+    [Model] CashRegister
+    [Model] ShopModel
+    [Model] CashEffect1
+    [Model] CashEffect2
+  [Folder] Thunder
+    [Model] Door
+    [Model] CashRegister
+    [Model] ShopModel
+    [Model] CashEffect1
+    [Model] CashEffect2
+    [Model] Robux2
+    [Model] Robux1
+    [Model] DoorButton
+    [Model] GearGiver2
+    [Model] Gen
+    [Model] Gen1
+    [Model] Gen2
+    [Model] Wall1
+    [Model] Ladders
+    [Model] Gen3
+    [Model] Gen6
+    [Model] Gen4
+    [Model] Gen7
+    [Model] Gen5
+    [Model] Wall2
+    [Model] UpStairs
+    [Model] Wall3
+    [Model] Wall4
+    [Model] GearGiver1
+    [Model] UltimaPad
+    [Model] Ultima2
+    [Model] Ultima
+  [Folder] Mecha
+    [Model] Door
+    [Model] CashRegister
+    [Model] ShopModel
+    [Model] CashEffect1
+    [Model] CashEffect2
+  [Folder] Hyper
+    [Model] Door
+    [Model] CashEffect1
+    [Model] CashEffect2
+    [Model] CashRegister
+    [Model] ShopModel
+    [Model] WallButton1
+    [Model] GenB
+    [Model] Gen
+    [Model] GunPadButton1
+    [Model] DoorBTN
+    [Model] Robux1
+    [Model] Robux2
+  [Folder] Frozen
+    [Model] Door
+    [Model] CashRegister
+    [Model] ShopModel
+    [Model] CashEffect1
+    [Model] CashEffect2
+    [Model] Wall1
+    [Model] Wall2
+    [Model] Wall3
+    [Model] Wall4
+    [Model] UpStairs
+    [Model] Ladders
+    [Model] Gen1
+    [Model] GearGiver1
+    [Model] GearGiver2
+    [Model] Gen2
+    [Model] GenB3
+    [Model] GearGiver3
+    [Model] GearGiver4
+    [Model] GearGiver5
+    [Model] GearGiver6
+    [Model] GearButton7
+    [Model] UltimaPad
+    [Model] Ultima
+    [Model] Ultima2
+    [Model] Robux2
+    [Model] Robux1
+    [Model] DoorButton
+    [Model] Gen
+[Model] Corners
+[Model] Model
+[Folder] Powers
+[Model] meladdict75
+[Model] zolapfire9999
+[Model] messialt132
+[Model] SnowStorm_Queen1
+[Model] Empyrean_Chaos
+[Model] XxMysticalLotusxX
+[Model] EthanRulesPizza29
+[Model] MysteriousStrangerOG
+[Model] city800
+--- REPLICATEDSTORAGE ---
+[RemoteEvent] Guide
+[Folder] GamePass
+[Model] Entrance22
+[Folder] DefaultChatSystemChatEvents
+  [RemoteEvent] OnNewMessage
+  [RemoteEvent] OnMessageDoneFiltering
+  [RemoteEvent] OnNewSystemMessage
+  [RemoteEvent] OnChannelJoined
+  [RemoteEvent] OnChannelLeft
+  [RemoteEvent] OnMuted
+  [RemoteEvent] OnUnmuted
+  [RemoteEvent] OnMainChannelSet
+  [RemoteEvent] ChannelNameColorUpdated
+  [RemoteEvent] SayMessageRequest
+  [RemoteEvent] SetBlockedUserIdsRequest
+  [RemoteFunction] GetInitDataRequest
+  [RemoteFunction] MutePlayerRequest
+  [RemoteFunction] UnMutePlayerRequest
+--- REPLICATEDFIRST ---
+--- LIGHTING ---
+--- PLAYER BACKPACK ---
+--- PLAYER CHARACTER ---
+SCAN COMPLETE!
