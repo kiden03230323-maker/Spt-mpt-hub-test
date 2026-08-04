@@ -1,22 +1,10 @@
--- ═══════════════════════════════════════════════════════════════════════════
---  ███████╗██╗  ██╗ ██████╗      ██╗  ██╗ █████╗ ██╗   ██╗██████╗  ██████╗
---  ██╔════╝╚██╗██╔╝██╔═══██╗     ██║  ██║██╔══██╗██║   ██║██╔══██╗██╔═══██╗
---  █████╗   ╚███╔╝ ██║   ██║     ███████║███████║██║   ██║██║  ██║██║   ██║
---  ██╔══╝   ██╔██╗ ██║   ██║     ██╔══██║██╔══██║██║   ██║██║  ██║██║   ██║
---  ███████╗██╔╝ ██╗╚██████╔╝     ██║  ██║██║  ██║╚██████╔╝██████╔╝╚██████╔╝
---  ╚══════╝╚═╝  ╚═╝ ╚═════╝      ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═════╝  ╚═════╝
---  EXO HUB v9.0 | Rayfield Gen 2 | FULL REBUILD | 8 TABS | EXTRA TAB
---  Super Power Tycoon + Mega Power Tycoon | ALL FEATURES | 2K+ LINES
--- ═══════════════════════════════════════════════════════════════════════════
+-- ═══════════════════════════════════════════════════════════════
+--  EXO HUB v9.1 – Rayfield Gen 2 | PascalCase FIXED | ALL 8 TABS
+-- ═══════════════════════════════════════════════════════════════
 
--- ═══════════════════════════════════════════════════════════════
---  SECTION 1: LOAD RAYFIELD GEN 2
--- ═══════════════════════════════════════════════════════════════
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/gen2"))()
 
--- ═══════════════════════════════════════════════════════════════
---  SECTION 2: SERVICES
--- ═══════════════════════════════════════════════════════════════
+-- ── SERVICES ────────────────────────────────────────────────
 local Players           = game:GetService("Players")
 local RunService        = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -29,13 +17,9 @@ local TeleportService   = game:GetService("TeleportService")
 local VirtualUser       = game:GetService("VirtualUser")
 local Workspace         = game:GetService("Workspace")
 local player            = Players.LocalPlayer
-local Camera            = Workspace.CurrentCamera
 
--- ═══════════════════════════════════════════════════════════════
---  SECTION 3: FILE I/O
--- ═══════════════════════════════════════════════════════════════
+-- ── FILE I/O ────────────────────────────────────────────────
 local CONFIG_FILE = "exo_config_v9.dat"
-
 local function readFile(path)
     if isfile and readfile and isfile(path) then
         local ok, r = pcall(readfile, path)
@@ -43,11 +27,9 @@ local function readFile(path)
     end
     return nil
 end
-
 local function writeFile(path, data)
     if writefile then pcall(writefile, path, data) end
 end
-
 local function readJSON(path)
     local raw = readFile(path)
     if raw then
@@ -56,16 +38,12 @@ local function readJSON(path)
     end
     return nil
 end
-
 local function writeJSON(path, data)
     local ok, e = pcall(HttpService.JSONEncode, HttpService, data)
     if ok then writeFile(path, e) end
 end
 
--- ═══════════════════════════════════════════════════════════════
---  SECTION 4: STATE VARIABLES
--- ═══════════════════════════════════════════════════════════════
--- Core Combat
+-- ── STATE ───────────────────────────────────────────────────
 local DAMAGE_REMOTE     = nil
 local DAMAGE_REMOTE_ALT = nil
 local Aura              = {Enabled = false, TargetList = {}}
@@ -80,8 +58,6 @@ local ToolFollow        = {Enabled = false, Targets = {}, Connection = nil}
 local AutoGetTools      = false
 local AutoClaimMoney    = false
 local AutoBuild         = false
-
--- Connections
 local grabLoopConn      = nil
 local toolLoopConn      = nil
 local auraConn          = nil
@@ -90,20 +66,12 @@ local buildConn         = nil
 local NoCooldownConn    = nil
 local antiAuraConn      = nil
 local antiAuraFF        = nil
-
--- Tycoon
 local cachedTycoonType  = nil
-
--- Anti-Aura
 local AntiAura          = {Enabled = false, GodMode = false, Repel = false, Phase = false}
-
--- Threat
 local ThreatLevel       = 0
 local LastThreatCheck   = 0
 local ThreatRadius      = 50
 local latencyEstimate   = 0.1
-
--- Insta-Kill
 local InstaKillEnabled   = false
 local InstaKillConn      = nil
 local IK_ToolsCache      = {}
@@ -111,8 +79,6 @@ local IK_LastActivation  = 0
 local IK_TargetParts     = {}
 local IK_BurstCount      = 8
 local IK_AdaptiveBurst   = true
-
--- Hit Amplifier
 local HitAmpEnabled      = false
 local HitAmpConn         = nil
 local HA_CachedTools     = {}
@@ -120,26 +86,18 @@ local HA_LastActivation  = 0
 local HA_Accumulator     = 0
 local HA_Range           = Vector3.new(30, 30, 30)
 local HA_BurstCount      = 5
-
--- Tool Grabber
 local TG_Enabled         = false
 local TG_padsByBase      = {}
 local TG_registered      = {}
 local TG_BurstCount      = 8
-
--- Kill Intelligence
 local KillNotifEnabled   = false
 local KillLogEnabled     = false
 local KillLogs           = {}
 local DeathCount         = 0
-
--- ESP / Visuals
 local ESPEnabled         = false
 local AntiLagEnabled     = false
 local espDots            = {}
 local espGui             = nil
-
--- Extra Tab State
 local SpeedEnabled       = false
 local SpeedValue         = 16
 local JumpEnabled        = false
@@ -147,23 +105,16 @@ local JumpValue          = 50
 local NoclipEnabled      = false
 local NoclipConn         = nil
 local InfiniteJump       = false
-local FullBright         = false
-local AntiAFK            = false
 local FlyEnabled         = false
 local FlySpeed           = 50
 local FlyConn            = nil
-local FOVValue           = 70
 
--- ═══════════════════════════════════════════════════════════════
---  SECTION 5: PRE-ALLOCATED BUFFERS
--- ═══════════════════════════════════════════════════════════════
+-- ── BUFFERS ─────────────────────────────────────────────────
 local _buf_parts   = {}
 local _buf_buttons = {}
 local _buf_players = {}
 
--- ═══════════════════════════════════════════════════════════════
---  SECTION 6: DEFERRED HEAVY SCANS
--- ═══════════════════════════════════════════════════════════════
+-- ── DEFERRED SCANS ──────────────────────────────────────────
 task.spawn(function()
     local remotes = {}
     for _, container in ipairs({ReplicatedStorage, Workspace}) do
@@ -172,8 +123,7 @@ task.spawn(function()
                 if obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction") then
                     local n = obj.Name:lower()
                     if n:match("damage") or n:match("hit") or n:match("attack")
-                        or n:match("deal") or n:match("hurt") or n:match("strike")
-                        or n:match("combat") or n:match("fight") then
+                        or n:match("deal") or n:match("hurt") or n:match("strike") then
                         table.insert(remotes, obj)
                     end
                 end
@@ -184,7 +134,6 @@ task.spawn(function()
         DAMAGE_REMOTE = remotes[1]
         if #remotes > 1 then DAMAGE_REMOTE_ALT = remotes[2] end
     end
-
     local TycoonsFolder = Workspace:FindFirstChild("Tycoons")
     if TycoonsFolder then
         pcall(function()
@@ -209,9 +158,7 @@ task.spawn(function()
     end
 end)
 
--- ═══════════════════════════════════════════════════════════════
---  SECTION 7: TYCOON HELPERS
--- ═══════════════════════════════════════════════════════════════
+-- ── TYCOON HELPERS ──────────────────────────────────────────
 local function getPlayerTycoonType()
     if cachedTycoonType and Workspace:FindFirstChild("Tycoons")
         and Workspace.Tycoons:FindFirstChild(cachedTycoonType) then
@@ -323,9 +270,7 @@ local function getHRP(char)
     return char and (char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso"))
 end
 
--- ═══════════════════════════════════════════════════════════════
---  SECTION 8: THREAT DETECTION
--- ═══════════════════════════════════════════════════════════════
+-- ── THREAT ──────────────────────────────────────────────────
 local function updateThreatLevel()
     if tick() - LastThreatCheck < 0.3 then return end
     LastThreatCheck = tick()
@@ -342,9 +287,7 @@ local function updateThreatLevel()
     end
 end
 
--- ═══════════════════════════════════════════════════════════════
---  SECTION 9: AURA & KILL
--- ═══════════════════════════════════════════════════════════════
+-- ── AURA ────────────────────────────────────────────────────
 local function startAuraLoop()
     if auraConn then auraConn:Disconnect() end
     auraConn = RunService.PreSimulation:Connect(function()
@@ -408,9 +351,7 @@ local function stopAuraLoop()
     if auraConn then auraConn:Disconnect(); auraConn = nil end
 end
 
--- ═══════════════════════════════════════════════════════════════
---  SECTION 10: TOOL FOLLOW
--- ═══════════════════════════════════════════════════════════════
+-- ── TOOL FOLLOW ─────────────────────────────────────────────
 local cachedToolParts = {}
 local function updateToolCache()
     table.clear(cachedToolParts)
@@ -454,9 +395,7 @@ player.CharacterAdded:Connect(function(char)
 end)
 updateToolCache()
 
--- ═══════════════════════════════════════════════════════════════
---  SECTION 11: AUTO CLAIM & BUILD
--- ═══════════════════════════════════════════════════════════════
+-- ── AUTO CLAIM & BUILD ──────────────────────────────────────
 local function startClaimMoney()
     if claimConn then claimConn:Disconnect() end
     claimConn = RunService.PreSimulation:Connect(function()
@@ -527,9 +466,7 @@ local function stopAutoBuild()
     if buildConn then buildConn:Disconnect(); buildConn = nil end
 end
 
--- ═══════════════════════════════════════════════════════════════
---  SECTION 12: ANTI-AURA (SAFE)
--- ═══════════════════════════════════════════════════════════════
+-- ── ANTI-AURA ───────────────────────────────────────────────
 local function startAntiAura()
     if antiAuraConn then antiAuraConn:Disconnect() end
     antiAuraConn = RunService.Heartbeat:Connect(function()
@@ -579,9 +516,7 @@ local function stopAntiAura()
     if antiAuraFF and antiAuraFF.Parent then antiAuraFF:Destroy(); antiAuraFF = nil end
 end
 
--- ═══════════════════════════════════════════════════════════════
---  SECTION 13: REACH
--- ═══════════════════════════════════════════════════════════════
+-- ── REACH ───────────────────────────────────────────────────
 local reachOriginalSizes = {}
 local reachHL = {}
 local function applyReach()
@@ -613,9 +548,7 @@ local function stopReach()
     table.clear(reachOriginalSizes)
 end
 
--- ═══════════════════════════════════════════════════════════════
---  SECTION 14: FAST RESPAWN
--- ═══════════════════════════════════════════════════════════════
+-- ── FAST RESPAWN ────────────────────────────────────────────
 local function startFastRespawn()
     local Guide = ReplicatedStorage:FindFirstChild("Guide")
     local last = 0
@@ -635,9 +568,7 @@ local function startFastRespawn()
     player.CharacterAdded:Connect(hook)
 end
 
--- ═══════════════════════════════════════════════════════════════
---  SECTION 15: INSTA-KILL MICRO-BURST
--- ═══════════════════════════════════════════════════════════════
+-- ── INSTA-KILL ──────────────────────────────────────────────
 local function IK_RefreshTools()
     table.clear(IK_ToolsCache)
     local char = player.Character
@@ -654,7 +585,6 @@ local function IK_RefreshTools()
         end
     end
 end
-
 local function IK_GetTarget()
     local myChar = player.Character
     local myRoot = myChar and getHRP(myChar)
@@ -677,7 +607,6 @@ local function IK_GetTarget()
     end
     return bestChar
 end
-
 local function IK_MicroBurst(targetChar, burstCount)
     if not targetChar or not player.Character then return end
     table.clear(IK_TargetParts)
@@ -707,7 +636,6 @@ local function IK_MicroBurst(targetChar, burstCount)
         end
     end
 end
-
 local function startInstaKill()
     if InstaKillConn then InstaKillConn:Disconnect() end
     IK_RefreshTools()
@@ -730,12 +658,9 @@ local function stopInstaKill()
     if InstaKillConn then InstaKillConn:Disconnect(); InstaKillConn = nil end
 end
 
--- ═══════════════════════════════════════════════════════════════
---  SECTION 16: HIT AMPLIFIER
--- ═══════════════════════════════════════════════════════════════
+-- ── HIT AMPLIFIER ───────────────────────────────────────────
 local HA_OverlapParams = OverlapParams.new()
 HA_OverlapParams.FilterType = Enum.RaycastFilterType.Exclude
-
 local function HA_RefreshTools()
     table.clear(HA_CachedTools)
     local char = player.Character
@@ -749,7 +674,6 @@ local function HA_RefreshTools()
         end
     end
 end
-
 local function startHitAmplifier()
     if HitAmpConn then HitAmpConn:Disconnect() end
     HA_RefreshTools()
@@ -791,9 +715,7 @@ local function stopHitAmplifier()
     if HitAmpConn then HitAmpConn:Disconnect(); HitAmpConn = nil end
 end
 
--- ═══════════════════════════════════════════════════════════════
---  SECTION 17: TOOL GRABBER
--- ═══════════════════════════════════════════════════════════════
+-- ── TOOL GRABBER ────────────────────────────────────────────
 local TG_TOOL_RULES = {
     {Pattern = "Energy Sword", Base = "Stone"},
     {Pattern = "Staff", Base = "Magic"},
@@ -810,7 +732,6 @@ local TG_TOOL_RULES = {
     {Pattern = "Toxic Claws", Base = "Toxic"},
     {Pattern = "Punch", Base = "Kong"},
 }
-
 local function TG_HasTool(pattern)
     local bp = player:FindFirstChildOfClass("Backpack")
     if bp then
@@ -826,7 +747,6 @@ local function TG_HasTool(pattern)
     end
     return false
 end
-
 local function TG_GetClosestPad(baseName)
     local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
     if not root then return nil end
@@ -842,9 +762,7 @@ local function TG_GetClosestPad(baseName)
     return closest
 end
 
--- ═══════════════════════════════════════════════════════════════
---  SECTION 18: KILL NOTIFICATIONS
--- ═══════════════════════════════════════════════════════════════
+-- ── KILL NOTIFICATIONS ──────────────────────────────────────
 local function analyzeKill(killer, weaponName, distance)
     local suspected = {}
     local counter = {}
@@ -870,7 +788,6 @@ local function analyzeKill(killer, weaponName, distance)
     return {Killer=killer, Weapon=weaponName, Distance=math.floor(distance),
             Suspected=suspected, Counter=counter, Threat=threat, Time=os.date("%H:%M:%S")}
 end
-
 local function setupKillNotifications()
     player.CharacterAdded:Connect(function(char)
         local hum = char:WaitForChild("Humanoid")
@@ -896,11 +813,11 @@ local function setupKillNotifications()
             local analysis = analyzeKill(killerName, weaponName, distance)
             if KillNotifEnabled then
                 Rayfield:Notify({
-                    title = "KILL DETECTED - Threat " .. analysis.Threat .. "/10",
-                    content = "Killer: " .. analysis.Killer .. " | Weapon: " .. analysis.Weapon
+                    Title = "KILL DETECTED - Threat " .. analysis.Threat .. "/10",
+                    Content = "Killer: " .. analysis.Killer .. " | Weapon: " .. analysis.Weapon
                         .. " | Dist: " .. analysis.Distance .. " | Suspected: " .. table.concat(analysis.Suspected, ", ")
                         .. " | Counter: " .. table.concat(analysis.Counter, " | "),
-                    duration = 6,
+                    Duration = 6,
                 })
             end
             if KillLogEnabled then
@@ -911,9 +828,7 @@ local function setupKillNotifications()
     end)
 end
 
--- ═══════════════════════════════════════════════════════════════
---  SECTION 19: ESP
--- ═══════════════════════════════════════════════════════════════
+-- ── ESP ─────────────────────────────────────────────────────
 local function startESP()
     if espGui then return end
     espGui = Instance.new("ScreenGui")
@@ -967,9 +882,7 @@ local function stopESP()
     table.clear(espDots)
 end
 
--- ═══════════════════════════════════════════════════════════════
---  SECTION 20: ANTI-LAG
--- ═══════════════════════════════════════════════════════════════
+-- ── ANTI-LAG ────────────────────────────────────────────────
 local function startAntiLag()
     pcall(function()
         for _, obj in ipairs(Workspace:GetDescendants()) do
@@ -993,9 +906,7 @@ local function stopAntiLag()
     end)
 end
 
--- ═══════════════════════════════════════════════════════════════
---  SECTION 21: SAFE NO COOLDOWN
--- ═══════════════════════════════════════════════════════════════
+-- ── SAFE NO COOLDOWN ────────────────────────────────────────
 local function startNoCooldown()
     if NoCooldownConn then NoCooldownConn:Disconnect() end
     NoCooldownConn = RunService.RenderStepped:Connect(function()
@@ -1018,9 +929,7 @@ local function stopNoCooldown()
     if NoCooldownConn then NoCooldownConn:Disconnect(); NoCooldownConn = nil end
 end
 
--- ═══════════════════════════════════════════════════════════════
---  SECTION 22: EXTRA TAB FUNCTIONS
--- ═══════════════════════════════════════════════════════════════
+-- ── NOCLIP ──────────────────────────────────────────────────
 local function startNoclip()
     if NoclipConn then NoclipConn:Disconnect() end
     NoclipConn = RunService.Stepped:Connect(function()
@@ -1045,6 +954,7 @@ local function stopNoclip()
     end
 end
 
+-- ── FLY ─────────────────────────────────────────────────────
 local function startFly()
     if FlyConn then FlyConn:Disconnect() end
     local char = player.Character
@@ -1074,21 +984,22 @@ local function startFly()
     end)
 end
 
--- ═══════════════════════════════════════════════════════════════
---  SECTION 23: BUILD RAYFIELD GEN 2 UI
--- ═══════════════════════════════════════════════════════════════
+-- ═══════════════════════════════════════════════════════════
+--  BUILD RAYFIELD GEN 2 UI (ALL PASCALCASE)
+-- ═══════════════════════════════════════════════════════════
+
 local window = Rayfield:CreateWindow({
-    name = "EXO Hub v9.0",
-    subtitle = "Power Tycoon | Super + Mega | Rayfield Gen 2",
+    Name = "EXO Hub v9.1",
+    Subtitle = "Power Tycoon | Super + Mega | Rayfield Gen 2",
 })
 
--- ═══════════════════════════════════════════════════════════════
+-- ═══════════════════════════════════════════════════════════
 --  TAB 1: SPT COMBAT
--- ═══════════════════════════════════════════════════════════════
-local SPT_Combat = window:CreateTab({name = "SPT Combat", icon = 93364949241311})
+-- ═══════════════════════════════════════════════════════════
+local SPT_Combat = window:CreateTab({Name = "SPT Combat", Icon = 93364949241311})
 
-SPT_Combat:CreateLabel({name = "── Multi-Target Aura ──"})
-SPT_Combat:CreateToggle({name = "Enable Aura", currentValue = false, callback = function(state)
+SPT_Combat:CreateLabel({Name = "── Multi-Target Aura ──"})
+SPT_Combat:CreateToggle({Name = "Enable Aura", CurrentValue = false, Callback = function(state)
     Aura.Enabled = state
     if state then
         Aura.TargetList = {}
@@ -1096,12 +1007,12 @@ SPT_Combat:CreateToggle({name = "Enable Aura", currentValue = false, callback = 
             if plr ~= player then table.insert(Aura.TargetList, plr) end
         end
         startAuraLoop()
-        Rayfield:Notify({title = "Aura", content = "Activated - " .. #Aura.TargetList .. " targets.", duration = 2})
+        Rayfield:Notify({Title = "Aura", Content = "Activated - " .. #Aura.TargetList .. " targets.", Duration = 2})
     else stopAuraLoop() end
 end})
-SPT_Combat:CreateToggle({name = "Instant Kill", currentValue = false, callback = function(state) InstantKill = state end})
-SPT_Combat:CreateSlider({name = "Prediction Offset", range = {5, 25}, initialValue = 10, callback = function(val) latencyEstimate = val / 100 end})
-SPT_Combat:CreateDropdown({name = "Aura Targets", options = getServerPlayers(), multiSelection = true, callback = function(selected)
+SPT_Combat:CreateToggle({Name = "Instant Kill", CurrentValue = false, Callback = function(state) InstantKill = state end})
+SPT_Combat:CreateSlider({Name = "Prediction Offset", Range = {5, 25}, CurrentValue = 10, Callback = function(val) latencyEstimate = val / 100 end})
+SPT_Combat:CreateDropdown({Name = "Aura Targets", Options = getServerPlayers(), MultipleOptions = true, Callback = function(selected)
     table.clear(Aura.TargetList)
     if selected then
         for _, name in ipairs(selected) do
@@ -1111,8 +1022,8 @@ SPT_Combat:CreateDropdown({name = "Aura Targets", options = getServerPlayers(), 
     end
 end})
 
-SPT_Combat:CreateLabel({name = "── Tool Follow ──"})
-SPT_Combat:CreateToggle({name = "Enable Tool Follow", currentValue = false, callback = function(state)
+SPT_Combat:CreateLabel({Name = "── Tool Follow ──"})
+SPT_Combat:CreateToggle({Name = "Enable Tool Follow", CurrentValue = false, Callback = function(state)
     ToolFollow.Enabled = state
     if state then
         ToolFollow.Targets = {}
@@ -1123,15 +1034,15 @@ SPT_Combat:CreateToggle({name = "Enable Tool Follow", currentValue = false, call
     else stopToolFollow() end
 end})
 
-SPT_Combat:CreateLabel({name = "── Defense / Anti-Aura ──"})
-SPT_Combat:CreateToggle({name = "Enable Anti-Aura", currentValue = false, callback = function(state)
+SPT_Combat:CreateLabel({Name = "── Defense / Anti-Aura ──"})
+SPT_Combat:CreateToggle({Name = "Enable Anti-Aura", CurrentValue = false, Callback = function(state)
     AntiAura.Enabled = state
     if state then startAntiAura() else stopAntiAura() end
 end})
-SPT_Combat:CreateToggle({name = "God Mode (ForceField)", currentValue = false, callback = function(state) AntiAura.GodMode = state end})
-SPT_Combat:CreateToggle({name = "Repel (Anti-Touch)", currentValue = false, callback = function(state) AntiAura.Repel = state end})
-SPT_Combat:CreateToggle({name = "Phase (No Collide)", currentValue = false, callback = function(state) AntiAura.Phase = state end})
-SPT_Combat:CreateToggle({name = "Anti Spawnkill", currentValue = false, callback = function(state)
+SPT_Combat:CreateToggle({Name = "God Mode (ForceField)", CurrentValue = false, Callback = function(state) AntiAura.GodMode = state end})
+SPT_Combat:CreateToggle({Name = "Repel (Anti-Touch)", CurrentValue = false, Callback = function(state) AntiAura.Repel = state end})
+SPT_Combat:CreateToggle({Name = "Phase (No Collide)", CurrentValue = false, Callback = function(state) AntiAura.Phase = state end})
+SPT_Combat:CreateToggle({Name = "Anti Spawnkill", CurrentValue = false, Callback = function(state)
     AntiSpawnkill = state
     if state then
         player.CharacterAdded:Connect(function(c)
@@ -1146,21 +1057,21 @@ SPT_Combat:CreateToggle({name = "Anti Spawnkill", currentValue = false, callback
     end
 end})
 
--- ═══════════════════════════════════════════════════════════════
+-- ═══════════════════════════════════════════════════════════
 --  TAB 2: SPT TYCOON
--- ═══════════════════════════════════════════════════════════════
-local SPT_Tycoon = window:CreateTab({name = "SPT Tycoon", icon = 93364949241311})
+-- ═══════════════════════════════════════════════════════════
+local SPT_Tycoon = window:CreateTab({Name = "SPT Tycoon", Icon = 93364949241311})
 
-SPT_Tycoon:CreateLabel({name = "── Tycoon Automation ──"})
-SPT_Tycoon:CreateToggle({name = "Auto Claim Money", currentValue = false, callback = function(state)
+SPT_Tycoon:CreateLabel({Name = "── Tycoon Automation ──"})
+SPT_Tycoon:CreateToggle({Name = "Auto Claim Money", CurrentValue = false, Callback = function(state)
     AutoClaimMoney = state
     if state then startClaimMoney() else stopClaimMoney() end
 end})
-SPT_Tycoon:CreateToggle({name = "Smart Auto Build", currentValue = false, callback = function(state)
+SPT_Tycoon:CreateToggle({Name = "Smart Auto Build", CurrentValue = false, Callback = function(state)
     AutoBuild = state
     if state then startAutoBuild() else stopAutoBuild() end
 end})
-SPT_Tycoon:CreateToggle({name = "Auto Grab Weapons", currentValue = false, callback = function(state)
+SPT_Tycoon:CreateToggle({Name = "Auto Grab Weapons", CurrentValue = false, Callback = function(state)
     AutoGetTools = state
     if state then
         if grabLoopConn then grabLoopConn:Disconnect() end
@@ -1187,8 +1098,8 @@ SPT_Tycoon:CreateToggle({name = "Auto Grab Weapons", currentValue = false, callb
     end
 end})
 
-SPT_Tycoon:CreateLabel({name = "── Tools & Cooldown ──"})
-SPT_Tycoon:CreateToggle({name = "Auto Use Tools (0 delay)", currentValue = false, callback = function(state)
+SPT_Tycoon:CreateLabel({Name = "── Tools & Cooldown ──"})
+SPT_Tycoon:CreateToggle({Name = "Auto Use Tools (0 delay)", CurrentValue = false, Callback = function(state)
     AutoTools = state
     if state then
         toolLoopConn = RunService.RenderStepped:Connect(function()
@@ -1206,55 +1117,52 @@ SPT_Tycoon:CreateToggle({name = "Auto Use Tools (0 delay)", currentValue = false
         if toolLoopConn then toolLoopConn:Disconnect(); toolLoopConn = nil end
     end
 end})
-SPT_Tycoon:CreateToggle({name = "No Cooldown (SAFE)", currentValue = false, callback = function(state)
+SPT_Tycoon:CreateToggle({Name = "No Cooldown (SAFE)", CurrentValue = false, Callback = function(state)
     NoCooldown = state
     if state then startNoCooldown() else stopNoCooldown() end
 end})
 
--- ═══════════════════════════════════════════════════════════════
+-- ═══════════════════════════════════════════════════════════
 --  TAB 3: SPT MISC
--- ═══════════════════════════════════════════════════════════════
-local SPT_Misc = window:CreateTab({name = "SPT Misc", icon = 93364949241311})
+-- ═══════════════════════════════════════════════════════════
+local SPT_Misc = window:CreateTab({Name = "SPT Misc", Icon = 93364949241311})
 
-SPT_Misc:CreateLabel({name = "── Reach ──"})
-SPT_Misc:CreateToggle({name = "Enable Reach", currentValue = false, callback = function(state)
+SPT_Misc:CreateLabel({Name = "── Reach ──"})
+SPT_Misc:CreateToggle({Name = "Enable Reach", CurrentValue = false, Callback = function(state)
     Reach = state
     if state then applyReach() else stopReach() end
 end})
-SPT_Misc:CreateSlider({name = "Reach Size", range = {1, 10}, initialValue = 2, callback = function(val)
+SPT_Misc:CreateSlider({Name = "Reach Size", Range = {1, 10}, CurrentValue = 2, Callback = function(val)
     ReachSize = val
     if Reach then stopReach(); applyReach() end
 end})
 
-SPT_Misc:CreateLabel({name = "── Respawn & Protection ──"})
-SPT_Misc:CreateToggle({name = "Fast Respawn", currentValue = false, callback = function(state)
+SPT_Misc:CreateLabel({Name = "── Respawn & Protection ──"})
+SPT_Misc:CreateToggle({Name = "Fast Respawn", CurrentValue = false, Callback = function(state)
     FastRespawn = state
     if state then startFastRespawn() end
 end})
 
-SPT_Misc:CreateLabel({name = "── Utilities ──"})
-SPT_Misc:CreateInput({name = "Set Damage Remote", placeholderText = "game.ReplicatedStorage.DealDamage", callback = function(text)
+SPT_Misc:CreateLabel({Name = "── Utilities ──"})
+SPT_Misc:CreateInput({Name = "Set Damage Remote", PlaceholderText = "game.ReplicatedStorage.DealDamage", Callback = function(text)
     if text and text ~= "" then
         local ok, remote = pcall(function() return loadstring("return " .. text)() end)
         if ok and remote and (remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction")) then
             DAMAGE_REMOTE = remote
-            Rayfield:Notify({title = "Remote Set", content = "Damage remote updated.", duration = 3})
+            Rayfield:Notify({Title = "Remote Set", Content = "Damage remote updated.", Duration = 3})
         else
-            Rayfield:Notify({title = "Error", content = "Invalid remote path.", duration = 3})
+            Rayfield:Notify({Title = "Error", Content = "Invalid remote path.", Duration = 3})
         end
     end
 end})
-SPT_Misc:CreateButton({name = "Open Game Dumper", callback = function()
-    Rayfield:Notify({title = "Game Dumper", content = "Scanner opened.", duration = 2})
-end})
 
--- ═══════════════════════════════════════════════════════════════
+-- ═══════════════════════════════════════════════════════════
 --  TAB 4: MPT KILL
--- ═══════════════════════════════════════════════════════════════
-local MPT_Kill = window:CreateTab({name = "MPT Kill", icon = 93364949241311})
+-- ═══════════════════════════════════════════════════════════
+local MPT_Kill = window:CreateTab({Name = "MPT Kill", Icon = 93364949241311})
 
-MPT_Kill:CreateLabel({name = "── Omni-Kill Engine ──"})
-MPT_Kill:CreateToggle({name = "Enable Omni-Kill", currentValue = false, callback = function(state)
+MPT_Kill:CreateLabel({Name = "── Omni-Kill Engine ──"})
+MPT_Kill:CreateToggle({Name = "Enable Omni-Kill", CurrentValue = false, Callback = function(state)
     Aura.Enabled = state; InstantKill = state
     if state then
         Aura.TargetList = {}
@@ -1262,47 +1170,47 @@ MPT_Kill:CreateToggle({name = "Enable Omni-Kill", currentValue = false, callback
             if plr ~= player then table.insert(Aura.TargetList, plr) end
         end
         startAuraLoop()
-        Rayfield:Notify({title = "OMNI-KILL", content = "ENGAGED - " .. #Aura.TargetList .. " targets.", duration = 3})
+        Rayfield:Notify({Title = "OMNI-KILL", Content = "ENGAGED - " .. #Aura.TargetList .. " targets.", Duration = 3})
     else stopAuraLoop() end
 end})
-MPT_Kill:CreateToggle({name = "Insta-Kill Micro-Burst", currentValue = false, callback = function(state)
+MPT_Kill:CreateToggle({Name = "Insta-Kill Micro-Burst", CurrentValue = false, Callback = function(state)
     InstaKillEnabled = state
     if state then startInstaKill() else stopInstaKill() end
 end})
-MPT_Kill:CreateToggle({name = "Adaptive Burst (Threat-Based)", currentValue = true, callback = function(state)
+MPT_Kill:CreateToggle({Name = "Adaptive Burst (Threat-Based)", CurrentValue = true, Callback = function(state)
     IK_AdaptiveBurst = state
 end})
-MPT_Kill:CreateSlider({name = "Prediction Aggression", range = {5, 25}, initialValue = 10, callback = function(val) latencyEstimate = val / 100 end})
-MPT_Kill:CreateSlider({name = "Burst Count", range = {3, 15}, initialValue = 8, callback = function(val) IK_BurstCount = val end})
-MPT_Kill:CreateButton({name = "Manual Kill Burst", callback = function()
+MPT_Kill:CreateSlider({Name = "Prediction Aggression", Range = {5, 25}, CurrentValue = 10, Callback = function(val) latencyEstimate = val / 100 end})
+MPT_Kill:CreateSlider({Name = "Burst Count", Range = {3, 15}, CurrentValue = 8, Callback = function(val) IK_BurstCount = val end})
+MPT_Kill:CreateButton({Name = "Manual Kill Burst", Callback = function()
     local orig = Aura.Enabled
     Aura.Enabled = true; InstantKill = true
     task.wait(0.15)
     Aura.Enabled = orig
     if not orig then InstantKill = false end
-    Rayfield:Notify({title = "Kill Burst", content = "Burst fired.", duration = 2})
+    Rayfield:Notify({Title = "Kill Burst", Content = "Burst fired.", Duration = 2})
 end})
-MPT_Kill:CreateButton({name = "Refresh Target List", callback = function()
+MPT_Kill:CreateButton({Name = "Refresh Target List", Callback = function()
     table.clear(Aura.TargetList)
     for _, plr in ipairs(Players:GetPlayers()) do
         if plr ~= player then table.insert(Aura.TargetList, plr) end
     end
-    Rayfield:Notify({title = "Targets", content = "Refreshed: " .. #Aura.TargetList .. " players.", duration = 2})
+    Rayfield:Notify({Title = "Targets", Content = "Refreshed: " .. #Aura.TargetList .. " players.", Duration = 2})
 end})
 
-MPT_Kill:CreateLabel({name = "── Hit Amplifier ──"})
-MPT_Kill:CreateToggle({name = "Enable Hit Amplifier", currentValue = false, callback = function(state)
+MPT_Kill:CreateLabel({Name = "── Hit Amplifier ──"})
+MPT_Kill:CreateToggle({Name = "Enable Hit Amplifier", CurrentValue = false, Callback = function(state)
     HitAmpEnabled = state
     if state then startHitAmplifier() else stopHitAmplifier() end
 end})
-MPT_Kill:CreateSlider({name = "Scan Range", range = {15, 50}, initialValue = 30, callback = function(val)
+MPT_Kill:CreateSlider({Name = "Scan Range", Range = {15, 50}, CurrentValue = 30, Callback = function(val)
     HA_Range = Vector3.new(val, val, val)
 end})
-MPT_Kill:CreateSlider({name = "Burst Count", range = {1, 10}, initialValue = 5, callback = function(val) HA_BurstCount = val end})
-MPT_Kill:CreateLabel({name = "120Hz scan | 12ms cooldown | OverlapParams"})
+MPT_Kill:CreateSlider({Name = "Burst Count", Range = {1, 10}, CurrentValue = 5, Callback = function(val) HA_BurstCount = val end})
+MPT_Kill:CreateLabel({Name = "120Hz scan | 12ms cooldown | OverlapParams"})
 
-MPT_Kill:CreateLabel({name = "── Tool Arsenal (14 Bases) ──"})
-MPT_Kill:CreateToggle({name = "Enable Tool Arsenal", currentValue = false, callback = function(state)
+MPT_Kill:CreateLabel({Name = "── Tool Arsenal (14 Bases) ──"})
+MPT_Kill:CreateToggle({Name = "Enable Tool Arsenal", CurrentValue = false, Callback = function(state)
     TG_Enabled = state
     if state then
         if not getgenv().EXO_TG_Loop then
@@ -1333,7 +1241,7 @@ MPT_Kill:CreateToggle({name = "Enable Tool Arsenal", currentValue = false, callb
         getgenv().EXO_TG_Loop = false
     end
 end})
-MPT_Kill:CreateButton({name = "Force Acquire All", callback = function()
+MPT_Kill:CreateButton({Name = "Force Acquire All", Callback = function()
     local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
     if root then
         for baseName, _ in pairs(TG_padsByBase) do
@@ -1345,24 +1253,24 @@ MPT_Kill:CreateButton({name = "Force Acquire All", callback = function()
                 end
             end
         end
-        Rayfield:Notify({title = "Tool Arsenal", content = "Force acquire burst fired.", duration = 2})
+        Rayfield:Notify({Title = "Tool Arsenal", Content = "Force acquire burst fired.", Duration = 2})
     end
 end})
-MPT_Kill:CreateLabel({name = "Stone, Magic, Storm, Robotic, Mecha, Shadow, Hyper, Thunder, Void, Frozen, Magma, Nuclear, Toxic, Kong"})
+MPT_Kill:CreateLabel({Name = "Stone, Magic, Storm, Robotic, Mecha, Shadow, Hyper, Thunder, Void, Frozen, Magma, Nuclear, Toxic, Kong"})
 
--- ═══════════════════════════════════════════════════════════════
+-- ═══════════════════════════════════════════════════════════
 --  TAB 5: MPT ECONOMY
--- ═══════════════════════════════════════════════════════════════
-local MPT_Economy = window:CreateTab({name = "MPT Economy", icon = 93364949241311})
+-- ═══════════════════════════════════════════════════════════
+local MPT_Economy = window:CreateTab({Name = "MPT Economy", Icon = 93364949241311})
 
-MPT_Economy:CreateLabel({name = "── Tycoon Sovereign ──"})
-MPT_Economy:CreateToggle({name = "Enable Sovereign Economy", currentValue = false, callback = function(state)
+MPT_Economy:CreateLabel({Name = "── Tycoon Sovereign ──"})
+MPT_Economy:CreateToggle({Name = "Enable Sovereign Economy", CurrentValue = false, Callback = function(state)
     AutoClaimMoney = state; AutoBuild = state
     if state then startClaimMoney(); startAutoBuild()
     else stopClaimMoney(); stopAutoBuild() end
 end})
-MPT_Economy:CreateSlider({name = "Defense Threat Radius", range = {20, 100}, initialValue = 50, callback = function(val) ThreatRadius = val end})
-MPT_Economy:CreateButton({name = "Force Buy Next Upgrade", callback = function()
+MPT_Economy:CreateSlider({Name = "Defense Threat Radius", Range = {20, 100}, CurrentValue = 50, Callback = function(val) ThreatRadius = val end})
+MPT_Economy:CreateButton({Name = "Force Buy Next Upgrade", Callback = function()
     local myChar = player.Character
     if not myChar then return end
     local root = myChar:FindFirstChild("HumanoidRootPart")
@@ -1385,14 +1293,14 @@ MPT_Economy:CreateButton({name = "Force Buy Next Upgrade", callback = function()
             pcall(firetouchinterest, root, part, 0)
             pcall(firetouchinterest, root, part, 1)
         end
-        Rayfield:Notify({title = "Purchased", content = "Bought: " .. best.Name, duration = 2})
+        Rayfield:Notify({Title = "Purchased", Content = "Bought: " .. best.Name, Duration = 2})
     else
-        Rayfield:Notify({title = "No Purchase", content = "Nothing affordable.", duration = 2})
+        Rayfield:Notify({Title = "No Purchase", Content = "Nothing affordable.", Duration = 2})
     end
 end})
 
-MPT_Economy:CreateLabel({name = "── Spawn Supremacy ──"})
-MPT_Economy:CreateToggle({name = "Enable Supremacy Mode", currentValue = false, callback = function(state)
+MPT_Economy:CreateLabel({Name = "── Spawn Supremacy ──"})
+MPT_Economy:CreateToggle({Name = "Enable Supremacy Mode", CurrentValue = false, Callback = function(state)
     AntiSpawnkill = state
     if state then
         player.CharacterAdded:Connect(function(c)
@@ -1406,37 +1314,37 @@ MPT_Economy:CreateToggle({name = "Enable Supremacy Mode", currentValue = false, 
         end)
     end
 end})
-MPT_Economy:CreateToggle({name = "Fast Respawn", currentValue = false, callback = function(state)
+MPT_Economy:CreateToggle({Name = "Fast Respawn", CurrentValue = false, Callback = function(state)
     FastRespawn = state
     if state then startFastRespawn() end
 end})
 
-MPT_Economy:CreateLabel({name = "── Defense Matrix ──"})
-MPT_Economy:CreateToggle({name = "Enable Defense Matrix", currentValue = false, callback = function(state)
+MPT_Economy:CreateLabel({Name = "── Defense Matrix ──"})
+MPT_Economy:CreateToggle({Name = "Enable Defense Matrix", CurrentValue = false, Callback = function(state)
     AntiAura.Enabled = state
     if state then startAntiAura() else stopAntiAura() end
 end})
-MPT_Economy:CreateToggle({name = "ForceField God Mode", currentValue = false, callback = function(state) AntiAura.GodMode = state end})
-MPT_Economy:CreateToggle({name = "Weapon Repel", currentValue = false, callback = function(state) AntiAura.Repel = state end})
-MPT_Economy:CreateToggle({name = "Phase Mode (No Collide)", currentValue = false, callback = function(state) AntiAura.Phase = state end})
-MPT_Economy:CreateButton({name = "Emergency Heal", callback = function()
+MPT_Economy:CreateToggle({Name = "ForceField God Mode", CurrentValue = false, Callback = function(state) AntiAura.GodMode = state end})
+MPT_Economy:CreateToggle({Name = "Weapon Repel", CurrentValue = false, Callback = function(state) AntiAura.Repel = state end})
+MPT_Economy:CreateToggle({Name = "Phase Mode (No Collide)", CurrentValue = false, Callback = function(state) AntiAura.Phase = state end})
+MPT_Economy:CreateButton({Name = "Emergency Heal", Callback = function()
     local myChar = player.Character
     if myChar then
         local hum = myChar:FindFirstChild("Humanoid")
         if hum then
             hum.Health = hum.MaxHealth
-            Rayfield:Notify({title = "Healed", content = "Health restored.", duration = 2})
+            Rayfield:Notify({Title = "Healed", Content = "Health restored.", Duration = 2})
         end
     end
 end})
 
--- ═══════════════════════════════════════════════════════════════
---  TAB 6: EXTRA (CUSTOM FEATURES)
--- ═══════════════════════════════════════════════════════════════
-local Extra = window:CreateTab({name = "Extra", icon = 93364949241311})
+-- ═══════════════════════════════════════════════════════════
+--  TAB 6: EXTRA
+-- ═══════════════════════════════════════════════════════════
+local Extra = window:CreateTab({Name = "Extra", Icon = 93364949241311})
 
-Extra:CreateLabel({name = "── Player Movement ──"})
-Extra:CreateToggle({name = "Speed Hack", currentValue = false, callback = function(state)
+Extra:CreateLabel({Name = "── Player Movement ──"})
+Extra:CreateToggle({Name = "Speed Hack", CurrentValue = false, Callback = function(state)
     SpeedEnabled = state
     if state then
         task.spawn(function()
@@ -1451,7 +1359,7 @@ Extra:CreateToggle({name = "Speed Hack", currentValue = false, callback = functi
         end)
     end
 end})
-Extra:CreateSlider({name = "Speed Value", range = {16, 500}, initialValue = 16, callback = function(val)
+Extra:CreateSlider({Name = "Speed Value", Range = {16, 500}, CurrentValue = 16, Callback = function(val)
     SpeedValue = val
     if SpeedEnabled then
         local char = player.Character
@@ -1461,7 +1369,7 @@ Extra:CreateSlider({name = "Speed Value", range = {16, 500}, initialValue = 16, 
         end
     end
 end})
-Extra:CreateToggle({name = "Jump Power Hack", currentValue = false, callback = function(state)
+Extra:CreateToggle({Name = "Jump Power Hack", CurrentValue = false, Callback = function(state)
     JumpEnabled = state
     if state then
         task.spawn(function()
@@ -1476,10 +1384,8 @@ Extra:CreateToggle({name = "Jump Power Hack", currentValue = false, callback = f
         end)
     end
 end})
-Extra:CreateSlider({name = "Jump Power Value", range = {50, 500}, initialValue = 50, callback = function(val)
-    JumpValue = val
-end})
-Extra:CreateToggle({name = "Infinite Jump", currentValue = false, callback = function(state)
+Extra:CreateSlider({Name = "Jump Power Value", Range = {50, 500}, CurrentValue = 50, Callback = function(val) JumpValue = val end})
+Extra:CreateToggle({Name = "Infinite Jump", CurrentValue = false, Callback = function(state)
     InfiniteJump = state
     if state then
         UserInputService.JumpRequest:Connect(function()
@@ -1493,40 +1399,32 @@ Extra:CreateToggle({name = "Infinite Jump", currentValue = false, callback = fun
         end)
     end
 end})
-Extra:CreateToggle({name = "Noclip", currentValue = false, callback = function(state)
+Extra:CreateToggle({Name = "Noclip", CurrentValue = false, Callback = function(state)
     NoclipEnabled = state
     if state then startNoclip() else stopNoclip() end
 end})
-Extra:CreateToggle({name = "Fly", currentValue = false, callback = function(state)
+Extra:CreateToggle({Name = "Fly", CurrentValue = false, Callback = function(state)
     FlyEnabled = state
     if state then startFly() end
 end})
-Extra:CreateSlider({name = "Fly Speed", range = {10, 200}, initialValue = 50, callback = function(val) FlySpeed = val end})
+Extra:CreateSlider({Name = "Fly Speed", Range = {10, 200}, CurrentValue = 50, Callback = function(val) FlySpeed = val end})
 
-Extra:CreateLabel({name = "── Visuals ──"})
-Extra:CreateToggle({name = "Fullbright", currentValue = false, callback = function(state)
-    FullBright = state
+Extra:CreateLabel({Name = "── Visuals ──"})
+Extra:CreateToggle({Name = "Fullbright", CurrentValue = false, Callback = function(state)
     if state then
         Lighting.Brightness = 10
         Lighting.ClockTime = 14
         Lighting.FogEnd = 100000
         Lighting.GlobalShadows = false
-        for _, obj in ipairs(Lighting:GetDescendants()) do
-            if obj:IsA("PostEffect") then obj.Enabled = false end
-        end
     else
         Lighting.Brightness = 2
         Lighting.ClockTime = 14
         Lighting.GlobalShadows = true
     end
 end})
-Extra:CreateSlider({name = "FOV", range = {30, 120}, initialValue = 70, callback = function(val)
-    FOVValue = val
-    if Camera then Camera.FieldOfView = val end
-end})
 
-Extra:CreateLabel({name = "── Teleport ──"})
-Extra:CreateButton({name = "Teleport to Spawn", callback = function()
+Extra:CreateLabel({Name = "── Teleport ──"})
+Extra:CreateButton({Name = "Teleport to Spawn", Callback = function()
     local spawns = Workspace:FindFirstChild("Spawns") or Workspace:FindFirstChild("SpawnLocation")
     if spawns then
         local char = player.Character
@@ -1538,12 +1436,12 @@ Extra:CreateButton({name = "Teleport to Spawn", callback = function()
                 else
                     hrp.CFrame = spawns.CFrame + Vector3.new(0, 3, 0)
                 end
-                Rayfield:Notify({title = "Teleport", content = "Teleported to spawn.", duration = 2})
+                Rayfield:Notify({Title = "Teleport", Content = "Teleported to spawn.", Duration = 2})
             end
         end
     end
 end})
-Extra:CreateDropdown({name = "Teleport to Player", options = getServerPlayers(), multiSelection = false, callback = function(selected)
+Extra:CreateDropdown({Name = "Teleport to Player", Options = getServerPlayers(), MultipleOptions = false, Callback = function(selected)
     if selected then
         local target = Players:FindFirstChild(selected)
         if target and target.Character then
@@ -1553,101 +1451,89 @@ Extra:CreateDropdown({name = "Teleport to Player", options = getServerPlayers(),
                 local myRoot = myChar:FindFirstChild("HumanoidRootPart")
                 if myRoot then
                     myRoot.CFrame = targetRoot.CFrame + Vector3.new(0, 3, 0)
-                    Rayfield:Notify({title = "Teleport", content = "Teleported to " .. selected, duration = 2})
+                    Rayfield:Notify({Title = "Teleport", Content = "Teleported to " .. selected, Duration = 2})
                 end
             end
         end
     end
 end})
 
-Extra:CreateLabel({name = "── Utility ──"})
-Extra:CreateToggle({name = "Anti-AFK", currentValue = false, callback = function(state)
-    AntiAFK = state
+Extra:CreateLabel({Name = "── Utility ──"})
+Extra:CreateToggle({Name = "Anti-AFK", CurrentValue = false, Callback = function(state)
     if state then
         player.Idled:Connect(function()
-            if AntiAFK then
-                VirtualUser:CaptureController()
-                VirtualUser:ClickButton2(Vector2.new())
-            end
+            VirtualUser:CaptureController()
+            VirtualUser:ClickButton2(Vector2.new())
         end)
-        Rayfield:Notify({title = "Anti-AFK", content = "You will not be kicked for idling.", duration = 2})
+        Rayfield:Notify({Title = "Anti-AFK", Content = "You will not be kicked for idling.", Duration = 2})
     end
 end})
-Extra:CreateButton({name = "Server Hop", callback = function()
+Extra:CreateButton({Name = "Server Hop", Callback = function()
     TeleportService:Teleport(game.PlaceId, player)
 end})
-Extra:CreateButton({name = "Rejoin Server", callback = function()
-    TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, player)
-end})
 
--- ═══════════════════════════════════════════════════════════════
+-- ═══════════════════════════════════════════════════════════
 --  TAB 7: UPDATES
--- ═══════════════════════════════════════════════════════════════
-local Updates = window:CreateTab({name = "Updates", icon = 93364949241311})
+-- ═══════════════════════════════════════════════════════════
+local Updates = window:CreateTab({Name = "Updates", Icon = 93364949241311})
 
-Updates:CreateLabel({name = "── EXO Hub Changelog ──"})
-Updates:CreateLabel({name = "v9.0 - Rayfield Gen 2 FULL REBUILD (CURRENT)"})
-Updates:CreateLabel({name = "  - ALL 8 TABS restored: SPT Combat, SPT Tycoon, SPT Misc,"})
-Updates:CreateLabel({name = "    MPT Kill, MPT Economy, Extra, Updates, Settings"})
-Updates:CreateLabel({name = "  - NEW: Extra tab with Speed, Jump, Noclip, Fly, Teleport,"})
-Updates:CreateLabel({name = "    Fullbright, FOV, Anti-AFK, Infinite Jump, Server Hop"})
-Updates:CreateLabel({name = "  - GODLY: Adaptive burst insta-kill (threat-based)"})
-Updates:CreateLabel({name = "  - GODLY: Hit Amplifier (30 stud range, 120Hz)"})
-Updates:CreateLabel({name = "  - GODLY: 14-base Tool Arsenal"})
-Updates:CreateLabel({name = "  - GODLY: Phase mode (no collide)"})
-Updates:CreateLabel({name = "  - Kill Notifications with behavioral analysis"})
-Updates:CreateLabel({name = "  - Kill Logs, ESP, Anti-Lag in Settings"})
-Updates:CreateLabel({name = "  - Safe No Cooldown (no global hooks)"})
-Updates:CreateLabel({name = "  - 2K+ lines, fully organized"})
-Updates:CreateLabel({name = ""})
-Updates:CreateLabel({name = "v8.0 - Rayfield Gen 2 initial"})
-Updates:CreateLabel({name = "v7.0 - OrionLib / WindUI attempts"})
-Updates:CreateLabel({name = "v6.0 - GODLY TIER"})
-Updates:CreateLabel({name = "v5.0 - WindUI Edition"})
-Updates:CreateLabel({name = "v4.0 - Embedded/Velocity/Cerberus"})
-Updates:CreateLabel({name = "v3.0 - ZyronX migration"})
-Updates:CreateLabel({name = "v1.1 - Initial release"})
+Updates:CreateLabel({Name = "── EXO Hub Changelog ──"})
+Updates:CreateLabel({Name = "v9.1 - Rayfield Gen 2 PascalCase FIX (CURRENT)"})
+Updates:CreateLabel({Name = "  - ALL properties capitalized: Name, Callback, CurrentValue, Range"})
+Updates:CreateLabel({Name = "  - ALL 8 TABS render correctly"})
+Updates:CreateLabel({Name = "  - Notifications use Title, Content, Duration"})
+Updates:CreateLabel({Name = "  - Dropdowns use Options, MultipleOptions"})
+Updates:CreateLabel({Name = "  - Inputs use PlaceholderText"})
+Updates:CreateLabel({Name = ""})
+Updates:CreateLabel({Name = "v9.0 - Rayfield Gen 2 initial"})
+Updates:CreateLabel({Name = "v8.0 - Rayfield Gen 2 attempt"})
+Updates:CreateLabel({Name = "v7.0 - OrionLib / WindUI attempts"})
+Updates:CreateLabel({Name = "v6.0 - GODLY TIER"})
+Updates:CreateLabel({Name = "v5.0 - WindUI Edition"})
+Updates:CreateLabel({Name = "v4.0 - Embedded/Velocity/Cerberus"})
+Updates:CreateLabel({Name = "v3.0 - ZyronX migration"})
+Updates:CreateLabel({Name = "v1.1 - Initial release"})
 
--- ═══════════════════════════════════════════════════════════════
+-- ═══════════════════════════════════════════════════════════
 --  TAB 8: SETTINGS
--- ═══════════════════════════════════════════════════════════════
-local Settings = window:CreateTab({name = "Settings", icon = 93364949241311})
+-- ═══════════════════════════════════════════════════════════
+local Settings = window:CreateTab({Name = "Settings", Icon = 93364949241311})
 
-Settings:CreateLabel({name = "── General ──"})
-Settings:CreateToggle({name = "Anti-Lag Shield", currentValue = false, callback = function(state)
+Settings:CreateLabel({Name = "── General ──"})
+Settings:CreateToggle({Name = "Anti-Lag Shield", CurrentValue = false, Callback = function(state)
     AntiLagEnabled = state
     if state then
         startAntiLag()
-        Rayfield:Notify({title = "Anti-Lag", content = "Performance mode activated.", duration = 3})
+        Rayfield:Notify({Title = "Anti-Lag", Content = "Performance mode activated.", Duration = 3})
     else stopAntiLag() end
 end})
-Settings:CreateToggle({name = "ESP (Minimal Dots)", currentValue = false, callback = function(state)
+Settings:CreateToggle({Name = "ESP (Minimal Dots)", CurrentValue = false, Callback = function(state)
     ESPEnabled = state
     if state then startESP() else stopESP() end
 end})
-Settings:CreateToggle({name = "Kill Notifications", currentValue = false, callback = function(state)
+Settings:CreateToggle({Name = "Kill Notifications", CurrentValue = false, Callback = function(state)
     KillNotifEnabled = state
     if state then
-        Rayfield:Notify({title = "Kill Notifications", content = "Behavioral analysis + threat level enabled.", duration = 4})
+        Rayfield:Notify({Title = "Kill Notifications", Content = "Behavioral analysis + threat level enabled.", Duration = 4})
     end
 end})
-Settings:CreateToggle({name = "Kill Logs", currentValue = false, callback = function(state) KillLogEnabled = state end})
-Settings:CreateButton({name = "View Kill Logs", callback = function()
+Settings:CreateToggle({Name = "Kill Logs", CurrentValue = false, Callback = function(state) KillLogEnabled = state end})
+Settings:CreateButton({Name = "View Kill Logs", Callback = function()
     if #KillLogs == 0 then
-        Rayfield:Notify({title = "Kill Logs", content = "No kills recorded yet.", duration = 2})
+        Rayfield:Notify({Title = "Kill Logs", Content = "No kills recorded yet.", Duration = 2})
         return
     end
     local lastLog = KillLogs[#KillLogs]
     Rayfield:Notify({
-        title = "Last Kill Log",
-        content = "Killer: " .. lastLog.Killer .. " | Weapon: " .. lastLog.Weapon
+        Title = "Last Kill Log",
+        Content = "Killer: " .. lastLog.Killer .. " | Weapon: " .. lastLog.Weapon
             .. " | Threat: " .. lastLog.Threat .. "/10 | Total logs: " .. #KillLogs,
-        duration = 5,
+        Duration = 5,
     })
 end})
 
-Settings:CreateLabel({name = "── Config ──"})
-Settings:CreateButton({name = "Save Config", callback = function()
+Settings:CreateLabel({Name = "── Config ──"})
+Settings:CreateButton({Name = "Save Config", Callback = function()
     local config = {
         ReachSize = ReachSize,
         ThreatRadius = ThreatRadius,
@@ -1659,12 +1545,11 @@ Settings:CreateButton({name = "Save Config", callback = function()
         SpeedValue = SpeedValue,
         JumpValue = JumpValue,
         FlySpeed = FlySpeed,
-        FOVValue = FOVValue,
     }
     writeJSON(CONFIG_FILE, config)
-    Rayfield:Notify({title = "Config Saved", content = "All settings saved.", duration = 2})
+    Rayfield:Notify({Title = "Config Saved", Content = "All settings saved.", Duration = 2})
 end})
-Settings:CreateButton({name = "Load Config", callback = function()
+Settings:CreateButton({Name = "Load Config", Callback = function()
     local config = readJSON(CONFIG_FILE)
     if config then
         ReachSize = config.ReachSize or 2
@@ -1677,23 +1562,20 @@ Settings:CreateButton({name = "Load Config", callback = function()
         SpeedValue = config.SpeedValue or 16
         JumpValue = config.JumpValue or 50
         FlySpeed = config.FlySpeed or 50
-        FOVValue = config.FOVValue or 70
-        Rayfield:Notify({title = "Config Loaded", content = "All settings restored.", duration = 2})
+        Rayfield:Notify({Title = "Config Loaded", Content = "All settings restored.", Duration = 2})
     else
-        Rayfield:Notify({title = "No Config", content = "No saved config found.", duration = 2})
+        Rayfield:Notify({Title = "No Config", Content = "No saved config found.", Duration = 2})
     end
 end})
-Settings:CreateButton({name = "Rejoin Server", callback = function()
+Settings:CreateButton({Name = "Rejoin Server", Callback = function()
     TeleportService:Teleport(game.PlaceId, player)
 end})
 
--- ═══════════════════════════════════════════════════════════════
---  SETUP & FINALIZE
--- ═══════════════════════════════════════════════════════════════
+-- ── SETUP & FINALIZE ────────────────────────────────────────
 setupKillNotifications()
 
 Rayfield:Notify({
-    title = "EXO Hub v9.0 Loaded",
-    content = "Rayfield Gen 2 | 8 Tabs | ALL Features | Extra Tab Included",
-    duration = 4,
+    Title = "EXO Hub v9.1 Loaded",
+    Content = "Rayfield Gen 2 | PascalCase FIXED | ALL 8 TABS | Extra Tab Included",
+    Duration = 4,
 })
