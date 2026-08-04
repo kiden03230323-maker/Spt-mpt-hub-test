@@ -1,13 +1,12 @@
 -- ═══════════════════════════════════════════════════════════════
---  EXO HUB v7.0 – OrionLib Edition
---  Fixes: No premature Players ref | Safe NoCooldown | No :Show()
---  OrionLib:Init() MUST be the last line
+--  EXO HUB v8.0 – Rayfield Gen 2 Edition
+--  All previous bugs fixed | Full power features | Clean API
 -- ═══════════════════════════════════════════════════════════════
 
--- ── 1. LOAD ORION ───────────────────────────────────────────
-local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
+-- ── 1. LOAD RAYFIELD GEN 2 ──────────────────────────────────
+local Rayfield = loadstring(game:HttpGet("https://sirius.menu/gen2"))()
 
--- ── 2. SERVICES (Players defined BEFORE any usage) ──────────
+-- ── 2. SERVICES ─────────────────────────────────────────────
 local Players           = game:GetService("Players")
 local RunService        = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -20,7 +19,7 @@ local TeleportService   = game:GetService("TeleportService")
 local player            = Players.LocalPlayer
 
 -- ── 3. FILE I/O ─────────────────────────────────────────────
-local CONFIG_FILE = "exo_config_v7.dat"
+local CONFIG_FILE = "exo_config_v8.dat"
 
 local function readFile(path)
     if isfile and readfile and isfile(path) then
@@ -46,65 +45,65 @@ local function writeJSON(path, data)
 end
 
 -- ── 4. STATE VARIABLES ──────────────────────────────────────
-local DAMAGE_REMOTE    = nil
+local DAMAGE_REMOTE     = nil
 local DAMAGE_REMOTE_ALT = nil
-local Aura             = {Enabled = false, TargetList = {}}
-local InstantKill      = false
-local AutoTools        = false
-local NoCooldown       = false
-local Reach            = false
-local ReachSize        = 2
-local FastRespawn      = false
-local AntiSpawnkill    = false
-local ToolFollow       = {Enabled = false, Targets = {}, Connection = nil}
-local AutoGetTools     = false
-local AutoClaimMoney   = false
-local AutoBuild        = false
-local grabLoopConn     = nil
-local toolLoopConn     = nil
-local auraConn         = nil
-local claimConn        = nil
-local buildConn        = nil
-local cachedTycoonType = nil
-local AntiAura         = {Enabled = false, GodMode = false, Repel = false, Phase = false}
-local antiAuraConn     = nil
-local antiAuraFF       = nil
-local ThreatLevel      = 0
-local LastThreatCheck  = 0
-local ThreatRadius     = 50
-local latencyEstimate  = 0.1
+local Aura              = {Enabled = false, TargetList = {}}
+local InstantKill       = false
+local AutoTools         = false
+local NoCooldown        = false
+local Reach             = false
+local ReachSize         = 2
+local FastRespawn       = false
+local AntiSpawnkill     = false
+local ToolFollow        = {Enabled = false, Targets = {}, Connection = nil}
+local AutoGetTools      = false
+local AutoClaimMoney    = false
+local AutoBuild         = false
+local grabLoopConn      = nil
+local toolLoopConn      = nil
+local auraConn          = nil
+local claimConn         = nil
+local buildConn         = nil
+local cachedTycoonType  = nil
+local AntiAura          = {Enabled = false, GodMode = false, Repel = false, Phase = false}
+local antiAuraConn      = nil
+local antiAuraFF        = nil
+local ThreatLevel       = 0
+local LastThreatCheck   = 0
+local ThreatRadius      = 50
+local latencyEstimate   = 0.1
 
-local InstaKillEnabled  = false
-local InstaKillConn     = nil
-local IK_ToolsCache     = {}
-local IK_LastActivation = 0
-local IK_TargetParts    = {}
-local IK_BurstCount     = 8
-local IK_AdaptiveBurst  = true
+local InstaKillEnabled   = false
+local InstaKillConn      = nil
+local IK_ToolsCache      = {}
+local IK_LastActivation  = 0
+local IK_TargetParts     = {}
+local IK_BurstCount      = 8
+local IK_AdaptiveBurst   = true
 
-local HitAmpEnabled     = false
-local HitAmpConn        = nil
-local HA_CachedTools    = {}
-local HA_LastActivation = 0
-local HA_Accumulator    = 0
-local HA_Range          = Vector3.new(30, 30, 30)
-local HA_BurstCount     = 5
+local HitAmpEnabled      = false
+local HitAmpConn         = nil
+local HA_CachedTools     = {}
+local HA_LastActivation  = 0
+local HA_Accumulator     = 0
+local HA_Range           = Vector3.new(30, 30, 30)
+local HA_BurstCount      = 5
 
-local TG_Enabled        = false
-local TG_padsByBase     = {}
-local TG_registered     = {}
-local TG_BurstCount     = 8
+local TG_Enabled         = false
+local TG_padsByBase      = {}
+local TG_registered      = {}
+local TG_BurstCount      = 8
 
-local KillNotifEnabled  = false
-local KillLogEnabled    = false
-local KillLogs          = {}
-local DeathCount        = 0
+local KillNotifEnabled   = false
+local KillLogEnabled     = false
+local KillLogs           = {}
+local DeathCount         = 0
 
-local ESPEnabled        = false
-local AntiLagEnabled    = false
-local espDots           = {}
-local espGui            = nil
-local NoCooldownConn    = nil
+local ESPEnabled         = false
+local AntiLagEnabled     = false
+local espDots            = {}
+local espGui             = nil
+local NoCooldownConn     = nil
 
 -- ── 5. PRE-ALLOCATED BUFFERS ────────────────────────────────
 local _buf_parts   = {}
@@ -112,7 +111,6 @@ local _buf_buttons = {}
 local _buf_players = {}
 
 -- ── 6. DEFERRED HEAVY SCANS (NON-BLOCKING) ─────────────────
-local scansComplete = false
 task.spawn(function()
     local remotes = {}
     for _, container in ipairs({ReplicatedStorage, workspace}) do
@@ -156,7 +154,6 @@ task.spawn(function()
             end
         end)
     end
-    scansComplete = true
 end)
 
 -- ── 7. TYCOON HELPERS ───────────────────────────────────────
@@ -821,12 +818,12 @@ local function setupKillNotifications()
             end
             local analysis = analyzeKill(killerName, weaponName, distance)
             if KillNotifEnabled then
-                OrionLib:MakeNotification({
-                    Name = "KILL DETECTED - Threat " .. analysis.Threat .. "/10",
-                    Content = "Killer: " .. analysis.Killer .. " | Weapon: " .. analysis.Weapon
+                Rayfield:Notify({
+                    title = "KILL DETECTED - Threat " .. analysis.Threat .. "/10",
+                    content = "Killer: " .. analysis.Killer .. " | Weapon: " .. analysis.Weapon
                         .. " | Dist: " .. analysis.Distance .. " | Suspected: " .. table.concat(analysis.Suspected, ", ")
                         .. " | Counter: " .. table.concat(analysis.Counter, " | "),
-                    Time = 6,
+                    duration = 6,
                 })
             end
             if KillLogEnabled then
@@ -939,20 +936,19 @@ local function stopNoCooldown()
 end
 
 -- ═══════════════════════════════════════════════════════════
---  BUILD ORION UI
+--  BUILD RAYFIELD GEN 2 UI
 -- ═══════════════════════════════════════════════════════════
 
-local Window = OrionLib:CreateWindow({
-    Name = "EXO Hub v7.0",
-    HidePremium = true,
-    SaveConfig = false,
+local window = Rayfield:CreateWindow({
+    name = "EXO Hub v8.0",
+    subtitle = "Power Tycoon | Rayfield Gen 2",
 })
 
 -- ── SPT COMBAT TAB ──────────────────────────────────────────
-local SPT_Combat = Window:MakeTab({Name = "SPT Combat", Icon = "rbxassetid://4483362458", PremiumOnly = false})
+local SPT_Combat = window:CreateTab({name = "SPT Combat", icon = 93364949241311})
 
-SPT_Combat:AddSection({Name = "Multi-Target Aura"})
-SPT_Combat:AddToggle({Name = "Enable Aura", Default = false, Callback = function(state)
+SPT_Combat:CreateLabel({name = "── Multi-Target Aura ──"})
+SPT_Combat:CreateToggle({name = "Enable Aura", currentValue = false, callback = function(state)
     Aura.Enabled = state
     if state then
         Aura.TargetList = {}
@@ -960,20 +956,23 @@ SPT_Combat:AddToggle({Name = "Enable Aura", Default = false, Callback = function
             if plr ~= player then table.insert(Aura.TargetList, plr) end
         end
         startAuraLoop()
-        OrionLib:MakeNotification({Name = "Aura", Content = "Activated - " .. #Aura.TargetList .. " targets.", Time = 2})
+        Rayfield:Notify({title = "Aura", content = "Activated - " .. #Aura.TargetList .. " targets.", duration = 2})
     else stopAuraLoop() end
 end})
-SPT_Combat:AddToggle({Name = "Instant Kill", Default = false, Callback = function(state) InstantKill = state end})
-SPT_Combat:AddSlider({Name = "Prediction Offset", Min = 5, Max = 25, Default = 10, Callback = function(val) latencyEstimate = val / 100 end})
-SPT_Combat:AddDropdown({Name = "Aura Targets", Options = getServerPlayers(), DefaultOption = "", Callback = function(option)
-    local plr = Players:FindFirstChild(option)
-    if plr then
-        if not table.find(Aura.TargetList, plr) then table.insert(Aura.TargetList, plr) end
+SPT_Combat:CreateToggle({name = "Instant Kill", currentValue = false, callback = function(state) InstantKill = state end})
+SPT_Combat:CreateSlider({name = "Prediction Offset", range = {5, 25}, initialValue = 10, callback = function(val) latencyEstimate = val / 100 end})
+SPT_Combat:CreateDropdown({name = "Aura Targets", options = getServerPlayers(), multiSelection = true, callback = function(selected)
+    table.clear(Aura.TargetList)
+    if selected then
+        for _, name in ipairs(selected) do
+            local plr = Players:FindFirstChild(name)
+            if plr then table.insert(Aura.TargetList, plr) end
+        end
     end
 end})
 
-SPT_Combat:AddSection({Name = "Tool Follow"})
-SPT_Combat:AddToggle({Name = "Enable Tool Follow", Default = false, Callback = function(state)
+SPT_Combat:CreateLabel({name = "── Tool Follow ──"})
+SPT_Combat:CreateToggle({name = "Enable Tool Follow", currentValue = false, callback = function(state)
     ToolFollow.Enabled = state
     if state then
         ToolFollow.Targets = {}
@@ -984,15 +983,15 @@ SPT_Combat:AddToggle({Name = "Enable Tool Follow", Default = false, Callback = f
     else stopToolFollow() end
 end})
 
-SPT_Combat:AddSection({Name = "Defense / Anti-Aura"})
-SPT_Combat:AddToggle({Name = "Enable Anti-Aura", Default = false, Callback = function(state)
+SPT_Combat:CreateLabel({name = "── Defense / Anti-Aura ──"})
+SPT_Combat:CreateToggle({name = "Enable Anti-Aura", currentValue = false, callback = function(state)
     AntiAura.Enabled = state
     if state then startAntiAura() else stopAntiAura() end
 end})
-SPT_Combat:AddToggle({Name = "God Mode (ForceField)", Default = false, Callback = function(state) AntiAura.GodMode = state end})
-SPT_Combat:AddToggle({Name = "Repel (Anti-Touch)", Default = false, Callback = function(state) AntiAura.Repel = state end})
-SPT_Combat:AddToggle({Name = "Phase (No Collide)", Default = false, Callback = function(state) AntiAura.Phase = state end})
-SPT_Combat:AddToggle({Name = "Anti Spawnkill", Default = false, Callback = function(state)
+SPT_Combat:CreateToggle({name = "God Mode (ForceField)", currentValue = false, callback = function(state) AntiAura.GodMode = state end})
+SPT_Combat:CreateToggle({name = "Repel (Anti-Touch)", currentValue = false, callback = function(state) AntiAura.Repel = state end})
+SPT_Combat:CreateToggle({name = "Phase (No Collide)", currentValue = false, callback = function(state) AntiAura.Phase = state end})
+SPT_Combat:CreateToggle({name = "Anti Spawnkill", currentValue = false, callback = function(state)
     AntiSpawnkill = state
     if state then
         player.CharacterAdded:Connect(function(c)
@@ -1008,18 +1007,18 @@ SPT_Combat:AddToggle({Name = "Anti Spawnkill", Default = false, Callback = funct
 end})
 
 -- ── SPT TYCOON TAB ──────────────────────────────────────────
-local SPT_Tycoon = Window:MakeTab({Name = "SPT Tycoon", Icon = "rbxassetid://4483362732", PremiumOnly = false})
+local SPT_Tycoon = window:CreateTab({name = "SPT Tycoon", icon = 93364949241311})
 
-SPT_Tycoon:AddSection({Name = "Tycoon Automation"})
-SPT_Tycoon:AddToggle({Name = "Auto Claim Money", Default = false, Callback = function(state)
+SPT_Tycoon:CreateLabel({name = "── Tycoon Automation ──"})
+SPT_Tycoon:CreateToggle({name = "Auto Claim Money", currentValue = false, callback = function(state)
     AutoClaimMoney = state
     if state then startClaimMoney() else stopClaimMoney() end
 end})
-SPT_Tycoon:AddToggle({Name = "Smart Auto Build", Default = false, Callback = function(state)
+SPT_Tycoon:CreateToggle({name = "Smart Auto Build", currentValue = false, callback = function(state)
     AutoBuild = state
     if state then startAutoBuild() else stopAutoBuild() end
 end})
-SPT_Tycoon:AddToggle({Name = "Auto Grab Weapons", Default = false, Callback = function(state)
+SPT_Tycoon:CreateToggle({name = "Auto Grab Weapons", currentValue = false, callback = function(state)
     AutoGetTools = state
     if state then
         if grabLoopConn then grabLoopConn:Disconnect() end
@@ -1046,8 +1045,8 @@ SPT_Tycoon:AddToggle({Name = "Auto Grab Weapons", Default = false, Callback = fu
     end
 end})
 
-SPT_Tycoon:AddSection({Name = "Tools & Cooldown"})
-SPT_Tycoon:AddToggle({Name = "Auto Use Tools (0 delay)", Default = false, Callback = function(state)
+SPT_Tycoon:CreateLabel({name = "── Tools & Cooldown ──"})
+SPT_Tycoon:CreateToggle({name = "Auto Use Tools (0 delay)", currentValue = false, callback = function(state)
     AutoTools = state
     if state then
         toolLoopConn = RunService.RenderStepped:Connect(function()
@@ -1065,48 +1064,48 @@ SPT_Tycoon:AddToggle({Name = "Auto Use Tools (0 delay)", Default = false, Callba
         if toolLoopConn then toolLoopConn:Disconnect(); toolLoopConn = nil end
     end
 end})
-SPT_Tycoon:AddToggle({Name = "No Cooldown (SAFE)", Default = false, Callback = function(state)
+SPT_Tycoon:CreateToggle({name = "No Cooldown (SAFE)", currentValue = false, callback = function(state)
     NoCooldown = state
     if state then startNoCooldown() else stopNoCooldown() end
 end})
 
 -- ── SPT MISC TAB ────────────────────────────────────────────
-local SPT_Misc = Window:MakeTab({Name = "SPT Misc", Icon = "rbxassetid://4483362191", PremiumOnly = false})
+local SPT_Misc = window:CreateTab({name = "SPT Misc", icon = 93364949241311})
 
-SPT_Misc:AddSection({Name = "Reach"})
-SPT_Misc:AddToggle({Name = "Enable Reach", Default = false, Callback = function(state)
+SPT_Misc:CreateLabel({name = "── Reach ──"})
+SPT_Misc:CreateToggle({name = "Enable Reach", currentValue = false, callback = function(state)
     Reach = state
     if state then applyReach() else stopReach() end
 end})
-SPT_Misc:AddSlider({Name = "Reach Size", Min = 1, Max = 10, Default = 2, Callback = function(val)
+SPT_Misc:CreateSlider({name = "Reach Size", range = {1, 10}, initialValue = 2, callback = function(val)
     ReachSize = val
     if Reach then stopReach(); applyReach() end
 end})
 
-SPT_Misc:AddSection({Name = "Respawn & Protection"})
-SPT_Misc:AddToggle({Name = "Fast Respawn", Default = false, Callback = function(state)
+SPT_Misc:CreateLabel({name = "── Respawn & Protection ──"})
+SPT_Misc:CreateToggle({name = "Fast Respawn", currentValue = false, callback = function(state)
     FastRespawn = state
     if state then startFastRespawn() end
 end})
 
-SPT_Misc:AddSection({Name = "Utilities"})
-SPT_Misc:AddTextbox({Name = "Set Damage Remote", Default = "game.ReplicatedStorage.DealDamage", TextDisappear = true, Callback = function(text)
+SPT_Misc:CreateLabel({name = "── Utilities ──"})
+SPT_Misc:CreateInput({name = "Set Damage Remote", placeholderText = "game.ReplicatedStorage.DealDamage", callback = function(text)
     if text and text ~= "" then
         local ok, remote = pcall(function() return loadstring("return " .. text)() end)
         if ok and remote and (remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction")) then
             DAMAGE_REMOTE = remote
-            OrionLib:MakeNotification({Name = "Remote Set", Content = "Damage remote updated.", Time = 3})
+            Rayfield:Notify({title = "Remote Set", content = "Damage remote updated.", duration = 3})
         else
-            OrionLib:MakeNotification({Name = "Error", Content = "Invalid remote path.", Time = 3})
+            Rayfield:Notify({title = "Error", content = "Invalid remote path.", duration = 3})
         end
     end
 end})
 
 -- ── MPT KILL TAB ────────────────────────────────────────────
-local MPT_Kill = Window:MakeTab({Name = "MPT Kill", Icon = "rbxassetid://4483362458", PremiumOnly = false})
+local MPT_Kill = window:CreateTab({name = "MPT Kill", icon = 93364949241311})
 
-MPT_Kill:AddSection({Name = "Omni-Kill Engine"})
-MPT_Kill:AddToggle({Name = "Enable Omni-Kill", Default = false, Callback = function(state)
+MPT_Kill:CreateLabel({name = "── Omni-Kill Engine ──"})
+MPT_Kill:CreateToggle({name = "Enable Omni-Kill", currentValue = false, callback = function(state)
     Aura.Enabled = state; InstantKill = state
     if state then
         Aura.TargetList = {}
@@ -1114,47 +1113,47 @@ MPT_Kill:AddToggle({Name = "Enable Omni-Kill", Default = false, Callback = funct
             if plr ~= player then table.insert(Aura.TargetList, plr) end
         end
         startAuraLoop()
-        OrionLib:MakeNotification({Name = "OMNI-KILL", Content = "ENGAGED - " .. #Aura.TargetList .. " targets.", Time = 3})
+        Rayfield:Notify({title = "OMNI-KILL", content = "ENGAGED - " .. #Aura.TargetList .. " targets.", duration = 3})
     else stopAuraLoop() end
 end})
-MPT_Kill:AddToggle({Name = "Insta-Kill Micro-Burst", Default = false, Callback = function(state)
+MPT_Kill:CreateToggle({name = "Insta-Kill Micro-Burst", currentValue = false, callback = function(state)
     InstaKillEnabled = state
     if state then startInstaKill() else stopInstaKill() end
 end})
-MPT_Kill:AddToggle({Name = "Adaptive Burst (Threat-Based)", Default = true, Callback = function(state)
+MPT_Kill:CreateToggle({name = "Adaptive Burst (Threat-Based)", currentValue = true, callback = function(state)
     IK_AdaptiveBurst = state
 end})
-MPT_Kill:AddSlider({Name = "Prediction Aggression", Min = 5, Max = 25, Default = 10, Callback = function(val) latencyEstimate = val / 100 end})
-MPT_Kill:AddSlider({Name = "Burst Count", Min = 3, Max = 15, Default = 8, Callback = function(val) IK_BurstCount = val end})
-MPT_Kill:AddButton({Name = "Manual Kill Burst", Callback = function()
+MPT_Kill:CreateSlider({name = "Prediction Aggression", range = {5, 25}, initialValue = 10, callback = function(val) latencyEstimate = val / 100 end})
+MPT_Kill:CreateSlider({name = "Burst Count", range = {3, 15}, initialValue = 8, callback = function(val) IK_BurstCount = val end})
+MPT_Kill:CreateButton({name = "Manual Kill Burst", callback = function()
     local orig = Aura.Enabled
     Aura.Enabled = true; InstantKill = true
     task.wait(0.15)
     Aura.Enabled = orig
     if not orig then InstantKill = false end
-    OrionLib:MakeNotification({Name = "Kill Burst", Content = "Burst fired.", Time = 2})
+    Rayfield:Notify({title = "Kill Burst", content = "Burst fired.", duration = 2})
 end})
-MPT_Kill:AddButton({Name = "Refresh Target List", Callback = function()
+MPT_Kill:CreateButton({name = "Refresh Target List", callback = function()
     table.clear(Aura.TargetList)
     for _, plr in ipairs(Players:GetPlayers()) do
         if plr ~= player then table.insert(Aura.TargetList, plr) end
     end
-    OrionLib:MakeNotification({Name = "Targets", Content = "Refreshed: " .. #Aura.TargetList .. " players.", Time = 2})
+    Rayfield:Notify({title = "Targets", content = "Refreshed: " .. #Aura.TargetList .. " players.", duration = 2})
 end})
 
-MPT_Kill:AddSection({Name = "Hit Amplifier"})
-MPT_Kill:AddToggle({Name = "Enable Hit Amplifier", Default = false, Callback = function(state)
+MPT_Kill:CreateLabel({name = "── Hit Amplifier ──"})
+MPT_Kill:CreateToggle({name = "Enable Hit Amplifier", currentValue = false, callback = function(state)
     HitAmpEnabled = state
     if state then startHitAmplifier() else stopHitAmplifier() end
 end})
-MPT_Kill:AddSlider({Name = "Scan Range", Min = 15, Max = 50, Default = 30, Callback = function(val)
+MPT_Kill:CreateSlider({name = "Scan Range", range = {15, 50}, initialValue = 30, callback = function(val)
     HA_Range = Vector3.new(val, val, val)
 end})
-MPT_Kill:AddSlider({Name = "Burst Count", Min = 1, Max = 10, Default = 5, Callback = function(val) HA_BurstCount = val end})
-MPT_Kill:AddLabel({Name = "120Hz scan | 12ms cooldown | OverlapParams"})
+MPT_Kill:CreateSlider({name = "Burst Count", range = {1, 10}, initialValue = 5, callback = function(val) HA_BurstCount = val end})
+MPT_Kill:CreateLabel({name = "120Hz scan | 12ms cooldown | OverlapParams"})
 
-MPT_Kill:AddSection({Name = "Tool Arsenal"})
-MPT_Kill:AddToggle({Name = "Enable Tool Arsenal", Default = false, Callback = function(state)
+MPT_Kill:CreateLabel({name = "── Tool Arsenal ──"})
+MPT_Kill:CreateToggle({name = "Enable Tool Arsenal", currentValue = false, callback = function(state)
     TG_Enabled = state
     if state then
         if not getgenv().EXO_TG_Loop then
@@ -1185,7 +1184,7 @@ MPT_Kill:AddToggle({Name = "Enable Tool Arsenal", Default = false, Callback = fu
         getgenv().EXO_TG_Loop = false
     end
 end})
-MPT_Kill:AddButton({Name = "Force Acquire All", Callback = function()
+MPT_Kill:CreateButton({name = "Force Acquire All", callback = function()
     local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
     if root then
         for baseName, _ in pairs(TG_padsByBase) do
@@ -1197,22 +1196,22 @@ MPT_Kill:AddButton({Name = "Force Acquire All", Callback = function()
                 end
             end
         end
-        OrionLib:MakeNotification({Name = "Tool Arsenal", Content = "Force acquire burst fired.", Time = 2})
+        Rayfield:Notify({title = "Tool Arsenal", content = "Force acquire burst fired.", duration = 2})
     end
 end})
-MPT_Kill:AddLabel({Name = "14 Bases: Stone, Magic, Storm, Robotic, Mecha, Shadow, Hyper, Thunder, Void, Frozen, Magma, Nuclear, Toxic, Kong"})
+MPT_Kill:CreateLabel({name = "14 Bases: Stone, Magic, Storm, Robotic, Mecha, Shadow, Hyper, Thunder, Void, Frozen, Magma, Nuclear, Toxic, Kong"})
 
 -- ── MPT ECONOMY TAB ─────────────────────────────────────────
-local MPT_Economy = Window:MakeTab({Name = "MPT Economy", Icon = "rbxassetid://4483362732", PremiumOnly = false})
+local MPT_Economy = window:CreateTab({name = "MPT Economy", icon = 93364949241311})
 
-MPT_Economy:AddSection({Name = "Tycoon Sovereign"})
-MPT_Economy:AddToggle({Name = "Enable Sovereign Economy", Default = false, Callback = function(state)
+MPT_Economy:CreateLabel({name = "── Tycoon Sovereign ──"})
+MPT_Economy:CreateToggle({name = "Enable Sovereign Economy", currentValue = false, callback = function(state)
     AutoClaimMoney = state; AutoBuild = state
     if state then startClaimMoney(); startAutoBuild()
     else stopClaimMoney(); stopAutoBuild() end
 end})
-MPT_Economy:AddSlider({Name = "Defense Threat Radius", Min = 20, Max = 100, Default = 50, Callback = function(val) ThreatRadius = val end})
-MPT_Economy:AddButton({Name = "Force Buy Next Upgrade", Callback = function()
+MPT_Economy:CreateSlider({name = "Defense Threat Radius", range = {20, 100}, initialValue = 50, callback = function(val) ThreatRadius = val end})
+MPT_Economy:CreateButton({name = "Force Buy Next Upgrade", callback = function()
     local myChar = player.Character
     if not myChar then return end
     local root = myChar:FindFirstChild("HumanoidRootPart")
@@ -1235,14 +1234,14 @@ MPT_Economy:AddButton({Name = "Force Buy Next Upgrade", Callback = function()
             pcall(firetouchinterest, root, part, 0)
             pcall(firetouchinterest, root, part, 1)
         end
-        OrionLib:MakeNotification({Name = "Purchased", Content = "Bought: " .. best.Name, Time = 2})
+        Rayfield:Notify({title = "Purchased", content = "Bought: " .. best.Name, duration = 2})
     else
-        OrionLib:MakeNotification({Name = "No Purchase", Content = "Nothing affordable.", Time = 2})
+        Rayfield:Notify({title = "No Purchase", content = "Nothing affordable.", duration = 2})
     end
 end})
 
-MPT_Economy:AddSection({Name = "Spawn Supremacy"})
-MPT_Economy:AddToggle({Name = "Enable Supremacy Mode", Default = false, Callback = function(state)
+MPT_Economy:CreateLabel({name = "── Spawn Supremacy ──"})
+MPT_Economy:CreateToggle({name = "Enable Supremacy Mode", currentValue = false, callback = function(state)
     AntiSpawnkill = state
     if state then
         player.CharacterAdded:Connect(function(c)
@@ -1256,91 +1255,91 @@ MPT_Economy:AddToggle({Name = "Enable Supremacy Mode", Default = false, Callback
         end)
     end
 end})
-MPT_Economy:AddToggle({Name = "Fast Respawn", Default = false, Callback = function(state)
+MPT_Economy:CreateToggle({name = "Fast Respawn", currentValue = false, callback = function(state)
     FastRespawn = state
     if state then startFastRespawn() end
 end})
 
-MPT_Economy:AddSection({Name = "Defense Matrix"})
-MPT_Economy:AddToggle({Name = "Enable Defense Matrix", Default = false, Callback = function(state)
+MPT_Economy:CreateLabel({name = "── Defense Matrix ──"})
+MPT_Economy:CreateToggle({name = "Enable Defense Matrix", currentValue = false, callback = function(state)
     AntiAura.Enabled = state
     if state then startAntiAura() else stopAntiAura() end
 end})
-MPT_Economy:AddToggle({Name = "ForceField God Mode", Default = false, Callback = function(state) AntiAura.GodMode = state end})
-MPT_Economy:AddToggle({Name = "Weapon Repel", Default = false, Callback = function(state) AntiAura.Repel = state end})
-MPT_Economy:AddToggle({Name = "Phase Mode (No Collide)", Default = false, Callback = function(state) AntiAura.Phase = state end})
-MPT_Economy:AddButton({Name = "Emergency Heal", Callback = function()
+MPT_Economy:CreateToggle({name = "ForceField God Mode", currentValue = false, callback = function(state) AntiAura.GodMode = state end})
+MPT_Economy:CreateToggle({name = "Weapon Repel", currentValue = false, callback = function(state) AntiAura.Repel = state end})
+MPT_Economy:CreateToggle({name = "Phase Mode (No Collide)", currentValue = false, callback = function(state) AntiAura.Phase = state end})
+MPT_Economy:CreateButton({name = "Emergency Heal", callback = function()
     local myChar = player.Character
     if myChar then
         local hum = myChar:FindFirstChild("Humanoid")
         if hum then
             hum.Health = hum.MaxHealth
-            OrionLib:MakeNotification({Name = "Healed", Content = "Health restored.", Time = 2})
+            Rayfield:Notify({title = "Healed", content = "Health restored.", duration = 2})
         end
     end
 end})
 
 -- ── UPDATES TAB ─────────────────────────────────────────────
-local Updates = Window:MakeTab({Name = "Updates", Icon = "rbxassetid://4483362191", PremiumOnly = false})
+local Updates = window:CreateTab({name = "Updates", icon = 93364949241311})
 
-Updates:AddSection({Name = "EXO Hub Changelog"})
-Updates:AddLabel({Name = "v7.0 - OrionLib Edition (CURRENT)"})
-Updates:AddLabel({Name = "  - Fixed: Players reference before definition"})
-Updates:AddLabel({Name = "  - Fixed: No Cooldown no longer hooks global wait"})
-Updates:AddLabel({Name = "  - Fixed: No KeySystem hanging UI thread"})
-Updates:AddLabel({Name = "  - OrionLib: stable, unlimited elements, built-in notifications"})
-Updates:AddLabel({Name = "  - GODLY: Adaptive burst insta-kill (threat-based)"})
-Updates:AddLabel({Name = "  - GODLY: Expanded Hit Amplifier (30 stud range)"})
-Updates:AddLabel({Name = "  - GODLY: 14-base Tool Arsenal"})
-Updates:AddLabel({Name = "  - GODLY: Phase mode (no collide)"})
-Updates:AddLabel({Name = "  - GODLY: Multi-layer threat detection"})
-Updates:AddLabel({Name = "  - Kill Notifications with behavioral analysis"})
-Updates:AddLabel({Name = "  - Kill Logs, ESP, Anti-Lag in Settings"})
-Updates:AddLabel({Name = ""})
-Updates:AddLabel({Name = "v6.0 - GODLY TIER"})
-Updates:AddLabel({Name = "v5.0 - WindUI Edition"})
-Updates:AddLabel({Name = "v4.0 - Embedded/Velocity/Cerberus"})
-Updates:AddLabel({Name = "v3.0 - ZyronX migration"})
-Updates:AddLabel({Name = "v1.1 - Initial release"})
+Updates:CreateLabel({name = "── EXO Hub Changelog ──"})
+Updates:CreateLabel({name = "v8.0 - Rayfield Gen 2 Edition (CURRENT)"})
+Updates:CreateLabel({name = "  - Rayfield Gen 2: stable, unlimited elements, sirius.menu CDN"})
+Updates:CreateLabel({name = "  - Fixed: No Players reference before definition"})
+Updates:CreateLabel({name = "  - Fixed: No Cooldown uses safe property manipulation"})
+Updates:CreateLabel({name = "  - Fixed: No KeySystem hanging UI thread"})
+Updates:CreateLabel({name = "  - GODLY: Adaptive burst insta-kill (threat-based)"})
+Updates:CreateLabel({name = "  - GODLY: Expanded Hit Amplifier (30 stud range)"})
+Updates:CreateLabel({name = "  - GODLY: 14-base Tool Arsenal"})
+Updates:CreateLabel({name = "  - GODLY: Phase mode (no collide)"})
+Updates:CreateLabel({name = "  - Kill Notifications with behavioral analysis"})
+Updates:CreateLabel({name = "  - Kill Logs, ESP, Anti-Lag in Settings"})
+Updates:CreateLabel({name = ""})
+Updates:CreateLabel({name = "v7.0 - OrionLib / WindUI attempts"})
+Updates:CreateLabel({name = "v6.0 - GODLY TIER"})
+Updates:CreateLabel({name = "v5.0 - WindUI Edition"})
+Updates:CreateLabel({name = "v4.0 - Embedded/Velocity/Cerberus"})
+Updates:CreateLabel({name = "v3.0 - ZyronX migration"})
+Updates:CreateLabel({name = "v1.1 - Initial release"})
 
 -- ── SETTINGS TAB ────────────────────────────────────────────
-local Settings = Window:MakeTab({Name = "Settings", Icon = "rbxassetid://4483362732", PremiumOnly = false})
+local Settings = window:CreateTab({name = "Settings", icon = 93364949241311})
 
-Settings:AddSection({Name = "General"})
-Settings:AddToggle({Name = "Anti-Lag Shield", Default = false, Callback = function(state)
+Settings:CreateLabel({name = "── General ──"})
+Settings:CreateToggle({name = "Anti-Lag Shield", currentValue = false, callback = function(state)
     AntiLagEnabled = state
     if state then
         startAntiLag()
-        OrionLib:MakeNotification({Name = "Anti-Lag", Content = "Performance mode activated.", Time = 3})
+        Rayfield:Notify({title = "Anti-Lag", content = "Performance mode activated.", duration = 3})
     else stopAntiLag() end
 end})
-Settings:AddToggle({Name = "ESP (Minimal Dots)", Default = false, Callback = function(state)
+Settings:CreateToggle({name = "ESP (Minimal Dots)", currentValue = false, callback = function(state)
     ESPEnabled = state
     if state then startESP() else stopESP() end
 end})
-Settings:AddToggle({Name = "Kill Notifications", Default = false, Callback = function(state)
+Settings:CreateToggle({name = "Kill Notifications", currentValue = false, callback = function(state)
     KillNotifEnabled = state
     if state then
-        OrionLib:MakeNotification({Name = "Kill Notifications", Content = "Behavioral analysis + threat level enabled.", Time = 4})
+        Rayfield:Notify({title = "Kill Notifications", content = "Behavioral analysis + threat level enabled.", duration = 4})
     end
 end})
-Settings:AddToggle({Name = "Kill Logs", Default = false, Callback = function(state) KillLogEnabled = state end})
-Settings:AddButton({Name = "View Kill Logs", Callback = function()
+Settings:CreateToggle({name = "Kill Logs", currentValue = false, callback = function(state) KillLogEnabled = state end})
+Settings:CreateButton({name = "View Kill Logs", callback = function()
     if #KillLogs == 0 then
-        OrionLib:MakeNotification({Name = "Kill Logs", Content = "No kills recorded yet.", Time = 2})
+        Rayfield:Notify({title = "Kill Logs", content = "No kills recorded yet.", duration = 2})
         return
     end
     local lastLog = KillLogs[#KillLogs]
-    OrionLib:MakeNotification({
-        Name = "Last Kill Log",
-        Content = "Killer: " .. lastLog.Killer .. " | Weapon: " .. lastLog.Weapon
+    Rayfield:Notify({
+        title = "Last Kill Log",
+        content = "Killer: " .. lastLog.Killer .. " | Weapon: " .. lastLog.Weapon
             .. " | Threat: " .. lastLog.Threat .. "/10 | Total logs: " .. #KillLogs,
-        Time = 5,
+        duration = 5,
     })
 end})
 
-Settings:AddSection({Name = "Config"})
-Settings:AddButton({Name = "Save Config", Callback = function()
+Settings:CreateLabel({name = "── Config ──"})
+Settings:CreateButton({name = "Save Config", callback = function()
     local config = {
         ReachSize = ReachSize,
         ThreatRadius = ThreatRadius,
@@ -1351,9 +1350,9 @@ Settings:AddButton({Name = "Save Config", Callback = function()
         TG_BurstCount = TG_BurstCount,
     }
     writeJSON(CONFIG_FILE, config)
-    OrionLib:MakeNotification({Name = "Config Saved", Content = "Settings saved.", Time = 2})
+    Rayfield:Notify({title = "Config Saved", content = "Settings saved.", duration = 2})
 end})
-Settings:AddButton({Name = "Load Config", Callback = function()
+Settings:CreateButton({name = "Load Config", callback = function()
     local config = readJSON(CONFIG_FILE)
     if config then
         ReachSize = config.ReachSize or 2
@@ -1363,26 +1362,20 @@ Settings:AddButton({Name = "Load Config", Callback = function()
         HA_Range = Vector3.new(config.HA_Range or 30, config.HA_Range or 30, config.HA_Range or 30)
         HA_BurstCount = config.HA_BurstCount or 5
         TG_BurstCount = config.TG_BurstCount or 8
-        OrionLib:MakeNotification({Name = "Config Loaded", Content = "Settings restored.", Time = 2})
+        Rayfield:Notify({title = "Config Loaded", content = "Settings restored.", duration = 2})
     else
-        OrionLib:MakeNotification({Name = "No Config", Content = "No saved config found.", Time = 2})
+        Rayfield:Notify({title = "No Config", content = "No saved config found.", duration = 2})
     end
 end})
-Settings:AddButton({Name = "Rejoin Server", Callback = function()
+Settings:CreateButton({name = "Rejoin Server", callback = function()
     TeleportService:Teleport(game.PlaceId, player)
 end})
 
--- ── SETUP KILL NOTIFICATIONS ────────────────────────────────
+-- ── SETUP & FINALIZE ────────────────────────────────────────
 setupKillNotifications()
 
--- ── FINAL NOTIFICATION ──────────────────────────────────────
-OrionLib:MakeNotification({
-    Name = "EXO Hub v7.0 Loaded",
-    Content = "OrionLib Edition. All systems online.",
-    Time = 4,
+Rayfield:Notify({
+    title = "EXO Hub v8.0 Loaded",
+    content = "Rayfield Gen 2 Edition. All systems online.",
+    duration = 4,
 })
-
--- ═══════════════════════════════════════════════════════════
---  ★★★ THIS MUST BE THE LAST LINE ★★★
--- ═══════════════════════════════════════════════════════════
-OrionLib:Init()
